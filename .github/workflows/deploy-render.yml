@@ -1,0 +1,30 @@
+name: deploy-render
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  trigger-render-deploys:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger API deploy hook
+        env:
+          RENDER_API_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "${RENDER_API_DEPLOY_HOOK_URL}" ]; then
+            echo "Missing secret: RENDER_API_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+          curl -fsS -X POST "${RENDER_API_DEPLOY_HOOK_URL}"
+
+      - name: Trigger Worker deploy hook
+        env:
+          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "${RENDER_WORKER_DEPLOY_HOOK_URL}" ]; then
+            echo "Missing secret: RENDER_WORKER_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+          curl -fsS -X POST "${RENDER_WORKER_DEPLOY_HOOK_URL}"

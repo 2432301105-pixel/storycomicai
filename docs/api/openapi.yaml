@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: StoryComicAI API
+  version: 0.1.0
+  description: Initial MVP API contract for StoryComicAI.
+servers:
+  - url: http://localhost:8000
+paths:
+  /v1/health/live:
+    get:
+      summary: Liveness probe
+      responses:
+        "200":
+          description: Service is alive
+  /v1/health/ready:
+    get:
+      summary: Readiness probe
+      responses:
+        "200":
+          description: Service is ready
+  /v1/auth/apple/verify:
+    post:
+      summary: Verify Apple Sign-In token and issue app access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppleVerifyRequest"
+      responses:
+        "200":
+          description: Token verified
+        "401":
+          description: Invalid Apple identity token
+  /v1/projects:
+    post:
+      summary: Create project
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Project created
+    get:
+      summary: List user projects
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Project list
+  /v1/projects/{project_id}/photos/presign:
+    post:
+      summary: Generate presigned upload URL
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Presigned URL generated
+  /v1/projects/{project_id}/photos/complete:
+    post:
+      summary: Complete photo upload metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Photo metadata saved
+  /v1/projects/{project_id}/hero-preview:
+    post:
+      summary: Enqueue hero preview generation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Job queued
+  /v1/projects/{project_id}/hero-preview/{job_id}:
+    get:
+      summary: Get hero preview job status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job status
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AppleVerifyRequest:
+      type: object
+      required: [identity_token]
+      properties:
+        identity_token:
+          type: string

@@ -1,0 +1,40 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+  "api/alembic/versions",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "N", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unused_configs = true
+exclude = [
+  "api/alembic/versions",
+]
+mypy_path = ["."]
+
+[[tool.mypy.overrides]]
+module = [
+  "celery.*",
+  "jose.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-q"
+testpaths = [
+  "api/app/tests",
+]

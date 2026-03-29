@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.storycomicai.com/generation-job.schema.json",
+  "title": "GenerationJob",
+  "type": "object",
+  "required": ["job_id", "project_id", "job_type", "status", "current_stage", "progress_pct"],
+  "properties": {
+    "job_id": { "type": "string", "format": "uuid" },
+    "project_id": { "type": "string", "format": "uuid" },
+    "job_type": { "type": "string", "enum": ["hero_preview", "free_preview", "full_generation", "export"] },
+    "status": { "type": "string", "enum": ["queued", "running", "succeeded", "failed"] },
+    "current_stage": { "type": "string" },
+    "progress_pct": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1 },
+    "error_message": { "type": "string" },
+    "result": { "type": "object" }
+  },
+  "additionalProperties": false
+}

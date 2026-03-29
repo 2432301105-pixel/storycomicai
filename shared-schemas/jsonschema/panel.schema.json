@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.storycomicai.com/panel.schema.json",
+  "title": "Panel",
+  "type": "object",
+  "required": ["panel_no", "camera_angle", "emotion", "visual_prompt", "dialogues"],
+  "properties": {
+    "panel_no": { "type": "integer", "minimum": 1 },
+    "camera_angle": { "type": "string" },
+    "emotion": { "type": "string" },
+    "visual_prompt": { "type": "string", "minLength": 5 },
+    "dialogues": {
+      "type": "array",
+      "items": { "$ref": "./dialogue.schema.json" }
+    },
+    "captions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

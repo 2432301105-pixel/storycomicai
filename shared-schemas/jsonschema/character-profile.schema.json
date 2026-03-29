@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.storycomicai.com/character-profile.schema.json",
+  "title": "CharacterProfile",
+  "type": "object",
+  "required": ["character_profile_id", "project_id", "status", "consistency_threshold"],
+  "properties": {
+    "character_profile_id": { "type": "string", "format": "uuid" },
+    "project_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected"]
+    },
+    "identity_embedding_ref": { "type": "string" },
+    "selected_hero_sheet_version_id": { "type": "string", "format": "uuid" },
+    "consistency_threshold": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "additionalProperties": false
+}

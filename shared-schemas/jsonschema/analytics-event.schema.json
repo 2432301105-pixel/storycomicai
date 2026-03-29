@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.storycomicai.com/analytics-event.schema.json",
+  "title": "AnalyticsEvent",
+  "type": "object",
+  "required": ["event_name", "timestamp_utc", "properties"],
+  "properties": {
+    "event_name": {
+      "type": "string",
+      "enum": [
+        "reveal_started",
+        "book_opened",
+        "preview_page_turned",
+        "switched_to_flat_reader",
+        "mode_switched",
+        "export_tapped",
+        "paywall_seen",
+        "unlock_started",
+        "unlock_completed",
+        "reader_telemetry"
+      ]
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "properties": {
+      "type": "object",
+      "required": ["schema_version"],
+      "properties": {
+        "schema_version": { "type": "string", "const": "2026-03-29" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_name": { "const": "reveal_started" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "project_id", "mode"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "book_opened" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "project_id", "mode"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "preview_page_turned" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": [
+              "schema_version",
+              "project_id",
+              "mode",
+              "from_page_index",
+              "to_page_index",
+              "total_pages"
+            ],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" },
+              "from_page_index": { "type": "string" },
+              "to_page_index": { "type": "string" },
+              "total_pages": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "switched_to_flat_reader" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "project_id", "mode", "from_mode"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" },
+              "from_mode": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "mode_switched" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "project_id", "mode", "from_mode", "to_mode"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" },
+              "from_mode": { "type": "string" },
+              "to_mode": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "export_tapped" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "project_id", "mode", "action"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" },
+              "action": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "paywall_seen" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "source"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "source": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "unlock_started" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "offer_id", "source"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "offer_id": { "type": "string" },
+              "source": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "unlock_completed" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "offer_id", "source"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "project_id": { "type": "string" },
+              "offer_id": { "type": "string" },
+              "source": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_name": { "const": "reader_telemetry" } } },
+      "then": {
+        "properties": {
+          "properties": {
+            "required": ["schema_version", "telemetry_type", "telemetry_scope"],
+            "properties": {
+              "schema_version": { "type": "string", "const": "2026-03-29" },
+              "telemetry_type": { "type": "string" },
+              "telemetry_scope": { "type": "string" },
+              "duration_ms": { "type": "string" },
+              "success": { "type": "string" },
+              "status_code": { "type": "string" },
+              "target_px": { "type": "string" },
+              "network_policy": { "type": "string" },
+              "network_throttled": { "type": "string" },
+              "cache_hit": { "type": "string" },
+              "page_index": { "type": "string" },
+              "pages_count": { "type": "string" },
+              "thumbnail_radius": { "type": "string" },
+              "full_radius": { "type": "string" },
+              "failure_streak": { "type": "string" },
+              "project_id": { "type": "string" },
+              "mode": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.storycomicai.com/dialogue.schema.json",
+  "title": "Dialogue",
+  "type": "object",
+  "required": ["speaker", "text"],
+  "properties": {
+    "speaker": { "type": "string" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "balloon_type": {
+      "type": "string",
+      "enum": ["speech", "thought", "narration"]
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
