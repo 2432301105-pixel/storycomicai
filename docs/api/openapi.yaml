@@ -113,6 +113,74 @@ paths:
       responses:
         "200":
           description: Job status
+  /v1/projects/{project_id}/comic-package:
+    get:
+      summary: Get comic package
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Comic package payload
+  /v1/projects/{project_id}/reading-progress:
+    patch:
+      summary: Update reading progress
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reading progress updated
+        "422":
+          description: Invalid page index
+  /v1/projects/{project_id}/exports:
+    post:
+      summary: Create export job
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Export job created
+  /v1/projects/{project_id}/exports/{job_id}:
+    get:
+      summary: Get export status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Export job status
 components:
   securitySchemes:
     bearerAuth:
@@ -126,3 +194,81 @@ components:
       properties:
         identity_token:
           type: string
+    ComicPackageData:
+      type: object
+      properties:
+        projectId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subtitle:
+          type: string
+        styleLabel:
+          type: string
+        cover:
+          type: object
+        pages:
+          type: array
+          items:
+            type: object
+        previewPages:
+          type: integer
+        presentationHints:
+          type: object
+        exportAvailability:
+          type: object
+        paywallMetadata:
+          type: object
+        readingProgress:
+          type: object
+        ctaMetadata:
+          type: object
+        legacyRevealMetadata:
+          type: object
+    ReadingProgressUpdateRequest:
+      type: object
+      required: [currentPageIndex, lastOpenedAtUtc]
+      properties:
+        currentPageIndex:
+          type: integer
+          minimum: 0
+        lastOpenedAtUtc:
+          type: string
+          format: date-time
+    ExportCreateRequest:
+      type: object
+      required: [type, preset]
+      properties:
+        type:
+          type: string
+          enum: [pdf, image_bundle]
+        preset:
+          type: string
+          enum: [screen, print]
+        includeCover:
+          type: boolean
+    ExportStatusData:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed]
+        progressPct:
+          type: integer
+        artifactUrl:
+          type: string
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+        retryable:
+          type: boolean

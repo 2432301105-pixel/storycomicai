@@ -10,16 +10,16 @@ celery_app = Celery(
     "storycomicai_workers",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["workers.app.tasks.hero_preview"],
+    include=["workers.app.tasks.export", "workers.app.tasks.hero_preview"],
 )
 
 celery_app.conf.update(
     task_default_queue="default",
     task_routes={
+        "workers.export.generate": {"queue": "exports"},
         "workers.hero_preview.generate": {"queue": "hero_preview"},
     },
     task_track_started=True,
     worker_prefetch_multiplier=1,
     task_acks_late=True,
 )
-

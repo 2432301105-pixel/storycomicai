@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     storage_provider: Literal["mock", "s3"] = "mock"
     storage_bucket: str = "storycomicai-local"
     storage_presign_ttl_seconds: int = 900
+    export_artifact_dir: str = "/tmp/storycomicai-artifacts"
+    export_download_token_ttl_seconds: int = 3600
 
     @field_validator("database_url", mode="before")
     @classmethod

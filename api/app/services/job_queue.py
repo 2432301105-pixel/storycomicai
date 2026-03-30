@@ -7,8 +7,6 @@ import uuid
 from datetime import UTC, datetime
 from typing import Protocol
 
-from celery import Celery
-
 from api.app.core.config import settings
 from api.app.db.session import SessionLocal
 from api.app.models.common import JobStatus, ProjectStatus
@@ -36,6 +34,15 @@ class CeleryJobQueueClient:
     """Celery-backed job queue implementation."""
 
     def __init__(self) -> None:
+        try:
+            from celery import Celery
+        except ModuleNotFoundError as exc:
+            raise DomainError(
+                code="QUEUE_CLIENT_UNAVAILABLE",
+                message="Celery client is not installed in this environment.",
+                status_code=503,
+            ) from exc
+
         self.client = Celery(
             "storycomicai_api_client",
             broker=settings.celery_broker_url,
@@ -151,4 +158,8 @@ def get_job_queue_client() -> JobQueueClient:
     if settings.job_queue_mode == "inline":
         logger.warning("Using inline job queue mode; background worker is disabled.")
         return InlineJobQueueClient()
-    return CeleryJobQueueClient()
+    try:
+        return CeleryJobQueueClient()
+    except DomainError:
+        logger.warning("Falling back to inline job queue mode because Celery is unavailable.")
+        return InlineJobQueueClient()
