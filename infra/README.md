@@ -7,6 +7,7 @@ Local development infrastructure and deployment templates for StoryComicAI.
 
 ## Render Deployment Files
 
-- Blueprint: `/render.yaml`
+- Blueprint (free/dev): `/render.yaml`
+- Blueprint (paid/full): `/render.paid.yaml`
 - API start: `infra/render/start_api.sh`
 - Worker start: `infra/render/start_worker.sh`

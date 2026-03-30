@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/1"
+    job_queue_mode: Literal["celery", "inline"] = "celery"
 
     auth_jwt_secret: str = Field(default="change-me", min_length=8)
     auth_jwt_algorithm: str = "HS256"

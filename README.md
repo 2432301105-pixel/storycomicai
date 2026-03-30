@@ -117,7 +117,9 @@ For architecture details, see:
 
 ## GitHub + Render Workflow (Remote-First)
 
-StoryComicAI can run fully remote (API + worker + Redis + PostgreSQL) with Render.
+StoryComicAI can run remote on Render with two profiles:
+- free/dev (API + Redis + PostgreSQL, inline jobs)
+- paid/full (API + worker + Redis + PostgreSQL)
 
 ### 1) Push this repo to GitHub
 - Create a dedicated GitHub repository for StoryComicAI.
@@ -126,21 +128,24 @@ StoryComicAI can run fully remote (API + worker + Redis + PostgreSQL) with Rende
 ### 2) Create Render Blueprint
 - In Render, use **Blueprint** and point to this repository.
 - Render will read [`render.yaml`](render.yaml) and provision:
-  - `storycomicai-api` (web service)
-  - `storycomicai-worker` (background worker)
+  - `storycomicai-api` (web service, free plan)
   - `storycomicai-redis`
   - `storycomicai-postgres`
+- Default `render.yaml` is a **free/dev profile**:
+  - no dedicated worker service
+  - `SC_JOB_QUEUE_MODE=inline` so hero-preview jobs complete without Celery worker
+- Full paid profile is preserved in [`render.paid.yaml`](render.paid.yaml) for API + worker deployments.
 
 ### 3) Configure required secrets in Render
 - `SC_APPLE_CLIENT_ID`
-- `SC_AUTH_JWT_SECRET` (auto-generated in blueprint for API; set same value for worker)
+- `SC_AUTH_JWT_SECRET` (auto-generated for API in Blueprint)
 
 ### 4) Configure GitHub deploy hooks
 - Add these GitHub repository secrets:
   - `RENDER_API_DEPLOY_HOOK_URL`
-  - `RENDER_WORKER_DEPLOY_HOOK_URL`
+  - `RENDER_WORKER_DEPLOY_HOOK_URL` (optional for free/dev; required for paid worker deployments)
 - Workflow file: `.github/workflows/deploy-render.yml`
-- On push to `main`, GitHub triggers both Render deploy hooks.
+- On push to `main`, GitHub always triggers API deploy hook. Worker hook is skipped if secret is not set.
 
 ### Render Start Commands
 - API start script: `infra/render/start_api.sh`
