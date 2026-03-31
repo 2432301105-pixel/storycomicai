@@ -22,7 +22,7 @@ final class DefaultComicPackageService: ComicPackageService {
             let dto = try await apiClient.request(endpoint, decode: ComicBookPackageResponseDTO.self)
             return dto.toDomain(source: .remote)
         } catch let apiError as APIError {
-            // Temporary compatibility path while backend contract rollout completes.
+            // Keep a narrow fallback only for explicit contract-not-implemented states.
             if apiError.isContractFallbackEligible {
                 return MockFixtures.sampleComicBookPackage(projectID: projectID, source: .fallback)
             }
@@ -78,7 +78,7 @@ final class MockComicPackageService: ComicPackageService {
     }
 }
 
-private extension ComicBookPackageResponseDTO {
+extension ComicBookPackageResponseDTO {
     func toDomain(source: ComicPackageSource) -> ComicBookPackage {
         let defaultPackage = MockFixtures.sampleComicBookPackage(projectID: projectID, source: source)
 
@@ -96,13 +96,15 @@ private extension ComicBookPackageResponseDTO {
             }
 
         let mappedHints = ComicPresentationHints(
-            readingDirection: ComicPresentationHints.ReadingDirection(
-                rawValue: presentationHints?.readingDirection ?? ""
-            ) ?? defaultPackage.presentationHints.readingDirection,
+            readingDirection: Self.mapReadingDirection(
+                presentationHints?.readingDirection,
+                fallback: defaultPackage.presentationHints.readingDirection
+            ),
             preferredRevealMode: presentationHints?.preferredRevealMode ?? defaultPackage.presentationHints.preferredRevealMode,
-            deskTheme: ComicPresentationHints.DeskTheme(
-                rawValue: presentationHints?.deskTheme ?? ""
-            ) ?? defaultPackage.presentationHints.deskTheme,
+            deskTheme: Self.mapDeskTheme(
+                presentationHints?.deskTheme,
+                fallback: defaultPackage.presentationHints.deskTheme
+            ),
             accentHex: presentationHints?.accentHex ?? defaultPackage.presentationHints.accentHex,
             extra: presentationHints?.extra ?? defaultPackage.presentationHints.extra
         )
@@ -194,29 +196,68 @@ private extension ComicBookPackageResponseDTO {
             source: source
         )
     }
+
+    static func mapReadingDirection(
+        _ value: String?,
+        fallback: ComicPresentationHints.ReadingDirection
+    ) -> ComicPresentationHints.ReadingDirection {
+        guard let normalized = value?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !normalized.isEmpty else {
+            return fallback
+        }
+
+        switch normalized {
+        case ComicPresentationHints.ReadingDirection.leftToRight.rawValue, "ltr":
+            return .leftToRight
+        case ComicPresentationHints.ReadingDirection.rightToLeft.rawValue, "rtl":
+            return .rightToLeft
+        default:
+            return fallback
+        }
+    }
+
+    static func mapDeskTheme(
+        _ value: String?,
+        fallback: ComicPresentationHints.DeskTheme
+    ) -> ComicPresentationHints.DeskTheme {
+        guard let normalized = value?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !normalized.isEmpty else {
+            return fallback
+        }
+
+        switch normalized {
+        case ComicPresentationHints.DeskTheme.graphite.rawValue, "charcoal", "slate":
+            return .graphite
+        case ComicPresentationHints.DeskTheme.silver.rawValue, "light", "paper", "linen":
+            return .silver
+        case ComicPresentationHints.DeskTheme.walnut.rawValue, "oak", "wood":
+            return .walnut
+        default:
+            return fallback
+        }
+    }
 }
 
 private extension APIError {
     var isContractFallbackEligible: Bool {
         switch self {
         case let .server(statusCode, _):
-            return statusCode == 404 || statusCode == 409 || statusCode == 501
+            return statusCode == 501
         case let .backend(code, _):
-            return code == "ENDPOINT_NOT_IMPLEMENTED" || code == "NOT_FOUND"
+            return code == "ENDPOINT_NOT_IMPLEMENTED"
         default:
             return false
         }
     }
 
     var isWriteBackFallbackEligible: Bool {
-        if isContractFallbackEligible {
-            return true
-        }
         switch self {
         case .transport:
             return true
         case let .server(statusCode, _):
             return statusCode >= 500
+        case let .backend(code, _):
+            return code == "ENDPOINT_NOT_IMPLEMENTED"
         default:
             return false
         }
