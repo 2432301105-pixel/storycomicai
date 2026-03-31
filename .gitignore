@@ -23,6 +23,7 @@ dist/
 
 # iOS / Xcode
 DerivedData/
+.deriveddata-ios*/
 *.xcworkspace/
 *.xcodeproj/xcuserdata/
 
