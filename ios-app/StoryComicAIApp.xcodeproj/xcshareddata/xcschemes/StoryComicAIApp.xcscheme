@@ -69,6 +69,23 @@
             ReferencedContainer = "container:StoryComicAIApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_USE_MOCK_SERVICES"
+            value = "false"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_API_BASE_URL"
+            value = "https://storycomicai.onrender.com"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_APPLE_CLIENT_ID"
+            value = "com.storycomicai.app"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -86,6 +103,23 @@
             ReferencedContainer = "container:StoryComicAIApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_USE_MOCK_SERVICES"
+            value = "false"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_API_BASE_URL"
+            value = "https://storycomicai.onrender.com"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_APPLE_CLIENT_ID"
+            value = "com.storycomicai.app"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
