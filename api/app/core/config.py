@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     debug: bool = False
     api_prefix: str = "/v1"
 
-    database_url: str = "postgresql+psycopg://storycomicai:storycomicai@localhost:5432/storycomicai"
+    database_url: str = "sqlite+pysqlite:////tmp/storycomicai.db"
 
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/0"

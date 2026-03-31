@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, SmallInteger, String
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.app.core.constants import DEFAULT_FREE_PREVIEW_PAGES
 from api.app.db.base import Base
+from api.app.db.types import GUID
 from api.app.models.common import ProjectStatus, TimestampMixin
 
 if TYPE_CHECKING:
@@ -24,9 +24,9 @@ if TYPE_CHECKING:
 class Project(TimestampMixin, Base):
     __tablename__ = "projects"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

@@ -7,10 +7,10 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, CheckConstraint, Enum, ForeignKey, SmallInteger, String, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.app.db.base import Base
+from api.app.db.types import GUID
 from api.app.models.common import TimestampMixin
 
 if TYPE_CHECKING:
@@ -37,9 +37,9 @@ class ExportStatus(StrEnum):
 class ExportJob(TimestampMixin, Base):
     __tablename__ = "export_jobs"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

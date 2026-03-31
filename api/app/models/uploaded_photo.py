@@ -6,11 +6,11 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import BIGINT, Boolean, Enum, ForeignKey, Integer, Numeric, String, text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import BIGINT, Boolean, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.app.db.base import Base
+from api.app.db.types import GUID, JSON_VARIANT
 from api.app.models.common import TimestampMixin, UploadStatus
 
 if TYPE_CHECKING:
@@ -20,9 +20,9 @@ if TYPE_CHECKING:
 class UploadedPhoto(TimestampMixin, Base):
     __tablename__ = "uploaded_photos"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -40,10 +40,9 @@ class UploadedPhoto(TimestampMixin, Base):
         default=UploadStatus.PRESIGNED,
     )
     metadata_json: Mapped[dict[str, Any]] = mapped_column(
-        JSONB,
+        JSON_VARIANT,
         nullable=False,
         default=dict,
-        server_default=text("'{}'::jsonb"),
     )
 
     project: Mapped["Project"] = relationship("Project", back_populates="uploaded_photos")
