@@ -42,6 +42,7 @@ struct OnboardingView: View {
             .padding(.horizontal, AppSpacing.lg)
             .padding(.bottom, AppSpacing.xl)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 }

@@ -37,6 +37,7 @@ struct SettingsView: View {
             .padding(.top, AppSpacing.xl)
             .padding(.bottom, AppSpacing.section)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)

@@ -23,6 +23,7 @@ struct HomeView: View {
                 container: container
             )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadRecentProjects() }

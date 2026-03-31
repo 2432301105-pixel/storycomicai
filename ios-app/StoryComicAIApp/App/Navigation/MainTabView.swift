@@ -47,6 +47,7 @@ struct MainTabView: View {
             .tag(MainTab.settings)
         }
         .tint(AppColor.accent)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .toolbarBackground(.visible, for: .tabBar)
         .toolbarBackground(AppColor.tabBarBackground, for: .tabBar)
     }

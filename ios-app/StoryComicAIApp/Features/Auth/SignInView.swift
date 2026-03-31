@@ -48,6 +48,7 @@ struct SignInView: View {
 
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 }

@@ -16,6 +16,7 @@ struct AppCoordinatorView: View {
                 MainTabView(container: container)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.25), value: sessionStore.hasCompletedOnboarding)
         .animation(.easeInOut(duration: 0.25), value: sessionStore.isAuthenticated)
     }

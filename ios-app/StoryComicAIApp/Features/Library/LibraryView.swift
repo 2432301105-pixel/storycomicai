@@ -57,9 +57,11 @@ struct LibraryView: View {
                     .padding(.top, AppSpacing.xl)
                     .padding(.bottom, AppSpacing.section)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(AppColor.backgroundPrimary)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .task { await viewModel.loadProjects() }
