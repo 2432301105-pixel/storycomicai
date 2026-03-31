@@ -12,8 +12,7 @@ struct BookPreviewView: View {
 
     var body: some View {
         ZStack {
-            previewBackground
-                .ignoresSafeArea()
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: true)
 
             VStack(spacing: AppSpacing.lg) {
                 ComicPresentationModePicker(
@@ -39,22 +38,6 @@ struct BookPreviewView: View {
             .padding(.horizontal, AppSpacing.lg)
             .padding(.top, AppSpacing.lg)
             .padding(.bottom, AppSpacing.xl)
-        }
-    }
-
-    private var previewBackground: some View {
-        LinearGradient(
-            colors: [AppColor.backgroundPrimary, AppColor.surfaceMuted],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay(alignment: .bottom) {
-            LinearGradient(
-                colors: [AppColor.deskTopStart, AppColor.deskTopMid, AppColor.deskTopEnd],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .frame(height: 320)
         }
     }
 

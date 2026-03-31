@@ -8,72 +8,91 @@ struct PhotoUploadView: View {
     @State private var navigateToHeroPreview: Bool = false
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            CardContainer {
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
+
+            VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Uploaded Photos")
-                        .font(AppTypography.body)
+                    Text("Hero Source")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.4)
+                        .textCase(.uppercase)
+
+                    Text("Choose reference photos")
+                        .font(AppTypography.title)
                         .foregroundStyle(AppColor.textPrimary)
 
-                    if flowStore.selectedLocalPhotos.isEmpty {
-                        Text("No photos selected yet.")
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColor.textSecondary)
-                    } else {
-                        ForEach(flowStore.selectedLocalPhotos) { photo in
-                            HStack {
-                                Image(systemName: "photo")
-                                Text(photo.filename)
-                                    .font(AppTypography.footnote)
-                                Spacer()
+                    Text("These images define the face and identity that should persist across the comic.")
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                CardContainer(emphasize: true) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Uploaded Photos")
+                            .font(AppTypography.section)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        if flowStore.selectedLocalPhotos.isEmpty {
+                            Text("No photos selected yet.")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+                        } else {
+                            ForEach(flowStore.selectedLocalPhotos) { photo in
+                                HStack {
+                                    Image(systemName: "photo")
+                                    Text(photo.filename)
+                                        .font(AppTypography.footnote)
+                                    Spacer()
+                                }
+                                .foregroundStyle(AppColor.textSecondary)
                             }
-                            .foregroundStyle(AppColor.textSecondary)
                         }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            HStack(spacing: AppSpacing.sm) {
-                PrimaryButton(title: "Add Demo Photo") {
-                    viewModel.addMockPhoto(to: flowStore)
-                }
-
-                PrimaryButton(title: "Use Fixture") {
-                    flowStore.selectedLocalPhotos = MockFixtures.samplePhotos()
-                }
-            }
-
-            if let message = viewModel.uploadErrorMessage {
-                Text(message)
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.error)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            NavigationLink(
-                destination: HeroPreviewView(
-                    viewModel: HeroPreviewViewModel(
-                        heroPreviewService: container.heroPreviewService,
-                        pollingIntervalSeconds: container.configuration.heroPreviewPollingIntervalSeconds
-                    ),
-                    flowStore: flowStore,
-                    container: container
-                ),
-                isActive: $navigateToHeroPreview
-            ) { EmptyView() }
-
-            PrimaryButton(title: "Upload and Continue", isLoading: viewModel.isUploading) {
-                Task {
-                    let success = await viewModel.uploadSelectedPhotos(for: flowStore)
-                    if success { navigateToHeroPreview = true }
                 }
-            }
 
-            Spacer()
+                HStack(spacing: AppSpacing.sm) {
+                    PrimaryButton(title: "Add Demo Photo") {
+                        viewModel.addMockPhoto(to: flowStore)
+                    }
+
+                    PrimaryButton(title: "Use Fixture") {
+                        flowStore.selectedLocalPhotos = MockFixtures.samplePhotos()
+                    }
+                }
+
+                if let message = viewModel.uploadErrorMessage {
+                    Text(message)
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                NavigationLink(
+                    destination: HeroPreviewView(
+                        viewModel: HeroPreviewViewModel(
+                            heroPreviewService: container.heroPreviewService,
+                            pollingIntervalSeconds: container.configuration.heroPreviewPollingIntervalSeconds
+                        ),
+                        flowStore: flowStore,
+                        container: container
+                    ),
+                    isActive: $navigateToHeroPreview
+                ) { EmptyView() }
+
+                PrimaryButton(title: "Upload and Continue", isLoading: viewModel.isUploading) {
+                    Task {
+                        let success = await viewModel.uploadSelectedPhotos(for: flowStore)
+                        if success { navigateToHeroPreview = true }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(AppSpacing.lg)
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Photo Upload")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

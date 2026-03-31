@@ -61,10 +61,10 @@ struct MainTabView: View {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(AppColor.tabBarBackground)
-        appearance.shadowColor = UIColor(AppColor.tabBarShadow)
+        appearance.shadowColor = UIColor(AppColor.tabBarBorder)
 
         let normalItemColor = UIColor(AppColor.textTertiary)
-        let selectedItemColor = UIColor(AppColor.textPrimary)
+        let selectedItemColor = UIColor(AppColor.accent)
         appearance.stackedLayoutAppearance.normal.iconColor = normalItemColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalItemColor]
         appearance.stackedLayoutAppearance.selected.iconColor = selectedItemColor

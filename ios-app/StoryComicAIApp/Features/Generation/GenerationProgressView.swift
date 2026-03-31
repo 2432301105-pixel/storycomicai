@@ -8,51 +8,54 @@ struct GenerationProgressView: View {
     @State private var navigateToPaywall: Bool = false
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                Text("Building your preview edition")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColor.textPrimary)
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
 
-                Text("We are planning the first pages, laying out the panels and preparing the book reveal.")
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColor.textSecondary)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                    Text("Building your preview edition")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
 
-                CardContainer(emphasize: true) {
-                    VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                        generationBoard
+                    Text("We are planning the first pages, laying out the panels and preparing the book reveal.")
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textSecondary)
 
-                        ProgressView(value: viewModel.progress, total: 1)
-                            .tint(AppColor.accent)
+                    CardContainer(emphasize: true) {
+                        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                            generationBoard
 
-                        ProgressStepListView(steps: viewModel.steps)
+                            ProgressView(value: viewModel.progress, total: 1)
+                                .tint(AppColor.accent)
+
+                            ProgressStepListView(steps: viewModel.steps)
+                        }
                     }
-                }
 
-                NavigationLink(
-                    destination: PaywallView(
-                        viewModel: PaywallViewModel(
-                            comicPackageService: container.comicPackageService,
-                            analyticsService: container.analyticsService
+                    NavigationLink(
+                        destination: PaywallView(
+                            viewModel: PaywallViewModel(
+                                comicPackageService: container.comicPackageService,
+                                analyticsService: container.analyticsService
+                            ),
+                            flowStore: flowStore,
+                            container: container
                         ),
-                        flowStore: flowStore,
-                        container: container
-                    ),
-                    isActive: $navigateToPaywall
-                ) { EmptyView() }
+                        isActive: $navigateToPaywall
+                    ) { EmptyView() }
 
-                PrimaryButton(title: viewModel.isComplete ? "Continue to reveal" : "Preparing preview", isLoading: !viewModel.isComplete) {
-                    if viewModel.isComplete {
-                        navigateToPaywall = true
+                    PrimaryButton(title: viewModel.isComplete ? "Continue to reveal" : "Preparing preview", isLoading: !viewModel.isComplete) {
+                        if viewModel.isComplete {
+                            navigateToPaywall = true
+                        }
                     }
+                    .disabled(!viewModel.isComplete)
                 }
-                .disabled(!viewModel.isComplete)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.section)
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.xl)
-            .padding(.bottom, AppSpacing.section)
         }
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Generation")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

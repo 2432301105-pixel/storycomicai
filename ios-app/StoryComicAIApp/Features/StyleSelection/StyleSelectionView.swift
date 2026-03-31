@@ -9,29 +9,33 @@ struct StyleSelectionView: View {
     @State private var presentationProjectID: UUID?
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                header
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
 
-                ForEach(StoryStyle.allCases) { style in
-                    Button {
-                        flowStore.selectedStyle = style
-                    } label: {
-                        StyleOptionCard(style: style, isSelected: flowStore.selectedStyle == style)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    header
+
+                    ForEach(StoryStyle.allCases) { style in
+                        Button {
+                            flowStore.selectedStyle = style
+                        } label: {
+                            StyleOptionCard(style: style, isSelected: flowStore.selectedStyle == style)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
-                }
 
-                if let message = viewModel.errorMessage {
-                    Text(message)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.error)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if let message = viewModel.errorMessage {
+                        Text(message)
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColor.error)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.section)
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.xl)
-            .padding(.bottom, AppSpacing.section)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomActionBar
@@ -51,7 +55,6 @@ struct StyleSelectionView: View {
                 ) {}
             }
         }
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Style")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
@@ -62,7 +65,7 @@ struct StyleSelectionView: View {
             Text("Choose The Edition")
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
-            Text("Each style changes the cover language, page tone and final object feel of your comic.")
+            Text("Each style changes the cover language, page tone and final collectible feel of your comic.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
         }
@@ -99,27 +102,15 @@ private struct StyleOptionCard: View {
     var body: some View {
         CardContainer(emphasize: isSelected) {
             HStack(spacing: AppSpacing.md) {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [AppColor.accent(for: style), AppColor.textPrimary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 112, height: 156)
-                    .overlay(alignment: .topLeading) {
-                        Text(style.moodLabel)
-                            .font(AppTypography.meta)
-                            .foregroundStyle(AppColor.textOnDark.opacity(0.84))
-                            .padding(AppSpacing.sm)
-                    }
-                    .overlay(alignment: .bottomLeading) {
-                        Text(style.displayName)
-                            .font(AppTypography.section)
-                            .foregroundStyle(AppColor.textOnDark)
-                            .padding(AppSpacing.sm)
-                    }
+                ComicCoverCard(
+                    title: style.displayName,
+                    subtitle: style.shortSignature,
+                    accent: AppColor.accent(for: style),
+                    eyebrow: style.moodLabel,
+                    badge: isSelected ? "Selected" : "Edition",
+                    emphasize: isSelected
+                )
+                .frame(width: 112)
 
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(style.displayName)

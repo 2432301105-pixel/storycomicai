@@ -8,31 +8,34 @@ struct HeroPreviewView: View {
     @State private var navigateToGeneration: Bool = false
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            content
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
 
-            NavigationLink(
-                destination: GenerationProgressView(
-                    viewModel: GenerationProgressViewModel(),
-                    flowStore: flowStore,
-                    container: container
-                ),
-                isActive: $navigateToGeneration
-            ) { EmptyView() }
+            VStack(spacing: AppSpacing.lg) {
+                content
 
-            if case let .loaded(job) = viewModel.state,
-               job.status == .succeeded {
-                PrimaryButton(title: "Continue to Generation") {
-                    navigateToGeneration = true
+                NavigationLink(
+                    destination: GenerationProgressView(
+                        viewModel: GenerationProgressViewModel(),
+                        flowStore: flowStore,
+                        container: container
+                    ),
+                    isActive: $navigateToGeneration
+                ) { EmptyView() }
+
+                if case let .loaded(job) = viewModel.state,
+                   job.status == .succeeded {
+                    PrimaryButton(title: "Continue to Generation") {
+                        navigateToGeneration = true
+                    }
+
+                    PrimaryButton(title: "Approve Character (Soon)") {}
+                        .disabled(true)
+                        .opacity(0.5)
                 }
-
-                PrimaryButton(title: "Approve Character (Soon)") {}
-                    .disabled(true)
-                    .opacity(0.5)
             }
+            .padding(AppSpacing.lg)
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Hero Preview")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
@@ -57,7 +60,7 @@ struct HeroPreviewView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
         case let .loaded(job):
-            CardContainer {
+            CardContainer(emphasize: true) {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Status: \(job.status.displayTitle)")
                         .font(AppTypography.body)

@@ -5,51 +5,79 @@ struct SignInView: View {
     @EnvironmentObject private var sessionStore: AppSessionStore
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            Spacer()
+        ZStack {
+            EditorialBackground(accent: AppColor.accent, showsDeskBand: false)
 
-            VStack(spacing: AppSpacing.sm) {
-                Text("StoryComicAI")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColor.textPrimary)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Personal Comic Studio")
+                            .font(AppTypography.eyebrow)
+                            .foregroundStyle(AppColor.textTertiary)
+                            .tracking(1.4)
+                            .textCase(.uppercase)
 
-                Text("Sign in to start creating premium personal comics.")
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColor.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal, AppSpacing.lg)
+                        Text("StoryComicAI")
+                            .font(AppTypography.display)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .minimumScaleFactor(0.8)
 
-            CardContainer {
-                VStack(spacing: AppSpacing.sm) {
-                    Text("Apple Identity Token (Dev Input)")
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textSecondary)
+                        Text("Create a premium comic edition where you are the main character, then open it like a finished book.")
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    ComicCoverCard(
+                        title: "Your Story,\nBound As A Book",
+                        subtitle: "Hero preview, premium reveal and export-ready pages.",
+                        accent: AppColor.accent(for: .cinematic),
+                        eyebrow: "Prestige Edition",
+                        badge: "Made For You",
+                        emphasize: true
+                    )
+
+                    CardContainer(emphasize: true) {
+                        VStack(alignment: .leading, spacing: AppSpacing.md) {
+                            Text("Developer Sign In")
+                                .font(AppTypography.section)
+                                .foregroundStyle(AppColor.textPrimary)
+
+                            Text("Use a local Apple token handoff to enter the live comic flow.")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+
+                            VStack(spacing: AppSpacing.sm) {
+                                Text("Apple Identity Token")
+                                    .font(AppTypography.meta)
+                                    .foregroundStyle(AppColor.textTertiary)
+                                    .textCase(.uppercase)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                TextField("identity token", text: $viewModel.identityTokenInput, axis: .vertical)
+                                    .textFieldStyle(.roundedBorder)
+                                    .lineLimit(3)
+                            }
+                        }
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    }
 
-                    TextField("identity token", text: $viewModel.identityTokenInput, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(3)
+                    if let authError = sessionStore.authErrorMessage {
+                        Text(authError)
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColor.error)
+                    }
+
+                    PrimaryButton(title: "Enter Studio", isLoading: sessionStore.isSigningIn) {
+                        Task { await viewModel.signIn() }
+                    }
                 }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xxl)
+                .padding(.bottom, AppSpacing.section)
             }
-            .padding(.horizontal, AppSpacing.lg)
-
-            if let authError = sessionStore.authErrorMessage {
-                Text(authError)
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.error)
-                    .padding(.horizontal, AppSpacing.lg)
-            }
-
-            PrimaryButton(title: "Sign In", isLoading: sessionStore.isSigningIn) {
-                Task { await viewModel.signIn() }
-            }
-            .padding(.horizontal, AppSpacing.lg)
-
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 }
 

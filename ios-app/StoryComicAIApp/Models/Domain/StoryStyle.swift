@@ -43,4 +43,19 @@ enum StoryStyle: String, CaseIterable, Codable, Identifiable {
         case .childrensBook: return "Storybook Edition"
         }
     }
+
+    var shortSignature: String {
+        switch self {
+        case .manga:
+            return "High-contrast speed lines and ink-forward drama."
+        case .western:
+            return "Vintage pulp color with bold collector energy."
+        case .cartoon:
+            return "Expressive shapes and clean animated rhythm."
+        case .cinematic:
+            return "Prestige framing, dramatic light and premium pacing."
+        case .childrensBook:
+            return "Warm storybook softness for giftable keepsakes."
+        }
+    }
 }

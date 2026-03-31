@@ -13,8 +13,7 @@ struct BookRevealView: View {
 
     var body: some View {
         ZStack {
-            revealBackground
-                .ignoresSafeArea()
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: true)
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
@@ -51,23 +50,6 @@ struct BookRevealView: View {
             withAnimation(AppMotion.revealEntry(reduceMotion: reduceMotion)) {
                 hasAnimatedIn = true
             }
-        }
-    }
-
-    private var revealBackground: some View {
-        LinearGradient(
-            colors: [AppColor.backgroundPrimary, AppColor.surfaceMuted],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay(alignment: .bottom) {
-            LinearGradient(
-                colors: [AppColor.deskTopStart, AppColor.deskTopMid, AppColor.deskTopEnd],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .frame(height: 360)
-            .blur(radius: 0.8)
         }
     }
 

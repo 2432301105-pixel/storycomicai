@@ -3,12 +3,16 @@ import SwiftUI
 enum AppColor {
     static let backgroundPrimary = Color(hex: "F5F0E8")
     static let backgroundSecondary = Color(hex: "ECE3D6")
+    static let backgroundCanvas = Color(hex: "F1E8DA")
+    static let backgroundInkWash = Color(hex: "E2D3BE")
     static let surface = Color(hex: "FBF7F0")
     static let surfaceElevated = Color(hex: "FFFDFC")
     static let surfaceMuted = Color(hex: "F0E8DC")
+    static let surfaceInset = Color(hex: "E9DDCC")
     static let pagePaper = Color(hex: "FCF8F2")
     static let border = Color(hex: "D8CDBC")
     static let borderStrong = Color(hex: "BFAE93")
+    static let borderFoil = Color(hex: "C9A86C")
 
     static let deskTopStart = Color(hex: "6B5343")
     static let deskTopMid = Color(hex: "8B6D58")
@@ -17,6 +21,8 @@ enum AppColor {
     static let bookDepthShadow = Color.black.opacity(0.28)
     static let overlayScrim = Color.black.opacity(0.24)
     static let lockedOverlay = Color(hex: "1B1712").opacity(0.62)
+    static let halftoneInk = Color(hex: "6F604F").opacity(0.12)
+    static let spotlight = Color.white.opacity(0.55)
 
     static let textPrimary = Color(hex: "1F1A15")
     static let textSecondary = Color(hex: "5E544A")
@@ -31,6 +37,7 @@ enum AppColor {
 
     static let tabBarBackground = Color(hex: "FBF7F1")
     static let tabBarShadow = Color.black.opacity(0.08)
+    static let tabBarBorder = Color(hex: "D9CCB8")
 
     static func accent(for style: StoryStyle) -> Color {
         switch style {

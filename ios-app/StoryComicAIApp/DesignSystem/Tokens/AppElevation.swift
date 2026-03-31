@@ -7,6 +7,13 @@ enum AppElevation {
         static let shadowYOffset: CGFloat = 8
     }
 
+    enum Cover {
+        static let radius: CGFloat = 24
+        static let shadowRadius: CGFloat = 28
+        static let shadowYOffset: CGFloat = 14
+        static let spineWidth: CGFloat = 18
+    }
+
     enum Book {
         static let revealRadius: CGFloat = 32
         static let revealYOffset: CGFloat = 16

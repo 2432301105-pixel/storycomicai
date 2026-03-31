@@ -8,42 +8,62 @@ struct StoryInputView: View {
     @State private var navigateToStyleSelection: Bool = false
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            CardContainer {
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
+
+            VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Story Prompt")
-                        .font(AppTypography.footnote)
+                    Text("Story Draft")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.4)
+                        .textCase(.uppercase)
+
+                    Text("Write the premise")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    Text("Give the comic its conflict, tone and emotional center. The story planner will turn this into pages and panels.")
+                        .font(AppTypography.body)
                         .foregroundStyle(AppColor.textSecondary)
-
-                    TextEditor(text: $flowStore.storyText)
-                        .frame(minHeight: 180)
-                        .padding(8)
-                        .background(AppColor.backgroundSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-            }
 
-            NavigationLink(
-                destination: StyleSelectionView(
-                    viewModel: StyleSelectionViewModel(projectService: container.projectService),
-                    flowStore: flowStore,
-                    container: container
-                ),
-                isActive: $navigateToStyleSelection
-            ) {
-                EmptyView()
-            }
+                CardContainer(emphasize: true) {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Story Prompt")
+                            .font(AppTypography.meta)
+                            .foregroundStyle(AppColor.textTertiary)
+                            .textCase(.uppercase)
 
-            PrimaryButton(title: "Continue") {
-                if viewModel.isStoryValid(flowStore.storyText) {
-                    navigateToStyleSelection = true
+                        TextEditor(text: $flowStore.storyText)
+                            .frame(minHeight: 220)
+                            .padding(8)
+                            .background(AppColor.backgroundSecondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
                 }
-            }
 
-            Spacer()
+                NavigationLink(
+                    destination: StyleSelectionView(
+                        viewModel: StyleSelectionViewModel(projectService: container.projectService),
+                        flowStore: flowStore,
+                        container: container
+                    ),
+                    isActive: $navigateToStyleSelection
+                ) {
+                    EmptyView()
+                }
+
+                PrimaryButton(title: "Continue") {
+                    if viewModel.isStoryValid(flowStore.storyText) {
+                        navigateToStyleSelection = true
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(AppSpacing.lg)
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Story")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
