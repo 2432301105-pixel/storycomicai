@@ -9,27 +9,15 @@ struct StyleSelectionView: View {
     @State private var presentationProjectID: UUID?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.lg) {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                header
+
                 ForEach(StoryStyle.allCases) { style in
                     Button {
                         flowStore.selectedStyle = style
                     } label: {
-                        CardContainer {
-                            HStack {
-                                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                    Text(style.displayName)
-                                        .font(AppTypography.body)
-                                        .foregroundStyle(AppColor.textPrimary)
-                                    Text("Selected visual language for rendering.")
-                                        .font(AppTypography.footnote)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                }
-                                Spacer()
-                                Image(systemName: flowStore.selectedStyle == style ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(flowStore.selectedStyle == style ? AppColor.success : AppColor.border)
-                            }
-                        }
+                        StyleOptionCard(style: style, isSelected: flowStore.selectedStyle == style)
                     }
                     .buttonStyle(.plain)
                 }
@@ -41,8 +29,9 @@ struct StyleSelectionView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .padding(AppSpacing.lg)
-            .padding(.bottom, AppSpacing.xl)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.xl)
+            .padding(.bottom, AppSpacing.section)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomActionBar
@@ -68,6 +57,17 @@ struct StyleSelectionView: View {
         .toolbar(.hidden, for: .tabBar)
     }
 
+    private var header: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("Choose The Edition")
+                .font(AppTypography.title)
+                .foregroundStyle(AppColor.textPrimary)
+            Text("Each style changes the cover language, page tone and final object feel of your comic.")
+                .font(AppTypography.body)
+                .foregroundStyle(AppColor.textSecondary)
+        }
+    }
+
     private var bottomActionBar: some View {
         VStack(spacing: AppSpacing.sm) {
             PrimaryButton(title: "Generate & Reveal", isLoading: viewModel.isCreatingProject) {
@@ -84,7 +84,66 @@ struct StyleSelectionView: View {
         .padding(.horizontal, AppSpacing.lg)
         .padding(.top, AppSpacing.sm)
         .padding(.bottom, AppSpacing.sm)
-        .background(AppColor.backgroundPrimary)
+        .background(AppColor.tabBarBackground)
+        .overlay(alignment: .top) {
+            Divider()
+                .overlay(AppColor.border)
+        }
+    }
+}
+
+private struct StyleOptionCard: View {
+    let style: StoryStyle
+    let isSelected: Bool
+
+    var body: some View {
+        CardContainer(emphasize: isSelected) {
+            HStack(spacing: AppSpacing.md) {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [AppColor.accent(for: style), AppColor.textPrimary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 112, height: 156)
+                    .overlay(alignment: .topLeading) {
+                        Text(style.moodLabel)
+                            .font(AppTypography.meta)
+                            .foregroundStyle(AppColor.textOnDark.opacity(0.84))
+                            .padding(AppSpacing.sm)
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        Text(style.displayName)
+                            .font(AppTypography.section)
+                            .foregroundStyle(AppColor.textOnDark)
+                            .padding(AppSpacing.sm)
+                    }
+
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(style.displayName)
+                        .font(AppTypography.section)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    Text(style.editorialBlurb)
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer()
+
+                    HStack(spacing: AppSpacing.xs) {
+                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
+                        Text(isSelected ? "Selected for rendering" : "Tap to choose this edition")
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 

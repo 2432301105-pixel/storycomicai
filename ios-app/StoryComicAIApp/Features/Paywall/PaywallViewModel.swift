@@ -129,11 +129,17 @@ final class PaywallViewModel: ObservableObject {
     private static func content(from package: ComicBookPackage) -> Content {
         let plans = plans(from: package.rankedPaywallOffers)
         return Content(
-            headline: package.ctaMetadata.revealHeadline ?? "Unlock Full Story",
-            subheadline: package.ctaMetadata.revealSubheadline ?? "Continue with your personalized comic experience.",
+            headline: package.paywallMetadata.isUnlocked
+                ? (package.ctaMetadata.revealHeadline ?? "Your comic is ready")
+                : "Unlock the full comic",
+            subheadline: package.paywallMetadata.isUnlocked
+                ? (package.ctaMetadata.revealSubheadline ?? "Continue with your personalized comic experience.")
+                : "Your preview is ready. Open the rest of the story and export the finished edition.",
             lockReasonText: package.paywallLockReasonText,
             plans: plans,
-            primaryButtonTitle: package.ctaMetadata.revealPrimaryLabel
+            primaryButtonTitle: package.paywallMetadata.isUnlocked
+                ? package.ctaMetadata.revealPrimaryLabel
+                : "Unlock Full Comic"
         )
     }
 
@@ -155,26 +161,26 @@ final class PaywallViewModel: ObservableObject {
 
     private static func defaultContent() -> Content {
         Content(
-            headline: "Unlock The Full Story",
-            subheadline: "Continue from your free preview and export your comic.",
+            headline: "Unlock the full comic",
+            subheadline: "Continue from your free preview and export the finished edition.",
             lockReasonText: "Free preview pages are complete.",
             plans: [
                 Plan(
                     id: "unlock_full_story",
-                    title: "Unlock Full Story",
+                    title: "Full Comic Access",
                     priceText: "$7.99 USD",
                     isRecommended: true,
-                    badgeLabel: "Best"
+                    badgeLabel: "Best Value"
                 ),
                 Plan(
                     id: "premium_export_addon",
-                    title: "HD Export Add-on",
+                    title: "Export Add-on",
                     priceText: "$2.99 USD",
                     isRecommended: false,
                     badgeLabel: nil
                 )
             ],
-            primaryButtonTitle: "Continue"
+            primaryButtonTitle: "Unlock Full Comic"
         )
     }
 

@@ -11,37 +11,72 @@ struct BookPreviewView: View {
     }
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            ComicPresentationModePicker(
-                selectedMode: coordinator.mode,
-                onSelect: viewModel.switchMode
-            )
+        ZStack {
+            previewBackground
+                .ignoresSafeArea()
 
-            switch coordinator.packageState {
-            case .idle, .loading:
-                LoadingStateView(title: "Opening Book", subtitle: "Preparing pages")
+            VStack(spacing: AppSpacing.lg) {
+                ComicPresentationModePicker(
+                    selectedMode: coordinator.mode,
+                    onSelect: viewModel.switchMode
+                )
+
+                switch coordinator.packageState {
+                case .idle, .loading:
+                    LoadingStateView(title: "Opening the book", subtitle: "Preparing the first spread")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                case let .failed(message):
+                    ErrorStateView(title: "Book preview failed", message: message) {
+                        Task { await coordinator.retry() }
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            case let .failed(message):
-                ErrorStateView(title: "Book Preview Failed", message: message) {
-                    Task { await coordinator.retry() }
+                case let .loaded(package):
+                    loadedView(package: package)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            case let .loaded(package):
-                loadedView(package: package)
             }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.lg)
+            .padding(.bottom, AppSpacing.xl)
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
+    }
+
+    private var previewBackground: some View {
+        LinearGradient(
+            colors: [AppColor.backgroundPrimary, AppColor.surfaceMuted],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .overlay(alignment: .bottom) {
+            LinearGradient(
+                colors: [AppColor.deskTopStart, AppColor.deskTopMid, AppColor.deskTopEnd],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .frame(height: 320)
+        }
     }
 
     @ViewBuilder
     private func loadedView(package: ComicBookPackage) -> some View {
-        VStack(spacing: AppSpacing.md) {
+        let spread = pageSpread(for: package)
+
+        VStack(spacing: AppSpacing.lg) {
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(package.title)
+                    .font(AppTypography.heading)
+                    .foregroundStyle(AppColor.textPrimary)
+                Text(currentSpreadLabel(package: package, spread: spread))
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             GeometryReader { proxy in
                 PageTurnView(
-                    page: coordinator.currentPage,
+                    leftPage: spread.left,
+                    rightPage: spread.right,
                     progress: viewModel.turnProgress,
                     direction: viewModel.turnDirection,
                     reduceMotion: reduceMotion
@@ -71,78 +106,85 @@ struct BookPreviewView: View {
                 )
                 .animation(AppMotion.pageTurn(reduceMotion: reduceMotion), value: coordinator.currentPageIndex)
             }
-            .frame(height: 520)
+            .frame(height: 540)
 
-            if package.isPaywallLocked {
-                CardContainer {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            CardContainer {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    HStack {
+                        Text("Tap page edges or drag to turn")
+                            .font(AppTypography.bodyStrong)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Spacer()
+                        Text("\(coordinator.currentPageIndex + 1) / \(package.pages.count)")
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+
+                    if package.isPaywallLocked {
                         Text(package.paywallLockReasonText)
-                            .font(AppTypography.body)
+                            .font(AppTypography.footnote)
                             .foregroundStyle(AppColor.warning)
-                        if let offer = package.primaryPaywallOffer {
-                            Text("Unlock offer: \(offer.formattedPriceText)")
-                                .font(AppTypography.footnote)
-                                .foregroundStyle(AppColor.textSecondary)
+                    }
+
+                    HStack(spacing: AppSpacing.sm) {
+                        compactButton(title: "Previous", systemImage: "chevron.left", disabled: !coordinator.canGoPrevious) {
+                            coordinator.goToPreviousPage()
+                        }
+                        compactButton(title: "Flat Reader", systemImage: "doc.text.image") {
+                            viewModel.openFlatReader()
+                        }
+                        compactButton(title: package.ctaMetadata.exportLabel, systemImage: "square.and.arrow.up", disabled: package.isPaywallLocked) {
+                            viewModel.openExport()
+                        }
+                        compactButton(title: "Next", systemImage: "chevron.right", disabled: !coordinator.canGoNext) {
+                            coordinator.goToNextPage()
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-            }
-
-            HStack(spacing: AppSpacing.sm) {
-                Button {
-                    coordinator.goToPreviousPage()
-                } label: {
-                    Label("Previous", systemImage: "chevron.left")
-                }
-                .buttonStyle(.bordered)
-                .tint(AppColor.accent)
-                .disabled(!coordinator.canGoPrevious)
-
-                Spacer()
-
-                Text("\(coordinator.currentPageIndex + 1) / \(package.pages.count)")
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                Spacer()
-
-                Button {
-                    coordinator.goToNextPage()
-                } label: {
-                    Label("Next", systemImage: "chevron.right")
-                }
-                .buttonStyle(.bordered)
-                .tint(AppColor.accent)
-                .disabled(!coordinator.canGoNext)
-            }
-
-            HStack(spacing: AppSpacing.sm) {
-                Button("Flat Reader") {
-                    viewModel.openFlatReader()
-                }
-                .buttonStyle(.bordered)
-                .tint(AppColor.accent)
-
-                Button(package.ctaMetadata.exportLabel) {
-                    viewModel.openExport()
-                }
-                .buttonStyle(.bordered)
-                .tint(AppColor.accent)
-                .disabled(package.isPaywallLocked)
-            }
-
-            Text("Sağa dokun veya sola kaydır: sonraki sayfa. Sola dokun veya sağa kaydır: önceki sayfa.")
-                .font(AppTypography.footnote)
-                .foregroundStyle(AppColor.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            if coordinator.isPrefetchingAssets {
-                Text("Optimizing next pages…")
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.textSecondary)
             }
         }
+    }
+
+    private func compactButton(
+        title: String,
+        systemImage: String,
+        disabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(AppTypography.footnote)
+                .foregroundStyle(disabled ? AppColor.textTertiary : AppColor.textPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, AppSpacing.sm)
+                .background(AppColor.surfaceElevated)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(AppColor.border.opacity(0.9), lineWidth: 1)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+    }
+
+    private func pageSpread(for package: ComicBookPackage) -> (left: ComicPresentationPage?, right: ComicPresentationPage?) {
+        guard !package.pages.isEmpty else { return (nil, nil) }
+        let currentIndex = min(max(coordinator.currentPageIndex, 0), package.pages.count - 1)
+        let nextIndex = min(currentIndex + 1, package.pages.count - 1)
+        let rightPage: ComicPresentationPage? = nextIndex == currentIndex ? nil : package.pages[nextIndex]
+        return (package.pages[currentIndex], rightPage)
+    }
+
+    private func currentSpreadLabel(
+        package: ComicBookPackage,
+        spread: (left: ComicPresentationPage?, right: ComicPresentationPage?)
+    ) -> String {
+        let leftValue = spread.left?.pageNumber ?? 0
+        if let rightValue = spread.right?.pageNumber {
+            return "Spread \(leftValue)-\(rightValue) of \(package.pages.count)"
+        }
+        return "Page \(leftValue) of \(package.pages.count)"
     }
 }
 

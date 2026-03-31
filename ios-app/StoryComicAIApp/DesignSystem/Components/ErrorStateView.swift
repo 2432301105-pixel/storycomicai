@@ -6,26 +6,33 @@ struct ErrorStateView: View {
     var retryAction: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 42))
-                .foregroundStyle(AppColor.warning)
+        VStack(spacing: AppSpacing.lg) {
+            Circle()
+                .fill(AppColor.surfaceMuted)
+                .frame(width: 76, height: 76)
+                .overlay {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(AppColor.warning)
+                }
 
-            Text(title)
-                .font(AppTypography.heading)
-                .foregroundStyle(AppColor.textPrimary)
+            VStack(spacing: AppSpacing.xs) {
+                Text(title)
+                    .font(AppTypography.heading)
+                    .foregroundStyle(AppColor.textPrimary)
 
-            Text(message)
-                .font(AppTypography.body)
-                .foregroundStyle(AppColor.textSecondary)
-                .multilineTextAlignment(.center)
+                Text(message)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
 
             if let retryAction {
-                PrimaryButton(title: "Retry", action: retryAction)
-                    .padding(.top, AppSpacing.sm)
+                PrimaryButton(title: "Try Again", action: retryAction)
+                    .frame(maxWidth: 240)
             }
         }
-        .padding(AppSpacing.lg)
+        .padding(AppSpacing.xl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary)
     }

@@ -5,35 +5,49 @@ struct SettingsView: View {
     @EnvironmentObject private var sessionStore: AppSessionStore
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            CardContainer {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text("Session")
-                        .font(AppTypography.body)
+                    Text("Settings")
+                        .font(AppTypography.title)
                         .foregroundStyle(AppColor.textPrimary)
-
-                    Text(sessionStore.isAuthenticated ? "Signed In" : "Signed Out")
-                        .font(AppTypography.footnote)
+                    Text("Account and product preferences for your comic studio.")
+                        .font(AppTypography.body)
                         .foregroundStyle(AppColor.textSecondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
 
-            PrimaryButton(title: "Sign Out", isLoading: viewModel.isSigningOut) {
-                viewModel.signOut(using: sessionStore)
-            }
+                CardContainer {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("Session")
+                            .font(AppTypography.meta)
+                            .foregroundStyle(AppColor.textTertiary)
+                            .textCase(.uppercase)
+                        Text(sessionStore.isAuthenticated ? "Signed In" : "Signed Out")
+                            .font(AppTypography.section)
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
-            Spacer()
+                PrimaryButton(title: "Sign Out", isLoading: viewModel.isSigningOut) {
+                    viewModel.signOut(using: sessionStore)
+                }
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.xl)
+            .padding(.bottom, AppSpacing.section)
         }
-        .padding(AppSpacing.lg)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #if !CI_DISABLE_PREVIEWS
 #Preview {
-    SettingsView(viewModel: SettingsViewModel())
-        .previewContainer()
+    NavigationStack {
+        SettingsView(viewModel: SettingsViewModel())
+    }
+    .previewContainer()
 }
 #endif

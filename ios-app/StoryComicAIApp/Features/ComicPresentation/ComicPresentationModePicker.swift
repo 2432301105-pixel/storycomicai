@@ -6,20 +6,34 @@ struct ComicPresentationModePicker: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Picker("Presentation Mode", selection: binding) {
+        HStack(spacing: AppSpacing.xs) {
             ForEach(ComicPresentationMode.switchableModes) { mode in
-                Text(mode.title).tag(mode)
+                Button {
+                    onSelect(mode)
+                } label: {
+                    Text(mode.title)
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(selectedMode == mode ? AppColor.textPrimary : AppColor.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.sm)
+                        .background {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(selectedMode == mode ? AppColor.surfaceElevated : Color.clear)
+                        }
+                }
+                .buttonStyle(.plain)
             }
         }
-        .pickerStyle(.segmented)
+        .padding(AppSpacing.xs)
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(AppColor.surfaceMuted)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppColor.border.opacity(0.9), lineWidth: 1)
+        }
         .animation(AppMotion.modeSwitch(reduceMotion: reduceMotion), value: selectedMode)
-    }
-
-    private var binding: Binding<ComicPresentationMode> {
-        Binding(
-            get: { selectedMode },
-            set: { onSelect($0) }
-        )
     }
 }
 

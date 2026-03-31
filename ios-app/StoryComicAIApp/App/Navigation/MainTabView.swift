@@ -42,13 +42,13 @@ struct MainTabView: View {
                 SettingsView(viewModel: SettingsViewModel())
             }
             .tabItem {
-                Label("Settings", systemImage: "gear")
+                Label("Settings", systemImage: "gearshape")
             }
             .tag(MainTab.settings)
         }
         .tint(AppColor.accent)
         .toolbarBackground(.visible, for: .tabBar)
-        .toolbarBackground(AppColor.backgroundSecondary, for: .tabBar)
+        .toolbarBackground(AppColor.tabBarBackground, for: .tabBar)
     }
 
     private static var hasConfiguredTabBarAppearance = false
@@ -59,10 +59,10 @@ struct MainTabView: View {
 
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(AppColor.backgroundSecondary)
-        appearance.shadowColor = UIColor(AppColor.border).withAlphaComponent(0.25)
+        appearance.backgroundColor = UIColor(AppColor.tabBarBackground)
+        appearance.shadowColor = UIColor(AppColor.tabBarShadow)
 
-        let normalItemColor = UIColor(AppColor.textSecondary)
+        let normalItemColor = UIColor(AppColor.textTertiary)
         let selectedItemColor = UIColor(AppColor.textPrimary)
         appearance.stackedLayoutAppearance.normal.iconColor = normalItemColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalItemColor]

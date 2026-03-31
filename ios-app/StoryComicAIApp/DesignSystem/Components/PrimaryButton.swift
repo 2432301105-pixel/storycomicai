@@ -14,21 +14,34 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(AppColor.accent)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [AppColor.accentSecondary, AppColor.accent],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(AppColor.borderStrong.opacity(0.55), lineWidth: 1)
+                    )
+                    .shadow(color: AppColor.bookShadow, radius: 16, x: 0, y: 8)
+
                 if isLoading {
                     ProgressView()
-                        .tint(.black)
+                        .tint(AppColor.textPrimary)
                 } else {
                     Text(title)
                         .font(AppTypography.button)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(AppColor.textPrimary)
                 }
             }
-            .frame(height: 50)
+            .frame(height: 54)
         }
         .disabled(isLoading)
         .buttonStyle(.plain)
+        .opacity(isLoading ? 0.9 : 1)
     }
 }
 

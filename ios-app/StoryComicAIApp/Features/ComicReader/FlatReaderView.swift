@@ -3,6 +3,8 @@ import SwiftUI
 struct FlatReaderView: View {
     @ObservedObject var coordinator: ComicPresentationCoordinator
     @StateObject private var viewModel: FlatReaderViewModel
+    @State private var chromeVisible: Bool = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(coordinator: ComicPresentationCoordinator) {
         self.coordinator = coordinator
@@ -10,102 +12,164 @@ struct FlatReaderView: View {
     }
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            ComicPresentationModePicker(
-                selectedMode: coordinator.mode,
-                onSelect: viewModel.switchMode
-            )
+        ZStack {
+            AppColor.backgroundPrimary.ignoresSafeArea()
 
             switch coordinator.packageState {
             case .idle, .loading:
-                LoadingStateView(title: "Loading Reader")
+                LoadingStateView(title: "Loading reader", subtitle: "Preparing your pages")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case let .failed(message):
-                ErrorStateView(title: "Reader Could Not Open", message: message) {
+                ErrorStateView(title: "Reader could not open", message: message) {
                     Task { await coordinator.retry() }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case let .loaded(package):
-                TabView(selection: selectionBinding(pageCount: package.pages.count)) {
-                    ForEach(Array(package.pages.enumerated()), id: \.element.id) { index, page in
-                        CardContainer {
-                            if shouldRenderContent(for: index, currentPage: coordinator.currentPageIndex) {
-                                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                                    Text("Page \(page.pageNumber)")
-                                        .font(AppTypography.footnote)
-                                        .foregroundStyle(AppColor.textSecondary)
-
-                                    Text(page.title)
-                                        .font(AppTypography.heading)
-                                        .foregroundStyle(AppColor.textPrimary)
-
-                                    pageImage(page: page)
-                                        .frame(maxWidth: .infinity, maxHeight: 420)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                                    if let caption = page.caption {
-                                        Text(caption)
-                                            .font(AppTypography.body)
-                                            .foregroundStyle(AppColor.textSecondary)
-                                    }
-                                }
-                            } else {
-                                VStack(spacing: AppSpacing.sm) {
-                                    Text("Page \(page.pageNumber)")
-                                        .font(AppTypography.footnote)
-                                        .foregroundStyle(AppColor.textSecondary)
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(AppColor.backgroundSecondary)
-                                        .frame(maxWidth: .infinity, maxHeight: 420)
-                                        .overlay {
-                                            ProgressView().tint(AppColor.accent)
-                                        }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, AppSpacing.xs)
-                        .tag(index)
-                    }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .always))
-
-                if package.isPaywallLocked {
-                    Text(package.paywallLockReasonText)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.warning)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                Button(package.ctaMetadata.exportLabel) {
-                    viewModel.openExport()
-                }
-                .buttonStyle(.bordered)
-                .tint(AppColor.accent)
-                .disabled(package.isPaywallLocked)
+                loadedView(package: package)
             }
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
+    }
+
+    private func loadedView(package: ComicBookPackage) -> some View {
+        ZStack(alignment: .top) {
+            TabView(selection: selectionBinding(pageCount: package.pages.count)) {
+                ForEach(Array(package.pages.enumerated()), id: \.element.id) { index, page in
+                    readerPage(page: page, index: index, currentPage: coordinator.currentPageIndex)
+                        .tag(index)
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.top, 88)
+                        .padding(.bottom, package.isPaywallLocked ? 140 : 104)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(AppMotion.modeSwitch(reduceMotion: reduceMotion)) {
+                                chromeVisible.toggle()
+                            }
+                        }
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
+            if chromeVisible {
+                VStack(spacing: AppSpacing.md) {
+                    ComicPresentationModePicker(
+                        selectedMode: coordinator.mode,
+                        onSelect: viewModel.switchMode
+                    )
+
+                    HStack {
+                        Text(package.title)
+                            .font(AppTypography.heading)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Spacer()
+                        Text("\(coordinator.currentPageIndex + 1) / \(package.pages.count)")
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.lg)
+                .transition(.opacity)
+            }
+
+            VStack {
+                Spacer()
+
+                if package.isPaywallLocked {
+                    CardContainer(emphasize: true) {
+                        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                            Text(package.paywallLockReasonText)
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.warning)
+                            Text("Unlock to export the finished edition.")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                }
+
+                if chromeVisible {
+                    HStack(spacing: AppSpacing.sm) {
+                        Button {
+                            viewModel.openExport()
+                        } label: {
+                            Label(package.ctaMetadata.exportLabel, systemImage: "square.and.arrow.up")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(package.isPaywallLocked ? AppColor.textTertiary : AppColor.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, AppSpacing.sm)
+                                .background(AppColor.surfaceElevated)
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(AppColor.border.opacity(0.9), lineWidth: 1)
+                                }
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(package.isPaywallLocked)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.bottom, AppSpacing.lg)
+                    .transition(.opacity)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func readerPage(page: ComicPresentationPage, index: Int, currentPage: Int) -> some View {
+        if shouldRenderContent(for: index, currentPage: currentPage) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    Text(page.title)
+                        .font(AppTypography.section)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    OptimizedComicImageView(
+                        thumbnailURL: page.thumbnailURL,
+                        fullImageURL: page.fullImageURL,
+                        strategy: .thumbnailThenFull,
+                        contentMode: .fit,
+                        thumbnailMaxPixelSize: 1_000,
+                        fullMaxPixelSize: 2_200
+                    )
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    if let caption = page.caption {
+                        Text(caption)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(AppSpacing.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AppColor.pagePaper)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(AppColor.border.opacity(0.85), lineWidth: 1)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: AppColor.bookShadow, radius: 14, x: 0, y: 8)
+            }
+        } else {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(AppColor.surfaceMuted)
+                .overlay {
+                    ProgressView()
+                        .tint(AppColor.accent)
+                }
+        }
     }
 
     private func selectionBinding(pageCount: Int) -> Binding<Int> {
         Binding(
             get: { max(0, min(coordinator.currentPageIndex, max(pageCount - 1, 0))) },
             set: { coordinator.setCurrentPageIndex($0) }
-        )
-    }
-
-    @ViewBuilder
-    private func pageImage(page: ComicPresentationPage) -> some View {
-        OptimizedComicImageView(
-            thumbnailURL: page.thumbnailURL,
-            fullImageURL: page.fullImageURL,
-            strategy: .thumbnailThenFull,
-            contentMode: .fill,
-            thumbnailMaxPixelSize: 900,
-            fullMaxPixelSize: 2_200
         )
     }
 
