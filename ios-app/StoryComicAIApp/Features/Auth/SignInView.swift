@@ -76,11 +76,16 @@ struct SignInView: View {
 #if !CI_DISABLE_PREVIEWS
 #Preview {
     let container = AppContainer.preview()
+    let sessionStore = AppSessionStore(
+        authService: container.authService,
+        tokenStore: container.tokenStore,
+        configuration: container.configuration
+    )
     SignInView(
         viewModel: SignInViewModel(
-            sessionStore: AppSessionStore(authService: container.authService, tokenStore: container.tokenStore)
+            sessionStore: sessionStore
         )
     )
-    .previewContainer()
+    .environmentObject(sessionStore)
 }
 #endif

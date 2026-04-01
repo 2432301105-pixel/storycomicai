@@ -127,7 +127,14 @@ struct MainTabView: View {
 
 #if !CI_DISABLE_PREVIEWS
 #Preview {
-    MainTabView(container: .preview())
-        .environmentObject(AppSessionStore(authService: AppContainer.preview().authService, tokenStore: AppContainer.preview().tokenStore))
+    let container = AppContainer.preview()
+    MainTabView(container: container)
+        .environmentObject(
+            AppSessionStore(
+                authService: container.authService,
+                tokenStore: container.tokenStore,
+                configuration: container.configuration
+            )
+        )
 }
 #endif
