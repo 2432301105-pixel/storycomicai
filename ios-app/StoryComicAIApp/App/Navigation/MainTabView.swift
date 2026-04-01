@@ -1,10 +1,26 @@
 import SwiftUI
 import UIKit
 
-enum MainTab: Hashable {
+enum MainTab: Hashable, CaseIterable {
     case home
     case library
     case settings
+
+    var title: String {
+        switch self {
+        case .home: return "Home"
+        case .library: return "Library"
+        case .settings: return "Settings"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .home: return "house"
+        case .library: return "books.vertical"
+        case .settings: return "gearshape"
+        }
+    }
 }
 
 struct MainTabView: View {
@@ -24,9 +40,8 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label("Home", systemImage: "house")
-            }
+            .toolbar(.hidden, for: .tabBar)
+            .tabItem { EmptyView() }
             .tag(MainTab.home)
 
             NavigationStack {
@@ -37,9 +52,8 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label("Library", systemImage: "books.vertical")
-            }
+            .toolbar(.hidden, for: .tabBar)
+            .tabItem { EmptyView() }
             .tag(MainTab.library)
 
             NavigationStack {
@@ -47,16 +61,29 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label("Settings", systemImage: "gearshape")
-            }
+            .toolbar(.hidden, for: .tabBar)
+            .tabItem { EmptyView() }
             .tag(MainTab.settings)
         }
         .tint(AppColor.accent)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
-        .toolbarBackground(.visible, for: .tabBar)
-        .toolbarBackground(AppColor.tabBarBackground, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            PremiumTabBar(selectedTab: selectedTab) { tab in
+                selectedTab = tab
+            }
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.xs)
+            .padding(.bottom, AppSpacing.xs)
+            .background(
+                LinearGradient(
+                    colors: [Color.clear, AppColor.backgroundPrimary.opacity(0.92)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(edges: .bottom)
+            )
+        }
     }
 
     private static var hasConfiguredTabBarAppearance = false
@@ -81,6 +108,7 @@ struct MainTabView: View {
         proxy.standardAppearance = appearance
         proxy.scrollEdgeAppearance = appearance
         proxy.isTranslucent = false
+        proxy.isHidden = true
 
         let navigationAppearance = UINavigationBarAppearance()
         navigationAppearance.configureWithOpaqueBackground()

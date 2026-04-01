@@ -9,39 +9,39 @@ struct StyleSelectionView: View {
     @State private var presentationProjectID: UUID?
 
     var body: some View {
-        ZStack {
-            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
-
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                    header
-
-                    ForEach(StoryStyle.allCases) { style in
-                        Button {
-                            flowStore.selectedStyle = style
-                        } label: {
-                            StyleOptionCard(style: style, isSelected: flowStore.selectedStyle == style)
-                        }
-                        .buttonStyle(.plain)
+        FloatingPanelScreen(accent: AppColor.accentSecondary) {
+            header
+        } content: {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                ForEach(StoryStyle.allCases) { style in
+                    Button {
+                        flowStore.selectedStyle = style
+                    } label: {
+                        StyleOptionCard(style: style, isSelected: flowStore.selectedStyle == style)
                     }
+                    .buttonStyle(.plain)
+                }
 
-                    if let message = viewModel.errorMessage {
-                        Text(message)
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColor.error)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                if let message = viewModel.errorMessage {
+                    Text(message)
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        } footer: {
+            PrimaryButton(title: "Generate & Reveal", isLoading: viewModel.isCreatingProject) {
+                Task {
+                    let success = await viewModel.ensureProjectExists(for: flowStore)
+                    if success, let projectID = flowStore.createdProject?.id {
+                        presentationProjectID = projectID
+                        navigateToPresentation = true
                     }
                 }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.xl)
-                .padding(.bottom, AppSpacing.section)
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomActionBar
+            .disabled(viewModel.isCreatingProject)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationDestination(isPresented: $navigateToPresentation) {
             if let projectID = presentationProjectID {
                 ComicPresentationCoordinatorView(
@@ -70,29 +70,6 @@ struct StyleSelectionView: View {
             Text("Each style changes the cover language, page tone and final collectible feel of your comic.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
-        }
-    }
-
-    private var bottomActionBar: some View {
-        VStack(spacing: AppSpacing.sm) {
-            PrimaryButton(title: "Generate & Reveal", isLoading: viewModel.isCreatingProject) {
-                Task {
-                    let success = await viewModel.ensureProjectExists(for: flowStore)
-                    if success, let projectID = flowStore.createdProject?.id {
-                        presentationProjectID = projectID
-                        navigateToPresentation = true
-                    }
-                }
-            }
-            .disabled(viewModel.isCreatingProject)
-        }
-        .padding(.horizontal, AppSpacing.lg)
-        .padding(.top, AppSpacing.sm)
-        .padding(.bottom, AppSpacing.sm)
-        .background(AppColor.tabBarBackground)
-        .overlay(alignment: .top) {
-            Divider()
-                .overlay(AppColor.border)
         }
     }
 }

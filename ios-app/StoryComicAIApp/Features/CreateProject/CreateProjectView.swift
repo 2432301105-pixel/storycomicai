@@ -8,11 +8,8 @@ struct CreateProjectView: View {
     @State private var navigateToStoryInput: Bool = false
 
     var body: some View {
-        ZStack {
-            EditorialBackground(accent: AppColor.accent, showsDeskBand: false)
-
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        FloatingPanelScreen(accent: AppColor.accent) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Edition Setup")
                         .font(AppTypography.eyebrow)
                         .foregroundStyle(AppColor.textTertiary)
@@ -26,19 +23,20 @@ struct CreateProjectView: View {
                     Text("Give this edition a strong title before you build the story world around it.")
                         .font(AppTypography.body)
                         .foregroundStyle(AppColor.textSecondary)
-                }
+            }
+        } content: {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                Text("Project Name")
+                    .font(AppTypography.meta)
+                    .foregroundStyle(AppColor.textTertiary)
+                    .textCase(.uppercase)
 
-                CardContainer(emphasize: true) {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Project Name")
-                            .font(AppTypography.meta)
-                            .foregroundStyle(AppColor.textTertiary)
-                            .textCase(.uppercase)
+                TextField("Example: Shadow of Istanbul", text: $flowStore.projectName)
+                    .textFieldStyle(.roundedBorder)
 
-                        TextField("Example: Shadow of Istanbul", text: $flowStore.projectName)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                }
+                Text("This title becomes the cover headline of the comic book edition.")
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(AppColor.textSecondary)
 
                 if let validationMessage = viewModel.validationMessage {
                     Text(validationMessage)
@@ -46,30 +44,25 @@ struct CreateProjectView: View {
                         .foregroundStyle(AppColor.warning)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                NavigationLink(
-                    destination: StoryInputView(
-                        viewModel: StoryInputViewModel(),
-                        flowStore: flowStore,
-                        container: container
-                    ),
-                    isActive: $navigateToStoryInput
-                ) {
-                    EmptyView()
-                }
-
-                PrimaryButton(title: "Continue") {
-                    if viewModel.validateProjectName(flowStore.projectName) {
-                        navigateToStoryInput = true
-                    }
-                }
-
-                Spacer()
             }
-            .padding(AppSpacing.lg)
+        } footer: {
+            NavigationLink(
+                destination: StoryInputView(
+                    viewModel: StoryInputViewModel(),
+                    flowStore: flowStore,
+                    container: container
+                ),
+                isActive: $navigateToStoryInput
+            ) {
+                EmptyView()
+            }
+
+            PrimaryButton(title: "Continue") {
+                if viewModel.validateProjectName(flowStore.projectName) {
+                    navigateToStoryInput = true
+                }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Create Project")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

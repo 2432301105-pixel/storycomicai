@@ -9,94 +9,81 @@ struct StoryInputView: View {
     @FocusState private var storyFieldFocused: Bool
 
     var body: some View {
-        ZStack {
-            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
+        FloatingPanelScreen(accent: AppColor.accentSecondary) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text("Story Source")
+                    .font(AppTypography.eyebrow)
+                    .foregroundStyle(AppColor.textTertiary)
+                    .tracking(1.4)
+                    .textCase(.uppercase)
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Story Source")
-                            .font(AppTypography.eyebrow)
+                Text("Tell the story")
+                    .font(AppTypography.title)
+                    .foregroundStyle(AppColor.textPrimary)
+
+                Text("Write the actual story you want turned into a comic book. We use this text to shape scenes, captions, dialogue beats and page flow.")
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColor.textSecondary)
+            }
+        } content: {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                CardContainer {
+                    HStack(spacing: AppSpacing.sm) {
+                        storyStep(title: "Story")
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppColor.textTertiary)
-                            .tracking(1.4)
-                            .textCase(.uppercase)
-
-                        Text("Tell the story")
-                            .font(AppTypography.title)
-                            .foregroundStyle(AppColor.textPrimary)
-
-                        Text("Write the actual story you want turned into a comic book. We use this text to shape scenes, captions, dialogue beats and page flow.")
-                            .font(AppTypography.body)
-                            .foregroundStyle(AppColor.textSecondary)
+                        storyStep(title: "Scenes")
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(AppColor.textTertiary)
+                        storyStep(title: "Panels")
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(AppColor.textTertiary)
+                        storyStep(title: "Comic")
                     }
-
-                    CardContainer {
-                        HStack(spacing: AppSpacing.sm) {
-                            storyStep(title: "Story")
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(AppColor.textTertiary)
-                            storyStep(title: "Scenes")
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(AppColor.textTertiary)
-                            storyStep(title: "Panels")
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(AppColor.textTertiary)
-                            storyStep(title: "Comic")
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    CardContainer(emphasize: true) {
-                        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            Text("Your Story")
-                                .font(AppTypography.meta)
-                                .foregroundStyle(AppColor.textTertiary)
-                                .textCase(.uppercase)
-
-                            TextEditor(text: $flowStore.storyText)
-                                .focused($storyFieldFocused)
-                                .frame(minHeight: 260)
-                                .padding(8)
-                                .background(AppColor.backgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                            Text("Write events, conflict, emotional turns and key moments. This text becomes the comic’s narrative backbone.")
-                                .font(AppTypography.footnote)
-                                .foregroundStyle(AppColor.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-
-                    NavigationLink(
-                        destination: StyleSelectionView(
-                            viewModel: StyleSelectionViewModel(projectService: container.projectService),
-                            flowStore: flowStore,
-                            container: container
-                        ),
-                        isActive: $navigateToStyleSelection
-                    ) {
-                        EmptyView()
-                    }
-
-                    PrimaryButton(title: "Turn this into a comic") {
-                        storyFieldFocused = false
-                        if viewModel.isStoryValid(flowStore.storyText) {
-                            navigateToStyleSelection = true
-                        }
-                    }
-
-                    Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.top, AppSpacing.xl)
-                .padding(.bottom, AppSpacing.section)
+
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Your Story")
+                        .font(AppTypography.meta)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .textCase(.uppercase)
+
+                    TextEditor(text: $flowStore.storyText)
+                        .focused($storyFieldFocused)
+                        .frame(minHeight: 260)
+                        .padding(8)
+                        .background(AppColor.backgroundSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    Text("Write events, conflict, emotional turns and key moments. This text becomes the comic’s narrative backbone.")
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        } footer: {
+            NavigationLink(
+                destination: StyleSelectionView(
+                    viewModel: StyleSelectionViewModel(projectService: container.projectService),
+                    flowStore: flowStore,
+                    container: container
+                ),
+                isActive: $navigateToStyleSelection
+            ) {
+                EmptyView()
+            }
+
+            PrimaryButton(title: "Turn this into a comic") {
+                storyFieldFocused = false
+                if viewModel.isStoryValid(flowStore.storyText) {
+                    navigateToStyleSelection = true
+                }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
     }

@@ -15,6 +15,8 @@ struct HomeView: View {
                     heroCreateCard
                     recentProjectsSection
                 }
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, AppSpacing.lg)
                 .padding(.top, AppSpacing.xl)
                 .padding(.bottom, AppSpacing.section)
@@ -40,11 +42,11 @@ struct HomeView: View {
                 .tracking(1.4)
                 .textCase(.uppercase)
 
-            Text("Your Comic Library,\nPrinted For One")
+            Text("Your personal comic studio")
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
 
-            Text("Build a premium comic edition where you are the main character, then reveal it like a finished collectible book.")
+            Text("Create a premium comic edition, return to your recent books and keep the collection calm and readable.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -55,27 +57,40 @@ struct HomeView: View {
         Button {
             navigateToCreateProject = true
         } label: {
-            ZStack(alignment: .bottomLeading) {
-                ComicCoverCard(
-                    title: "Create A New\nPersonal Edition",
-                    subtitle: "Upload photos, shape the story and reveal the final comic book.",
-                    accent: AppColor.accent(for: .cinematic),
-                    style: .cinematic,
-                    eyebrow: "Studio Launch",
-                    badge: "Start Here",
-                    emphasize: true
-                )
+            CardContainer(emphasize: true) {
+                HStack(alignment: .center, spacing: AppSpacing.lg) {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        Text("Start A New Edition")
+                            .font(AppTypography.heading)
+                            .foregroundStyle(AppColor.textPrimary)
 
-                HStack {
-                    Text("Create your comic")
-                        .font(AppTypography.button)
-                        .foregroundStyle(AppColor.textOnDark)
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppColor.textOnDark)
+                        Text("Upload photos, write the story, choose the visual edition and reveal the finished comic like a bound book.")
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: AppSpacing.xs) {
+                            Text("Create your comic")
+                                .font(AppTypography.button)
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundStyle(AppColor.accent)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    ComicCoverCard(
+                        title: "Personal\nEdition",
+                        subtitle: "Bound for one",
+                        accent: AppColor.accent(for: .cinematic),
+                        style: .cinematic,
+                        eyebrow: "Create",
+                        badge: "New",
+                        emphasize: false
+                    )
+                    .frame(width: 124)
                 }
-                .padding(AppSpacing.lg)
             }
         }
         .buttonStyle(.plain)
@@ -97,10 +112,12 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: AppElevation.Surface.radius, style: .continuous))
 
         case let .loaded(projects):
+            let featuredProjects = Array(projects.prefix(3))
+
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text("Recent Editions")
-                        .font(AppTypography.heading)
+                        .font(AppTypography.section)
                         .foregroundStyle(AppColor.textPrimary)
                     Text("Return to the books already on your desk.")
                         .font(AppTypography.footnote)
@@ -120,17 +137,24 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 } else {
-                    VStack(spacing: AppSpacing.md) {
-                        ForEach(projects.prefix(3)) { project in
-                            NavigationLink {
-                                ProjectDetailView(
-                                    viewModel: ProjectDetailViewModel(project: project),
-                                    container: container
-                                )
-                            } label: {
-                                HomeProjectCard(project: project)
+                    CardContainer {
+                        VStack(spacing: AppSpacing.md) {
+                            ForEach(featuredProjects) { project in
+                                NavigationLink {
+                                    ProjectDetailView(
+                                        viewModel: ProjectDetailViewModel(project: project),
+                                        container: container
+                                    )
+                                } label: {
+                                    HomeProjectCard(project: project)
+                                }
+                                .buttonStyle(.plain)
+
+                                if project.id != featuredProjects.last?.id {
+                                    Divider()
+                                        .overlay(AppColor.border.opacity(0.8))
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -143,48 +167,44 @@ private struct HomeProjectCard: View {
     let project: Project
 
     var body: some View {
-        CardContainer(emphasize: true) {
-            HStack(alignment: .top, spacing: AppSpacing.md) {
-                ComicCoverCard(
-                    title: project.title,
-                    subtitle: project.collectionSubtitle,
-                    accent: AppColor.accent(for: project.style),
-                    style: project.style,
-                    eyebrow: project.style.moodLabel,
-                    badge: project.statusDisplayName,
-                    emphasize: false
-                )
-                .frame(width: 118)
+        HStack(alignment: .center, spacing: AppSpacing.md) {
+            ComicCoverCard(
+                title: project.title,
+                subtitle: nil,
+                accent: AppColor.accent(for: project.style),
+                style: project.style,
+                eyebrow: project.style.moodLabel,
+                badge: project.statusDisplayName,
+                emphasize: false
+            )
+            .frame(width: 94)
 
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text(project.title)
-                        .font(AppTypography.heading)
-                        .foregroundStyle(AppColor.textPrimary)
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(project.title)
+                    .font(AppTypography.bodyStrong)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(2)
 
-                    Text(project.collectionSubtitle)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textSecondary)
+                Text(project.collectionSubtitle)
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(3)
 
-                    Text("Open the reveal, continue reading or export the finished edition.")
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer(minLength: 0)
-
-                    HStack {
-                        Text("Open project")
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColor.accent(for: project.style))
-                        Spacer()
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppColor.accent(for: project.style))
-                    }
-                }
+                Text(project.statusDisplayName)
+                    .font(AppTypography.badge)
+                    .foregroundStyle(AppColor.accent(for: project.style))
+                    .tracking(0.8)
+                    .textCase(.uppercase)
+                    .padding(.top, AppSpacing.xxs)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColor.textTertiary)
         }
+        .padding(.vertical, AppSpacing.xs)
+        .contentShape(Rectangle())
     }
 }
 

@@ -41,21 +41,25 @@ struct LibraryView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             } else {
-                                LazyVGrid(columns: columns, spacing: AppSpacing.lg) {
-                                    ForEach(Array(projects.enumerated()), id: \.element.id) { index, project in
-                                        NavigationLink {
-                                            ProjectDetailView(
-                                                viewModel: ProjectDetailViewModel(project: project),
-                                                container: container
-                                            )
-                                        } label: {
-                                            LibraryProjectCard(project: project, isOffset: index.isMultiple(of: 2) == false)
+                                CardContainer {
+                                    LazyVGrid(columns: columns, spacing: AppSpacing.lg) {
+                                        ForEach(projects) { project in
+                                            NavigationLink {
+                                                ProjectDetailView(
+                                                    viewModel: ProjectDetailViewModel(project: project),
+                                                    container: container
+                                                )
+                                            } label: {
+                                                LibraryProjectCard(project: project)
+                                            }
+                                            .buttonStyle(.plain)
                                         }
-                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
                         }
+                        .frame(maxWidth: 640)
+                        .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.horizontal, AppSpacing.lg)
                         .padding(.top, AppSpacing.xl)
                         .padding(.bottom, AppSpacing.section)
@@ -91,20 +95,18 @@ struct LibraryView: View {
 
 private struct LibraryProjectCard: View {
     let project: Project
-    let isOffset: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             ComicCoverCard(
                 title: project.title,
-                subtitle: project.collectionSubtitle,
+                subtitle: nil,
                 accent: AppColor.accent(for: project.style),
                 style: project.style,
                 eyebrow: project.style.moodLabel,
-                badge: project.statusDisplayName,
-                emphasize: true
+                badge: nil,
+                emphasize: false
             )
-            .offset(y: isOffset ? 10 : 0)
 
             Text(project.title)
                 .font(AppTypography.bodyStrong)
@@ -114,6 +116,12 @@ private struct LibraryProjectCard: View {
             Text(project.collectionSubtitle)
                 .font(AppTypography.footnote)
                 .foregroundStyle(AppColor.textSecondary)
+
+            Text(project.statusDisplayName)
+                .font(AppTypography.badge)
+                .foregroundStyle(AppColor.accent(for: project.style))
+                .tracking(0.8)
+                .textCase(.uppercase)
         }
     }
 }

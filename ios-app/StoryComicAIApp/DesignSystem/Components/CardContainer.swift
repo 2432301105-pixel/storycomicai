@@ -399,6 +399,128 @@ struct ComicCoverCard: View {
     }
 }
 
+struct FloatingPanelScreen<Header: View, Content: View, Footer: View>: View {
+    let accent: Color
+    let showsDeskBand: Bool
+    let header: Header
+    let content: Content
+    let footer: Footer
+
+    init(
+        accent: Color = AppColor.accent,
+        showsDeskBand: Bool = false,
+        @ViewBuilder header: () -> Header,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder footer: () -> Footer
+    ) {
+        self.accent = accent
+        self.showsDeskBand = showsDeskBand
+        self.header = header()
+        self.content = content()
+        self.footer = footer()
+    }
+
+    var body: some View {
+        ZStack {
+            EditorialBackground(accent: accent, showsDeskBand: showsDeskBand)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: AppSpacing.xl) {
+                    Spacer(minLength: AppSpacing.section)
+
+                    CardContainer(emphasize: true) {
+                        VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                            header
+                            content
+                            footer
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxWidth: 560)
+
+                    Spacer(minLength: AppSpacing.section)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.md)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
+    }
+}
+
+struct PremiumTabBar: View {
+    let selectedTab: MainTab
+    let onSelect: (MainTab) -> Void
+
+    var body: some View {
+        HStack(spacing: AppSpacing.xs) {
+            ForEach(MainTab.allCases, id: \.self) { tab in
+                Button {
+                    onSelect(tab)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 15, weight: .semibold))
+
+                        if selectedTab == tab {
+                            Text(tab.title)
+                                .font(AppTypography.footnote)
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                        }
+                    }
+                    .foregroundStyle(selectedTab == tab ? AppColor.textPrimary : AppColor.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, selectedTab == tab ? AppSpacing.sm : AppSpacing.xs)
+                    .padding(.vertical, 14)
+                    .background(
+                        Group {
+                            if selectedTab == tab {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [AppColor.surfaceElevated, AppColor.surfaceMuted.opacity(0.92)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .stroke(AppColor.borderStrong.opacity(0.45), lineWidth: 1)
+                                    )
+                            }
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [AppColor.surfaceElevated.opacity(0.98), AppColor.surface.opacity(0.95)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(AppColor.border.opacity(0.9), lineWidth: 1)
+                )
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(Color.white.opacity(0.5), lineWidth: 0.6)
+                        .blur(radius: 0.4)
+                }
+                .shadow(color: AppColor.bookShadow.opacity(0.9), radius: 20, x: 0, y: 8)
+        )
+        .animation(.easeInOut(duration: 0.18), value: selectedTab)
+    }
+}
+
 struct ComicPageOverlayLayer: View {
     let overlays: [ComicPageTextOverlay]
     let accent: Color
