@@ -28,19 +28,29 @@ struct CardContainer<Content: View>: View {
             .fill(
                 LinearGradient(
                     colors: emphasize
-                        ? [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.92)]
-                        : [AppColor.surface, AppColor.surfaceMuted, AppColor.surfaceInset.opacity(0.72)],
+                        ? [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.82)]
+                        : [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.7)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             .overlay(alignment: .topLeading) {
                 LinearGradient(
-                    colors: [Color.white.opacity(0.42), .clear],
+                    colors: [Color.white.opacity(0.58), .clear],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .clipShape(RoundedRectangle(cornerRadius: AppElevation.Surface.radius, style: .continuous))
+            }
+            .overlay(alignment: .bottomTrailing) {
+                RadialGradient(
+                    colors: [AppColor.accentSecondary.opacity(emphasize ? 0.16 : 0.08), .clear],
+                    center: .center,
+                    startRadius: 4,
+                    endRadius: 110
+                )
+                .frame(width: 180, height: 180)
+                .offset(x: 26, y: 26)
             }
     }
 
@@ -64,30 +74,32 @@ struct EditorialBackground: View {
 
     var body: some View {
         ZStack {
+            AppColor.backgroundPrimary
+
             LinearGradient(
-                colors: [AppColor.backgroundPrimary, AppColor.backgroundCanvas, AppColor.backgroundInkWash.opacity(0.55)],
+                colors: [Color.white.opacity(0.44), .clear, AppColor.backgroundInkWash.opacity(0.18)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
             RadialGradient(
                 colors: [AppColor.spotlight, .clear],
-                center: .topLeading,
-                startRadius: 20,
-                endRadius: 420
+                center: .top,
+                startRadius: 12,
+                endRadius: 520
             )
             .blendMode(.screen)
 
             RadialGradient(
-                colors: [accent.opacity(0.16), .clear],
-                center: .bottomTrailing,
+                colors: [accent.opacity(0.1), .clear],
+                center: .topTrailing,
                 startRadius: 10,
-                endRadius: 380
+                endRadius: 320
             )
 
             HalftoneWash()
                 .blendMode(.multiply)
-                .opacity(0.32)
+                .opacity(0.18)
 
             if showsDeskBand {
                 LinearGradient(
@@ -121,16 +133,16 @@ private struct HalftoneWash: View {
     var body: some View {
         GeometryReader { proxy in
             Canvas { context, size in
-                let step: CGFloat = 18
-                let radius: CGFloat = 1.1
+                let step: CGFloat = 22
+                let radius: CGFloat = 0.9
                 var path = Path()
 
                 stride(from: CGFloat(0), through: size.height, by: step).forEach { y in
                     stride(from: CGFloat(0), through: size.width, by: step).forEach { x in
                         let normalizedY = y / max(size.height, 1)
                         let normalizedX = x / max(size.width, 1)
-                        let intensity = (1 - normalizedY) * 0.55 + normalizedX * 0.12
-                        guard intensity > 0.16 else { return }
+                        let intensity = (1 - normalizedY) * 0.44 + normalizedX * 0.08
+                        guard intensity > 0.18 else { return }
                         let rect = CGRect(x: x, y: y, width: radius * 2, height: radius * 2)
                         path.addEllipse(in: rect)
                     }

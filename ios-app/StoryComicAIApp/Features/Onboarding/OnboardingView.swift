@@ -5,42 +5,63 @@ struct OnboardingView: View {
     let onFinish: () -> Void
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
-            Spacer()
+        ZStack {
+            EditorialBackground(accent: AppColor.accent, showsDeskBand: false)
 
-            TabView(selection: $viewModel.currentIndex) {
-                ForEach(Array(viewModel.pages.enumerated()), id: \.offset) { index, page in
-                    VStack(spacing: AppSpacing.md) {
-                        Image(systemName: page.systemImage)
-                            .font(.system(size: 64))
-                            .foregroundStyle(AppColor.accent)
+            VStack(spacing: AppSpacing.xl) {
+                Spacer()
 
-                        Text(page.title)
-                            .font(AppTypography.title)
-                            .foregroundStyle(AppColor.textPrimary)
-                            .multilineTextAlignment(.center)
+                VStack(spacing: AppSpacing.sm) {
+                    Text("StoryComicAI")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.4)
+                        .textCase(.uppercase)
 
-                        Text(page.subtitle)
-                            .font(AppTypography.body)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .multilineTextAlignment(.center)
+                    Text("A comic book app,\nnot an AI tool.")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
+                        .multilineTextAlignment(.center)
+                }
+
+                CardContainer(emphasize: true) {
+                    TabView(selection: $viewModel.currentIndex) {
+                        ForEach(Array(viewModel.pages.enumerated()), id: \.offset) { index, page in
+                            VStack(spacing: AppSpacing.md) {
+                                Image(systemName: page.systemImage)
+                                    .font(.system(size: 64))
+                                    .foregroundStyle(AppColor.accent)
+
+                                Text(page.title)
+                                    .font(AppTypography.heading)
+                                    .foregroundStyle(AppColor.textPrimary)
+                                    .multilineTextAlignment(.center)
+
+                                Text(page.subtitle)
+                                    .font(AppTypography.body)
+                                    .foregroundStyle(AppColor.textSecondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding(.horizontal, AppSpacing.lg)
+                            .tag(index)
+                        }
                     }
-                    .padding(.horizontal, AppSpacing.lg)
-                    .tag(index)
+                    .tabViewStyle(.page(indexDisplayMode: .always))
+                    .frame(height: 320)
                 }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .frame(height: 360)
 
-            PrimaryButton(title: viewModel.isLastPage ? "Get Started" : "Next") {
-                if viewModel.isLastPage {
-                    onFinish()
-                } else {
-                    viewModel.next()
+                PrimaryButton(title: viewModel.isLastPage ? "Get Started" : "Next") {
+                    if viewModel.isLastPage {
+                        onFinish()
+                    } else {
+                        viewModel.next()
+                    }
                 }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.bottom, AppSpacing.xl)
+
+                Spacer()
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.bottom, AppSpacing.xl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())

@@ -2,14 +2,14 @@ import SwiftUI
 
 enum AppElevation {
     enum Surface {
-        static let radius: CGFloat = 22
-        static let shadowRadius: CGFloat = 18
-        static let shadowYOffset: CGFloat = 8
+        static let radius: CGFloat = 28
+        static let shadowRadius: CGFloat = 24
+        static let shadowYOffset: CGFloat = 10
     }
 
     enum Cover {
-        static let radius: CGFloat = 24
-        static let shadowRadius: CGFloat = 28
+        static let radius: CGFloat = 26
+        static let shadowRadius: CGFloat = 30
         static let shadowYOffset: CGFloat = 14
         static let spineWidth: CGFloat = 18
     }

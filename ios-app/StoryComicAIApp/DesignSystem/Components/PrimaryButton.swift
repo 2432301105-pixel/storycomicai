@@ -14,19 +14,29 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [AppColor.accentSecondary, AppColor.accent],
+                            colors: [AppColor.accentSecondary.opacity(0.96), AppColor.accent],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(AppColor.borderStrong.opacity(0.55), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(AppColor.borderStrong.opacity(0.44), lineWidth: 1)
                     )
-                    .shadow(color: AppColor.bookShadow, radius: 16, x: 0, y: 8)
+                    .overlay(alignment: .top) {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.22), .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                    }
+                    .shadow(color: AppColor.bookShadow, radius: 18, x: 0, y: 10)
 
                 if isLoading {
                     ProgressView()
@@ -37,7 +47,7 @@ struct PrimaryButton: View {
                         .foregroundStyle(AppColor.textPrimary)
                 }
             }
-            .frame(height: 54)
+            .frame(height: 60)
         }
         .disabled(isLoading)
         .buttonStyle(.plain)
