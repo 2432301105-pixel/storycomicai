@@ -11,7 +11,8 @@ struct StoryComicAIApp: App {
         _sessionStore = StateObject(
             wrappedValue: AppSessionStore(
                 authService: resolvedContainer.authService,
-                tokenStore: resolvedContainer.tokenStore
+                tokenStore: resolvedContainer.tokenStore,
+                configuration: resolvedContainer.configuration
             )
         )
     }

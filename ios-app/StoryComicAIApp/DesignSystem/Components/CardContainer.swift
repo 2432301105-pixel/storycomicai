@@ -421,32 +421,37 @@ struct FloatingPanelScreen<Header: View, Content: View, Footer: View>: View {
     }
 
     var body: some View {
-        ZStack {
-            EditorialBackground(accent: accent, showsDeskBand: showsDeskBand)
+        GeometryReader { proxy in
+            ZStack {
+                EditorialBackground(accent: accent, showsDeskBand: showsDeskBand)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: AppSpacing.xl) {
-                    Spacer(minLength: AppSpacing.section)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: AppSpacing.xl) {
+                        Spacer(minLength: AppSpacing.section)
 
-                    CardContainer(emphasize: true) {
-                        VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                            header
-                            content
-                            footer
+                        CardContainer(emphasize: true) {
+                            VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                                header
+                                content
+                                footer
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxWidth: 560)
+                        .frame(maxWidth: 560)
 
-                    Spacer(minLength: AppSpacing.section)
+                        Spacer(minLength: AppSpacing.section)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: proxy.size.height)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.md)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, AppSpacing.md)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        .ignoresSafeArea(.container, edges: .all)
     }
 }
 

@@ -69,7 +69,10 @@ struct AppContainer {
         let configuration = AppConfiguration(
             apiBaseURL: URL(string: "http://localhost:8000")!,
             useMockServices: true,
-            heroPreviewPollingIntervalSeconds: 1
+            heroPreviewPollingIntervalSeconds: 1,
+            launchesDirectlyIntoApp: true,
+            launchIdentityTokenSeed: "preview-launch-user",
+            appleClientID: "com.storycomicai.app"
         )
         return .live(configuration: configuration)
     }
