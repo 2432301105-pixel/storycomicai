@@ -243,10 +243,12 @@ extension ComicBookPackageResponseDTO {
 private extension APIError {
     var isContractFallbackEligible: Bool {
         switch self {
+        case .decoding, .emptyResponseData, .transport:
+            return true
         case let .server(statusCode, _):
-            return statusCode == 501
+            return statusCode == 501 || statusCode == 404
         case let .backend(code, _):
-            return code == "ENDPOINT_NOT_IMPLEMENTED"
+            return code == "ENDPOINT_NOT_IMPLEMENTED" || code == "PROJECT_NOT_FOUND"
         default:
             return false
         }

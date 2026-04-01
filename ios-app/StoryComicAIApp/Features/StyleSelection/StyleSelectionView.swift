@@ -30,7 +30,7 @@ struct StyleSelectionView: View {
                 }
             }
         } footer: {
-            PrimaryButton(title: "Generate & Reveal", isLoading: viewModel.isCreatingProject) {
+            PrimaryButton(title: "Generate Comic", isLoading: viewModel.isCreatingProject) {
                 Task {
                     let success = await viewModel.ensureProjectExists(for: flowStore)
                     if success, let projectID = flowStore.createdProject?.id {
@@ -80,38 +80,44 @@ private struct StyleOptionCard: View {
 
     var body: some View {
         CardContainer(emphasize: isSelected) {
-            HStack(spacing: AppSpacing.md) {
+            HStack(alignment: .top, spacing: AppSpacing.md) {
                 ComicCoverCard(
-                    title: style.displayName,
-                    subtitle: style.shortSignature,
+                    title: style.coverTitle,
+                    subtitle: style.coverSubtitle,
                     accent: AppColor.accent(for: style),
                     style: style,
-                    eyebrow: style.moodLabel,
-                    badge: isSelected ? "Selected" : "Edition",
+                    eyebrow: style.coverEyebrow,
+                    badge: isSelected ? "Selected" : nil,
                     emphasize: isSelected
                 )
-                .frame(width: 112)
+                .frame(width: 94)
 
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                     Text(style.displayName)
-                        .font(AppTypography.section)
+                        .font(AppTypography.heading)
                         .foregroundStyle(AppColor.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
 
                     Text(style.editorialBlurb)
-                        .font(AppTypography.body)
+                        .font(AppTypography.footnote)
                         .foregroundStyle(AppColor.textSecondary)
+                        .lineLimit(4)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer()
+                        .multilineTextAlignment(.leading)
 
                     HStack(spacing: AppSpacing.xs) {
                         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
-                        Text(isSelected ? "Selected for rendering" : "Tap to choose this edition")
+                        Text(isSelected ? "Selected for render" : "Tap to choose")
                             .font(AppTypography.footnote)
                             .foregroundStyle(AppColor.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
+                    .padding(.top, AppSpacing.xs)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

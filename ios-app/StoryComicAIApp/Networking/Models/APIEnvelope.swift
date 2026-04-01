@@ -5,10 +5,11 @@ struct APIEnvelope<T: Decodable>: Decodable {
     let data: T?
     let error: APIEnvelopeError?
 
-    enum CodingKeys: String, CodingKey {
-        case requestID = "requestId"
-        case data
-        case error
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: AnyCodingKey.self)
+        requestID = try container.decodeIfPresent(String.self, forAnyKey: ["requestId", "request_id"]) ?? UUID().uuidString
+        data = try container.decodeIfPresent(T.self, forAnyKey: ["data"])
+        error = try container.decodeIfPresent(APIEnvelopeError.self, forAnyKey: ["error"])
     }
 }
 

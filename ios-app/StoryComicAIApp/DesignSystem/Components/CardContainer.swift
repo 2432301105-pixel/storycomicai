@@ -257,6 +257,8 @@ struct ComicCoverCard: View {
                     .foregroundStyle(AppColor.textOnDark.opacity(0.82))
                     .tracking(1.6)
                     .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
 
                 Spacer(minLength: 0)
 
@@ -264,13 +266,16 @@ struct ComicCoverCard: View {
                     .font(AppTypography.coverTitle)
                     .foregroundStyle(AppColor.textOnDark)
                     .lineLimit(3)
+                    .minimumScaleFactor(0.56)
+                    .allowsTightening(true)
 
                 if let subtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(AppTypography.footnote)
                         .foregroundStyle(AppColor.textOnDark.opacity(0.82))
-                        .lineLimit(3)
+                        .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
+                        .minimumScaleFactor(0.78)
                 }
             }
             .padding(AppSpacing.lg)
@@ -427,25 +432,23 @@ struct FloatingPanelScreen<Header: View, Content: View, Footer: View>: View {
                     .frame(width: proxy.size.width, height: proxy.size.height)
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: AppSpacing.xl) {
-                        Spacer(minLength: AppSpacing.section)
+                    VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                        header
 
                         CardContainer(emphasize: true) {
-                            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                                header
-                                content
-                                footer
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            content
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: 560)
 
-                        Spacer(minLength: AppSpacing.section)
+                        footer
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: proxy.size.height)
+                    .frame(maxWidth: 620)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, max(proxy.safeAreaInsets.top + AppSpacing.lg, AppSpacing.section))
+                    .padding(.bottom, proxy.safeAreaInsets.bottom + AppSpacing.section)
                     .padding(.horizontal, AppSpacing.lg)
-                    .padding(.vertical, AppSpacing.md)
+                    .frame(minHeight: proxy.size.height, alignment: .top)
                 }
             }
         }

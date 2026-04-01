@@ -40,8 +40,9 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .toolbar(.hidden, for: .tabBar)
-            .tabItem { EmptyView() }
+            .tabItem {
+                Label(MainTab.home.title, systemImage: MainTab.home.systemImage)
+            }
             .tag(MainTab.home)
 
             NavigationStack {
@@ -52,8 +53,9 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .toolbar(.hidden, for: .tabBar)
-            .tabItem { EmptyView() }
+            .tabItem {
+                Label(MainTab.library.title, systemImage: MainTab.library.systemImage)
+            }
             .tag(MainTab.library)
 
             NavigationStack {
@@ -61,29 +63,14 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .toolbar(.hidden, for: .tabBar)
-            .tabItem { EmptyView() }
+            .tabItem {
+                Label(MainTab.settings.title, systemImage: MainTab.settings.systemImage)
+            }
             .tag(MainTab.settings)
         }
         .tint(AppColor.accent)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            PremiumTabBar(selectedTab: selectedTab) { tab in
-                selectedTab = tab
-            }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.xs)
-            .padding(.bottom, AppSpacing.xs)
-            .background(
-                LinearGradient(
-                    colors: [Color.clear, AppColor.backgroundPrimary.opacity(0.92)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea(edges: .bottom)
-            )
-        }
     }
 
     private static var hasConfiguredTabBarAppearance = false
@@ -96,19 +83,27 @@ struct MainTabView: View {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(AppColor.tabBarBackground)
         appearance.shadowColor = UIColor(AppColor.tabBarBorder)
+        appearance.stackedLayoutAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
+        appearance.stackedLayoutAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
 
         let normalItemColor = UIColor(AppColor.textTertiary)
         let selectedItemColor = UIColor(AppColor.accent)
         appearance.stackedLayoutAppearance.normal.iconColor = normalItemColor
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalItemColor]
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: normalItemColor,
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
+        ]
         appearance.stackedLayoutAppearance.selected.iconColor = selectedItemColor
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedItemColor]
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: selectedItemColor,
+            .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
+        ]
 
         let proxy = UITabBar.appearance()
         proxy.standardAppearance = appearance
         proxy.scrollEdgeAppearance = appearance
         proxy.isTranslucent = false
-        proxy.isHidden = true
+        proxy.isHidden = false
 
         let navigationAppearance = UINavigationBarAppearance()
         navigationAppearance.configureWithOpaqueBackground()

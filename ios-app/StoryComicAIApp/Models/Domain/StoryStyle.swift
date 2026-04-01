@@ -79,4 +79,49 @@ enum StoryStyle: String, CaseIterable, Codable, Identifiable {
             return "Warm storybook softness for giftable keepsakes."
         }
     }
+
+    var coverTitle: String {
+        switch self {
+        case .manga:
+            return "Manga"
+        case .western:
+            return "Western"
+        case .cartoon:
+            return "Cartoon"
+        case .cinematic:
+            return "Cinema"
+        case .childrensBook:
+            return "Storybook"
+        }
+    }
+
+    var coverSubtitle: String {
+        switch self {
+        case .manga:
+            return "Ink drama"
+        case .western:
+            return "Collector pulp"
+        case .cartoon:
+            return "Clean shapes"
+        case .cinematic:
+            return "Prestige pace"
+        case .childrensBook:
+            return "Warm keepsake"
+        }
+    }
+
+    var coverEyebrow: String {
+        switch self {
+        case .manga:
+            return "Ink"
+        case .western:
+            return "Issue"
+        case .cartoon:
+            return "Edition"
+        case .cinematic:
+            return "Prestige"
+        case .childrensBook:
+            return "Story"
+        }
+    }
 }
