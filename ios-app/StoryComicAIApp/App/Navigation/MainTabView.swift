@@ -22,6 +22,8 @@ struct MainTabView: View {
             NavigationStack {
                 HomeView(viewModel: HomeViewModel(projectService: container.projectService), container: container)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(AppColor.backgroundPrimary.ignoresSafeArea())
             .tabItem {
                 Label("Home", systemImage: "house")
             }
@@ -33,6 +35,8 @@ struct MainTabView: View {
                     container: container
                 )
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(AppColor.backgroundPrimary.ignoresSafeArea())
             .tabItem {
                 Label("Library", systemImage: "books.vertical")
             }
@@ -41,6 +45,8 @@ struct MainTabView: View {
             NavigationStack {
                 SettingsView(viewModel: SettingsViewModel())
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(AppColor.backgroundPrimary.ignoresSafeArea())
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
             }
@@ -48,6 +54,7 @@ struct MainTabView: View {
         }
         .tint(AppColor.accent)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .toolbarBackground(.visible, for: .tabBar)
         .toolbarBackground(AppColor.tabBarBackground, for: .tabBar)
     }
@@ -74,6 +81,19 @@ struct MainTabView: View {
         proxy.standardAppearance = appearance
         proxy.scrollEdgeAppearance = appearance
         proxy.isTranslucent = false
+
+        let navigationAppearance = UINavigationBarAppearance()
+        navigationAppearance.configureWithOpaqueBackground()
+        navigationAppearance.backgroundColor = UIColor(AppColor.backgroundPrimary)
+        navigationAppearance.shadowColor = UIColor(AppColor.border.opacity(0.22))
+        navigationAppearance.titleTextAttributes = [.foregroundColor: UIColor(AppColor.textPrimary)]
+        navigationAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor(AppColor.textPrimary)]
+
+        let navigationProxy = UINavigationBar.appearance()
+        navigationProxy.standardAppearance = navigationAppearance
+        navigationProxy.scrollEdgeAppearance = navigationAppearance
+        navigationProxy.compactAppearance = navigationAppearance
+        navigationProxy.tintColor = UIColor(AppColor.textPrimary)
     }
 }
 

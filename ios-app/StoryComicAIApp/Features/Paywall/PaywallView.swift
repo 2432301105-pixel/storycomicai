@@ -8,56 +8,78 @@ struct PaywallView: View {
     @State private var navigateToViewer: Bool = false
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                switch viewModel.state {
-                case .idle, .loading:
-                    LoadingStateView(title: "Preparing unlock options", subtitle: "Staging the rest of your story")
+        ZStack {
+            EditorialBackground(accent: AppColor.accent(for: flowStore.selectedStyle), showsDeskBand: true)
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                    switch viewModel.state {
+                    case .idle, .loading:
+                        LoadingStateView(title: "Preparing unlock options", subtitle: "Staging the rest of your story")
+                            .frame(height: 420)
+
+                    case let .failed(message):
+                        ErrorStateView(title: "Paywall not available", message: message) {
+                            viewModel.retry(projectID: presentationProjectID)
+                        }
                         .frame(height: 420)
 
-                case let .failed(message):
-                    ErrorStateView(title: "Paywall not available", message: message) {
-                        viewModel.retry(projectID: presentationProjectID)
+                    case let .loaded(content):
+                        loadedContent(content: content)
                     }
-                    .frame(height: 420)
-
-                case let .loaded(content):
-                    loadedContent(content: content)
                 }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.section)
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.xl)
-            .padding(.bottom, AppSpacing.section)
         }
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle("Unlock")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             viewModel.onAppear(projectID: presentationProjectID)
         }
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
     @ViewBuilder
     private func loadedContent(content: PaywallViewModel.Content) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.xl) {
-            lockedPreview
-
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text("Collector Unlock")
+                    .font(AppTypography.eyebrow)
+                    .foregroundStyle(AppColor.textTertiary)
+                    .tracking(1.3)
+                    .textCase(.uppercase)
+
                 Text(content.headline)
                     .font(AppTypography.title)
                     .foregroundStyle(AppColor.textPrimary)
+
                 Text(content.subheadline)
                     .font(AppTypography.body)
                     .foregroundStyle(AppColor.textSecondary)
             }
 
-            CardContainer {
-                Text(content.lockReasonText)
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.warning)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            lockedPreview
+
+            CardContainer(emphasize: true) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Your preview edition is staged. Unlocking opens the remaining pages, keeps export available and preserves the full collector version.")
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    Text(content.lockReasonText)
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.warning)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+
+            Text("Choose your edition")
+                .font(AppTypography.heading)
+                .foregroundStyle(AppColor.textPrimary)
 
             VStack(spacing: AppSpacing.md) {
                 ForEach(content.plans) { plan in
@@ -81,6 +103,9 @@ struct PaywallView: View {
                                         .foregroundStyle(AppColor.textPrimary)
                                     Text(plan.priceText)
                                         .font(AppTypography.body)
+                                        .foregroundStyle(AppColor.textSecondary)
+                                    Text("Complete comic access, collectible reveal and export-ready delivery.")
+                                        .font(AppTypography.footnote)
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
 
@@ -127,41 +152,46 @@ struct PaywallView: View {
     }
 
     private var lockedPreview: some View {
-        RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [AppColor.accent(for: flowStore.selectedStyle).opacity(0.94), AppColor.textPrimary],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+        ComicCoverCard(
+            title: flowStore.projectName.isEmpty ? "Your comic continues here" : flowStore.projectName,
+            subtitle: "Page 4 onward is staged behind the collector unlock.",
+            accent: AppColor.accent(for: flowStore.selectedStyle),
+            style: flowStore.selectedStyle,
+            eyebrow: flowStore.selectedStyle.moodLabel,
+            badge: "Preview Locked",
+            emphasize: true
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: AppElevation.Cover.radius, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [AppColor.lockedOverlay.opacity(0.1), AppColor.lockedOverlay],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
-            )
-            .frame(height: 260)
-            .overlay {
-                AppColor.lockedOverlay
-                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-            }
-            .overlay(alignment: .bottomLeading) {
+        }
+        .overlay(alignment: .bottomLeading) {
+            ZStack(alignment: .bottomLeading) {
+                LinearGradient(
+                    colors: [.clear, Color.black.opacity(0.44)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(flowStore.projectName.isEmpty ? "Your comic continues here" : flowStore.projectName)
+                    Text("Your story continues on page 4")
                         .font(AppTypography.heading)
                         .foregroundStyle(AppColor.textOnDark)
-                    Text("Read the rest of the story, unlock export and keep the finished edition.")
+                    Text("Unlock the full edition to open the book, keep export active and read every scene.")
                         .font(AppTypography.body)
                         .foregroundStyle(AppColor.textOnDark.opacity(0.82))
                 }
                 .padding(AppSpacing.lg)
             }
-            .overlay(alignment: .topLeading) {
-                Text("Preview locked")
-                    .font(AppTypography.meta)
-                    .foregroundStyle(AppColor.textOnDark)
-                    .padding(.horizontal, AppSpacing.sm)
-                    .padding(.vertical, AppSpacing.xs)
-                    .background(Color.black.opacity(0.22))
-                    .clipShape(Capsule())
-                    .padding(AppSpacing.lg)
-            }
-            .shadow(color: AppColor.bookShadow, radius: 24, x: 0, y: 14)
+            .clipShape(RoundedRectangle(cornerRadius: AppElevation.Cover.radius, style: .continuous))
+        }
+        .shadow(color: AppColor.bookShadow, radius: 24, x: 0, y: 14)
     }
 
     private var presentationProjectID: UUID? {

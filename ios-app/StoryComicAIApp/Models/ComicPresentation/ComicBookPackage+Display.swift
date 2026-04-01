@@ -65,7 +65,8 @@ extension ComicBookPackage {
                 title: page.title,
                 caption: caption,
                 thumbnailURL: page.thumbnailURL,
-                fullImageURL: page.fullImageURL
+                fullImageURL: page.fullImageURL,
+                overlays: page.overlays
             )
         }
 

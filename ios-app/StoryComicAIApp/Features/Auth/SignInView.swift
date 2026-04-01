@@ -32,6 +32,7 @@ struct SignInView: View {
                         title: "Your Story,\nBound As A Book",
                         subtitle: "Hero preview, premium reveal and export-ready pages.",
                         accent: AppColor.accent(for: .cinematic),
+                        style: .cinematic,
                         eyebrow: "Prestige Edition",
                         badge: "Made For You",
                         emphasize: true

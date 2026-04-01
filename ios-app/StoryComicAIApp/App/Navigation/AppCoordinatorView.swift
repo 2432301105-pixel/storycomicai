@@ -5,15 +5,19 @@ struct AppCoordinatorView: View {
     @EnvironmentObject private var sessionStore: AppSessionStore
 
     var body: some View {
-        Group {
-            if !sessionStore.hasCompletedOnboarding {
-                OnboardingView(viewModel: OnboardingViewModel()) {
-                    sessionStore.completeOnboarding()
+        ZStack {
+            AppColor.backgroundPrimary.ignoresSafeArea()
+
+            Group {
+                if !sessionStore.hasCompletedOnboarding {
+                    OnboardingView(viewModel: OnboardingViewModel()) {
+                        sessionStore.completeOnboarding()
+                    }
+                } else if !sessionStore.isAuthenticated {
+                    SignInView(viewModel: SignInViewModel(sessionStore: sessionStore))
+                } else {
+                    MainTabView(container: container)
                 }
-            } else if !sessionStore.isAuthenticated {
-                SignInView(viewModel: SignInViewModel(sessionStore: sessionStore))
-            } else {
-                MainTabView(container: container)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

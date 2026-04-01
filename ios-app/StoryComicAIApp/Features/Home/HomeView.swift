@@ -60,6 +60,7 @@ struct HomeView: View {
                     title: "Create A New\nPersonal Edition",
                     subtitle: "Upload photos, shape the story and reveal the final comic book.",
                     accent: AppColor.accent(for: .cinematic),
+                    style: .cinematic,
                     eyebrow: "Studio Launch",
                     badge: "Start Here",
                     emphasize: true
@@ -148,6 +149,7 @@ private struct HomeProjectCard: View {
                     title: project.title,
                     subtitle: project.collectionSubtitle,
                     accent: AppColor.accent(for: project.style),
+                    style: project.style,
                     eyebrow: project.style.moodLabel,
                     badge: project.statusDisplayName,
                     emphasize: false

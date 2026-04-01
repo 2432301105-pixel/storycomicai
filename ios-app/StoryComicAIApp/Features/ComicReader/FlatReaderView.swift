@@ -30,13 +30,23 @@ struct FlatReaderView: View {
                 loadedView(package: package)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
     private func loadedView(package: ComicBookPackage) -> some View {
-        ZStack(alignment: .top) {
+        let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
+        let accent = AppColor.accent(for: style)
+
+        return ZStack(alignment: .top) {
             TabView(selection: selectionBinding(pageCount: package.pages.count)) {
                 ForEach(Array(package.pages.enumerated()), id: \.element.id) { index, page in
-                    readerPage(page: page, index: index, currentPage: coordinator.currentPageIndex)
+                    readerPage(
+                        page: page,
+                        index: index,
+                        currentPage: coordinator.currentPageIndex,
+                        accent: accent
+                    )
                         .tag(index)
                         .padding(.horizontal, AppSpacing.lg)
                         .padding(.top, 88)
@@ -120,7 +130,12 @@ struct FlatReaderView: View {
     }
 
     @ViewBuilder
-    private func readerPage(page: ComicPresentationPage, index: Int, currentPage: Int) -> some View {
+    private func readerPage(
+        page: ComicPresentationPage,
+        index: Int,
+        currentPage: Int,
+        accent: Color
+    ) -> some View {
         if shouldRenderContent(for: index, currentPage: currentPage) {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -128,15 +143,26 @@ struct FlatReaderView: View {
                         .font(AppTypography.section)
                         .foregroundStyle(AppColor.textPrimary)
 
-                    OptimizedComicImageView(
-                        thumbnailURL: page.thumbnailURL,
-                        fullImageURL: page.fullImageURL,
-                        strategy: .thumbnailThenFull,
-                        contentMode: .fit,
-                        thumbnailMaxPixelSize: 1_000,
-                        fullMaxPixelSize: 2_200
-                    )
+                    ZStack {
+                        OptimizedComicImageView(
+                            thumbnailURL: page.thumbnailURL,
+                            fullImageURL: page.fullImageURL,
+                            strategy: .thumbnailThenFull,
+                            contentMode: .fit,
+                            thumbnailMaxPixelSize: 1_000,
+                            fullMaxPixelSize: 2_200
+                        )
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                        ComicPageOverlayLayer(overlays: page.overlays, accent: accent)
+                            .padding(10)
+                    }
                     .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(AppColor.surfaceMuted.opacity(0.45))
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     if let caption = page.caption {

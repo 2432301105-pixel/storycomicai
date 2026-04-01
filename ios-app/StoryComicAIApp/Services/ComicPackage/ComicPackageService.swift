@@ -80,18 +80,20 @@ final class MockComicPackageService: ComicPackageService {
 
 extension ComicBookPackageResponseDTO {
     func toDomain(source: ComicPackageSource) -> ComicBookPackage {
-        let defaultPackage = MockFixtures.sampleComicBookPackage(projectID: projectID, source: source)
+        let fallbackStyle = styleLabel.flatMap(StoryStyle.init(displayLabel:)) ?? .cinematic
+        let defaultPackage = MockFixtures.sampleComicBookPackage(projectID: projectID, style: fallbackStyle, source: source)
 
         let mappedPages: [ComicPresentationPage] = pages.isEmpty
             ? defaultPackage.pages
-            : pages.map { page in
+            : pages.enumerated().map { index, page in
                 ComicPresentationPage(
                     id: page.id,
                     pageNumber: page.pageNumber,
                     title: page.title,
                     caption: page.caption,
                     thumbnailURL: page.thumbnailURL,
-                    fullImageURL: page.fullImageURL
+                    fullImageURL: page.fullImageURL,
+                    overlays: defaultPackage.pages[safe: index]?.overlays ?? []
                 )
             }
 
@@ -268,5 +270,12 @@ private extension String {
     var trimmedNonEmpty: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
     }
 }

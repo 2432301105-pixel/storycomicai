@@ -51,10 +51,14 @@ struct BookRevealView: View {
                 hasAnimatedIn = true
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
     private func loadedView(package: ComicBookPackage) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xl) {
+        let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
+
+        return VStack(alignment: .leading, spacing: AppSpacing.xl) {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 Text(package.legacyRevealMetadata?.personalizationTag ?? "Personal Edition")
                     .font(AppTypography.eyebrow)
@@ -80,7 +84,7 @@ struct BookRevealView: View {
                     .blur(radius: 18)
                     .offset(y: 36)
 
-                bookObject(package: package)
+                bookObject(package: package, style: style)
                     .scaleEffect(hasAnimatedIn ? 1 : 0.95)
                     .rotationEffect(.degrees(hasAnimatedIn ? -4 : -8))
                     .offset(y: hasAnimatedIn ? 0 : 20)
@@ -125,12 +129,12 @@ struct BookRevealView: View {
         }
     }
 
-    private func bookObject(package: ComicBookPackage) -> some View {
+    private func bookObject(package: ComicBookPackage, style: StoryStyle) -> some View {
         ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: AppElevation.Book.coverCorner, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [AppColor.accent(for: package.styleLabel).opacity(0.95), AppColor.textPrimary],
+                        colors: [AppColor.accent(for: style).opacity(0.95), AppColor.textPrimary],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -145,6 +149,10 @@ struct BookRevealView: View {
             RoundedRectangle(cornerRadius: AppElevation.Book.coverCorner, style: .continuous)
                 .stroke(Color.white.opacity(0.16), lineWidth: 1)
 
+            styleCoverPattern(style: style)
+                .opacity(0.36)
+                .clipShape(RoundedRectangle(cornerRadius: AppElevation.Book.coverCorner, style: .continuous))
+
             Rectangle()
                 .fill(Color.white.opacity(0.1))
                 .frame(width: 20)
@@ -158,6 +166,22 @@ struct BookRevealView: View {
                 )
 
             VStack(alignment: .leading, spacing: AppSpacing.md) {
+                HStack {
+                    Text(style.moodLabel)
+                        .font(AppTypography.badge)
+                        .foregroundStyle(AppColor.textOnDark.opacity(0.84))
+                        .tracking(1.0)
+                        .padding(.horizontal, AppSpacing.sm)
+                        .padding(.vertical, AppSpacing.xs)
+                        .background(Color.black.opacity(0.18))
+                        .clipShape(Capsule())
+                    Spacer()
+                    Text("NO. 0042")
+                        .font(AppTypography.badge)
+                        .foregroundStyle(AppColor.textOnDark.opacity(0.72))
+                        .tracking(1.1)
+                }
+
                 coverImage(url: package.cover.imageURL)
                     .frame(height: 230)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -230,6 +254,62 @@ struct BookRevealView: View {
             fullMaxPixelSize: 1_100,
             placeholderSystemImageName: "book.closed.fill"
         )
+    }
+
+    @ViewBuilder
+    private func styleCoverPattern(style: StoryStyle) -> some View {
+        GeometryReader { proxy in
+            ZStack {
+                switch style {
+                case .manga:
+                    ForEach(0..<7, id: \.self) { index in
+                        Capsule(style: .continuous)
+                            .fill(Color.white.opacity(index.isMultiple(of: 2) ? 0.08 : 0.14))
+                            .frame(width: proxy.size.width * 0.92, height: 12)
+                            .rotationEffect(.degrees(-34))
+                            .offset(x: proxy.size.width * 0.18, y: proxy.size.height * (0.14 + Double(index) * 0.08))
+                    }
+                case .western:
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: proxy.size.width * 0.6)
+                        .offset(x: proxy.size.width * 0.12, y: -proxy.size.height * 0.08)
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .frame(width: proxy.size.width * 0.82, height: proxy.size.height * 0.26)
+                        .rotationEffect(.degrees(-10))
+                        .offset(y: proxy.size.height * 0.44)
+                case .cartoon:
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: proxy.size.width * 0.42)
+                        .offset(x: proxy.size.width * 0.14, y: -proxy.size.height * 0.06)
+                    Circle()
+                        .fill(Color.white.opacity(0.09))
+                        .frame(width: proxy.size.width * 0.24)
+                        .offset(x: -proxy.size.width * 0.08, y: proxy.size.height * 0.18)
+                case .cinematic:
+                    Circle()
+                        .fill(Color.white.opacity(0.14))
+                        .frame(width: proxy.size.width * 0.64)
+                        .offset(x: proxy.size.width * 0.16, y: -proxy.size.height * 0.16)
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: proxy.size.width * 0.86, height: 28)
+                        .rotationEffect(.degrees(-28))
+                        .offset(x: proxy.size.width * 0.16, y: proxy.size.height * 0.22)
+                case .childrensBook:
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: proxy.size.width * 0.36)
+                        .offset(x: proxy.size.width * 0.16, y: -proxy.size.height * 0.08)
+                    Capsule(style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: proxy.size.width * 0.62, height: 24)
+                        .offset(x: proxy.size.width * 0.12, y: proxy.size.height * 0.52)
+                }
+            }
+        }
     }
 }
 

@@ -39,11 +39,14 @@ struct BookPreviewView: View {
             .padding(.top, AppSpacing.lg)
             .padding(.bottom, AppSpacing.xl)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
     @ViewBuilder
     private func loadedView(package: ComicBookPackage) -> some View {
         let spread = pageSpread(for: package)
+        let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
 
         VStack(spacing: AppSpacing.lg) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -60,6 +63,7 @@ struct BookPreviewView: View {
                 PageTurnView(
                     leftPage: spread.left,
                     rightPage: spread.right,
+                    accent: AppColor.accent(for: style),
                     progress: viewModel.turnProgress,
                     direction: viewModel.turnDirection,
                     reduceMotion: reduceMotion

@@ -52,19 +52,21 @@ enum MockFixtures {
 
     static func sampleComicBookPackage(
         projectID: UUID,
+        style: StoryStyle = .cinematic,
         source: ComicPackageSource = .mock
     ) -> ComicBookPackage {
-        let title = "Shadow Protocol"
-        let subtitle = "A personalized night-runner saga"
+        let title = coverTitle(for: style)
+        let subtitle = coverSubtitle(for: style)
         let pageCount = 10
         let pages: [ComicPresentationPage] = (1...pageCount).map { pageNumber in
             ComicPresentationPage(
                 id: UUID(),
                 pageNumber: pageNumber,
                 title: pageNumber == 1 ? "Cover" : "Chapter \(pageNumber - 1)",
-                caption: "Generated scene \(pageNumber) with personalized hero identity.",
+                caption: pageCaption(for: pageNumber, style: style),
                 thumbnailURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/thumb-\(pageNumber).jpg"),
-                fullImageURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/full-\(pageNumber).jpg")
+                fullImageURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/full-\(pageNumber).jpg"),
+                overlays: pageOverlays(for: pageNumber, style: style)
             )
         }
 
@@ -72,7 +74,7 @@ enum MockFixtures {
             projectID: projectID,
             title: title,
             subtitle: subtitle,
-            styleLabel: StoryStyle.manga.displayName,
+            styleLabel: style.displayName,
             cover: ComicBookCover(
                 imageURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/cover.jpg"),
                 titleText: title,
@@ -122,5 +124,171 @@ enum MockFixtures {
             ),
             source: source
         )
+    }
+
+    private static func coverTitle(for style: StoryStyle) -> String {
+        switch style {
+        case .manga:
+            return "Night Runner"
+        case .western:
+            return "Dust & Thunder"
+        case .cartoon:
+            return "City of Giggles"
+        case .cinematic:
+            return "Shadow Protocol"
+        case .childrensBook:
+            return "Moonlight Parade"
+        }
+    }
+
+    private static func coverSubtitle(for style: StoryStyle) -> String {
+        switch style {
+        case .manga:
+            return "An ink-forward personalized hero edition"
+        case .western:
+            return "A collector issue drawn from your own story"
+        case .cartoon:
+            return "A bright, animated adventure starring you"
+        case .cinematic:
+            return "A personalized prestige-cover comic edition"
+        case .childrensBook:
+            return "A keepsake storybook built around your hero"
+        }
+    }
+
+    private static func pageCaption(for pageNumber: Int, style: StoryStyle) -> String {
+        switch style {
+        case .manga:
+            return "Ink and momentum carry the hero across page \(pageNumber)."
+        case .western:
+            return "The dust settles just long enough for the next turn on page \(pageNumber)."
+        case .cartoon:
+            return "Bold expressions and quick timing drive scene \(pageNumber)."
+        case .cinematic:
+            return "Generated scene \(pageNumber) stages your hero with prestige-cover pacing."
+        case .childrensBook:
+            return "A warm story beat unfolds gently on page \(pageNumber)."
+        }
+    }
+
+    private static func pageOverlays(for pageNumber: Int, style: StoryStyle) -> [ComicPageTextOverlay] {
+        switch pageNumber {
+        case 1:
+            return [
+                ComicPageTextOverlay(
+                    kind: .narration,
+                    text: style.moodLabel,
+                    normalizedX: 0.26,
+                    normalizedY: 0.16,
+                    normalizedWidth: 0.32,
+                    tone: .accent
+                ),
+                ComicPageTextOverlay(
+                    kind: .sfx,
+                    text: style == .manga ? "SHHNK" : "RUSTLE",
+                    normalizedX: 0.74,
+                    normalizedY: 0.78,
+                    normalizedWidth: 0.22,
+                    tone: .inverse,
+                    rotationDegrees: style == .manga ? -7 : -4,
+                    emphasisScale: 1.12
+                )
+            ]
+        case 2:
+            return [
+                ComicPageTextOverlay(
+                    kind: .narration,
+                    text: "The city opens like a printed legend.",
+                    normalizedX: 0.28,
+                    normalizedY: 0.14,
+                    normalizedWidth: 0.44,
+                    tone: .accent
+                ),
+                ComicPageTextOverlay(
+                    kind: .speech,
+                    text: "This is where the story starts.",
+                    speaker: "Hero",
+                    normalizedX: 0.73,
+                    normalizedY: 0.30,
+                    normalizedWidth: 0.34,
+                    tone: .paper,
+                    tailDirection: .left
+                ),
+                ComicPageTextOverlay(
+                    kind: .thought,
+                    text: "Stay sharp. Something's waiting ahead.",
+                    normalizedX: 0.29,
+                    normalizedY: 0.72,
+                    normalizedWidth: 0.36,
+                    tone: .paper,
+                    tailDirection: .down
+                )
+            ]
+        case 3:
+            return [
+                ComicPageTextOverlay(
+                    kind: .speech,
+                    text: style == .cartoon ? "You made it right on cue!" : "You're later than the rain.",
+                    speaker: "Companion",
+                    normalizedX: 0.24,
+                    normalizedY: 0.34,
+                    normalizedWidth: 0.34,
+                    tone: .paper,
+                    tailDirection: .right
+                ),
+                ComicPageTextOverlay(
+                    kind: .speech,
+                    text: "Then let's not waste the entrance.",
+                    speaker: "Hero",
+                    normalizedX: 0.73,
+                    normalizedY: 0.58,
+                    normalizedWidth: 0.32,
+                    tone: .paper,
+                    tailDirection: .left
+                )
+            ]
+        case 4:
+            return [
+                ComicPageTextOverlay(
+                    kind: .sfx,
+                    text: style == .western ? "CLANG" : "THRUM",
+                    normalizedX: 0.68,
+                    normalizedY: 0.22,
+                    normalizedWidth: 0.22,
+                    tone: .inverse,
+                    rotationDegrees: -10,
+                    emphasisScale: 1.18
+                ),
+                ComicPageTextOverlay(
+                    kind: .narration,
+                    text: "Every panel tightens the promise.",
+                    normalizedX: 0.33,
+                    normalizedY: 0.82,
+                    normalizedWidth: 0.42,
+                    tone: .ink
+                )
+            ]
+        default:
+            return [
+                ComicPageTextOverlay(
+                    kind: .speech,
+                    text: "Keep turning. The finished edition is yours.",
+                    speaker: "Hero",
+                    normalizedX: 0.67,
+                    normalizedY: 0.28,
+                    normalizedWidth: 0.34,
+                    tone: .paper,
+                    tailDirection: .left
+                ),
+                ComicPageTextOverlay(
+                    kind: .narration,
+                    text: "StoryComicAI personalizes each beat around the main character.",
+                    normalizedX: 0.31,
+                    normalizedY: 0.84,
+                    normalizedWidth: 0.44,
+                    tone: .accent
+                )
+            ]
+        }
     }
 }

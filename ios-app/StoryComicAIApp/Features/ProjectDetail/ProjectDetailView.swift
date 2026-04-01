@@ -14,6 +14,7 @@ struct ProjectDetailView: View {
                         title: viewModel.project.title,
                         subtitle: viewModel.project.collectionSubtitle,
                         accent: AppColor.accent(for: viewModel.project.style),
+                        style: viewModel.project.style,
                         eyebrow: viewModel.project.style.moodLabel,
                         badge: viewModel.project.statusDisplayName,
                         emphasize: true

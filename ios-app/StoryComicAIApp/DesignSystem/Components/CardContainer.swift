@@ -148,6 +148,7 @@ struct ComicCoverCard: View {
     let title: String
     let subtitle: String?
     let accent: Color
+    let style: StoryStyle?
     let eyebrow: String
     let badge: String?
     let emphasize: Bool
@@ -156,6 +157,7 @@ struct ComicCoverCard: View {
         title: String,
         subtitle: String? = nil,
         accent: Color,
+        style: StoryStyle? = nil,
         eyebrow: String,
         badge: String? = nil,
         emphasize: Bool = false
@@ -163,6 +165,7 @@ struct ComicCoverCard: View {
         self.title = title
         self.subtitle = subtitle
         self.accent = accent
+        self.style = style
         self.eyebrow = eyebrow
         self.badge = badge
         self.emphasize = emphasize
@@ -198,6 +201,18 @@ struct ComicCoverCard: View {
                             topTrailingRadius: 0
                         )
                     )
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.black.opacity(0.14))
+                        .frame(width: 88, height: 40)
+                        .overlay {
+                            Text(styleStamp)
+                                .font(AppTypography.badge)
+                                .foregroundStyle(AppColor.textOnDark.opacity(0.88))
+                                .tracking(1.0)
+                        }
+                        .padding(AppSpacing.md)
                 }
                 .overlay(alignment: .topTrailing) {
                     if let badge {
@@ -254,26 +269,452 @@ struct ComicCoverCard: View {
     private var coverPattern: some View {
         GeometryReader { proxy in
             ZStack(alignment: .topTrailing) {
-                Circle()
-                    .fill(Color.white.opacity(0.16))
-                    .frame(width: proxy.size.width * 0.72)
-                    .offset(x: proxy.size.width * 0.18, y: -proxy.size.width * 0.22)
-                    .blur(radius: 2)
+                switch resolvedStyle {
+                case .manga:
+                    Circle()
+                        .fill(Color.white.opacity(0.18))
+                        .frame(width: proxy.size.width * 0.68)
+                        .offset(x: proxy.size.width * 0.18, y: -proxy.size.width * 0.2)
 
-                RoundedRectangle(cornerRadius: 999, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: proxy.size.width * 0.9, height: 34)
-                    .rotationEffect(.degrees(-28))
-                    .offset(x: proxy.size.width * 0.22, y: proxy.size.height * 0.18)
+                    ForEach(0..<6, id: \.self) { index in
+                        Capsule(style: .continuous)
+                            .fill(Color.white.opacity(index.isMultiple(of: 2) ? 0.07 : 0.12))
+                            .frame(width: proxy.size.width * 0.9, height: 12)
+                            .rotationEffect(.degrees(-36))
+                            .offset(
+                                x: proxy.size.width * 0.12,
+                                y: proxy.size.height * (0.14 + (Double(index) * 0.095))
+                            )
+                    }
 
-                RoundedRectangle(cornerRadius: 999, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
-                    .frame(width: proxy.size.width * 0.8, height: 28)
-                    .rotationEffect(.degrees(-28))
-                    .offset(x: proxy.size.width * 0.12, y: proxy.size.height * 0.34)
+                case .western:
+                    Circle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: proxy.size.width * 0.72)
+                        .offset(x: proxy.size.width * 0.14, y: -proxy.size.width * 0.12)
+
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: proxy.size.width * 0.86, height: 42)
+                        .rotationEffect(.degrees(-24))
+                        .offset(x: proxy.size.width * 0.18, y: proxy.size.height * 0.18)
+
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .stroke(Color.white.opacity(0.13), lineWidth: 1)
+                        .frame(width: proxy.size.width * 0.76, height: proxy.size.height * 0.32)
+                        .rotationEffect(.degrees(-12))
+                        .offset(x: proxy.size.width * 0.08, y: proxy.size.height * 0.38)
+
+                case .cartoon:
+                    Circle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: proxy.size.width * 0.54)
+                        .offset(x: proxy.size.width * 0.16, y: -proxy.size.width * 0.18)
+
+                    Circle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: proxy.size.width * 0.34)
+                        .offset(x: -proxy.size.width * 0.08, y: proxy.size.height * 0.22)
+
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: proxy.size.width * 0.72, height: 34)
+                        .rotationEffect(.degrees(-18))
+                        .offset(x: proxy.size.width * 0.18, y: proxy.size.height * 0.42)
+
+                case .cinematic:
+                    Circle()
+                        .fill(Color.white.opacity(0.16))
+                        .frame(width: proxy.size.width * 0.72)
+                        .offset(x: proxy.size.width * 0.18, y: -proxy.size.width * 0.22)
+                        .blur(radius: 2)
+
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: proxy.size.width * 0.9, height: 34)
+                        .rotationEffect(.degrees(-28))
+                        .offset(x: proxy.size.width * 0.22, y: proxy.size.height * 0.18)
+
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color.white.opacity(0.04))
+                        .frame(width: proxy.size.width * 0.8, height: 28)
+                        .rotationEffect(.degrees(-28))
+                        .offset(x: proxy.size.width * 0.12, y: proxy.size.height * 0.34)
+
+                case .childrensBook:
+                    Circle()
+                        .fill(Color.white.opacity(0.14))
+                        .frame(width: proxy.size.width * 0.58)
+                        .offset(x: proxy.size.width * 0.14, y: -proxy.size.width * 0.16)
+
+                    Circle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: proxy.size.width * 0.4)
+                        .offset(x: -proxy.size.width * 0.05, y: proxy.size.height * 0.18)
+
+                    Capsule(style: .continuous)
+                        .fill(Color.white.opacity(0.07))
+                        .frame(width: proxy.size.width * 0.7, height: 30)
+                        .offset(x: proxy.size.width * 0.12, y: proxy.size.height * 0.46)
+
+                    Capsule(style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                        .frame(width: proxy.size.width * 0.54, height: 24)
+                        .offset(x: -proxy.size.width * 0.06, y: proxy.size.height * 0.56)
+                }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
+    }
+
+    private var resolvedStyle: StoryStyle {
+        style ?? .cinematic
+    }
+
+    private var styleStamp: String {
+        switch resolvedStyle {
+        case .manga:
+            return "INK"
+        case .western:
+            return "ISSUE"
+        case .cartoon:
+            return "COLOR"
+        case .cinematic:
+            return "PRESTIGE"
+        case .childrensBook:
+            return "STORY"
+        }
+    }
+}
+
+struct ComicPageOverlayLayer: View {
+    let overlays: [ComicPageTextOverlay]
+    let accent: Color
+
+    var body: some View {
+        GeometryReader { proxy in
+            ForEach(overlays) { overlay in
+                overlayView(overlay)
+                    .frame(width: max(84, proxy.size.width * overlay.normalizedWidth))
+                    .scaleEffect(overlay.emphasisScale)
+                    .rotationEffect(.degrees(overlay.rotationDegrees))
+                    .position(
+                        x: proxy.size.width * overlay.normalizedX,
+                        y: proxy.size.height * overlay.normalizedY
+                    )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func overlayView(_ overlay: ComicPageTextOverlay) -> some View {
+        switch overlay.kind {
+        case .speech:
+            ComicSpeechBubbleView(
+                text: overlay.text,
+                speaker: overlay.speaker,
+                tailDirection: overlay.tailDirection ?? .left,
+                tone: overlay.tone,
+                accent: accent
+            )
+        case .narration:
+            ComicNarrationBoxView(text: overlay.text, tone: overlay.tone, accent: accent)
+        case .thought:
+            ComicThoughtBubbleView(
+                text: overlay.text,
+                speaker: overlay.speaker,
+                tone: overlay.tone,
+                accent: accent
+            )
+        case .sfx:
+            ComicSFXView(text: overlay.text, tone: overlay.tone, accent: accent)
+        }
+    }
+}
+
+private struct ComicSpeechBubbleView: View {
+    let text: String
+    let speaker: String?
+    let tailDirection: ComicPageTextOverlay.TailDirection
+    let tone: ComicPageTextOverlay.Tone
+    let accent: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let speaker, !speaker.isEmpty {
+                Text(speaker)
+                    .font(AppTypography.badge)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .tracking(0.9)
+                    .textCase(.uppercase)
+            }
+
+            Text(text)
+                .font(AppTypography.caption)
+                .foregroundStyle(foregroundColor)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(backgroundColor)
+        .overlay(alignment: tailAlignment) {
+            BubbleTailShape(direction: tailDirection)
+                .fill(backgroundColor)
+                .frame(width: 18, height: 12)
+                .offset(x: tailOffsetX, y: 10)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(borderColor, lineWidth: 1.5)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: AppColor.bookShadow.opacity(0.55), radius: 8, x: 0, y: 4)
+    }
+
+    private var backgroundColor: Color {
+        switch tone {
+        case .paper:
+            return AppColor.surfaceElevated
+        case .ink:
+            return AppColor.textPrimary.opacity(0.92)
+        case .accent:
+            return accent.opacity(0.92)
+        case .inverse:
+            return AppColor.textOnDark.opacity(0.96)
+        }
+    }
+
+    private var foregroundColor: Color {
+        switch tone {
+        case .ink, .accent:
+            return AppColor.textOnDark
+        case .paper, .inverse:
+            return AppColor.textPrimary
+        }
+    }
+
+    private var borderColor: Color {
+        switch tone {
+        case .paper, .inverse:
+            return AppColor.textPrimary.opacity(0.72)
+        case .ink, .accent:
+            return Color.white.opacity(0.18)
+        }
+    }
+
+    private var tailAlignment: Alignment {
+        switch tailDirection {
+        case .left:
+            return .bottomLeading
+        case .right:
+            return .bottomTrailing
+        case .down:
+            return .bottom
+        }
+    }
+
+    private var tailOffsetX: CGFloat {
+        switch tailDirection {
+        case .left:
+            return 12
+        case .right:
+            return -12
+        case .down:
+            return 0
+        }
+    }
+}
+
+private struct ComicNarrationBoxView: View {
+    let text: String
+    let tone: ComicPageTextOverlay.Tone
+    let accent: Color
+
+    var body: some View {
+        Text(text)
+            .font(AppTypography.meta)
+            .foregroundStyle(foregroundColor)
+            .tracking(0.5)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(backgroundColor)
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(borderColor, lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .shadow(color: AppColor.bookShadow.opacity(0.35), radius: 6, x: 0, y: 3)
+    }
+
+    private var backgroundColor: Color {
+        switch tone {
+        case .paper:
+            return AppColor.surfaceElevated
+        case .ink:
+            return AppColor.textPrimary
+        case .accent:
+            return accent.opacity(0.86)
+        case .inverse:
+            return AppColor.textOnDark.opacity(0.94)
+        }
+    }
+
+    private var foregroundColor: Color {
+        switch tone {
+        case .ink, .accent:
+            return AppColor.textOnDark
+        case .paper, .inverse:
+            return AppColor.textPrimary
+        }
+    }
+
+    private var borderColor: Color {
+        switch tone {
+        case .paper, .inverse:
+            return AppColor.borderStrong.opacity(0.88)
+        case .ink, .accent:
+            return Color.white.opacity(0.15)
+        }
+    }
+}
+
+private struct ComicThoughtBubbleView: View {
+    let text: String
+    let speaker: String?
+    let tone: ComicPageTextOverlay.Tone
+    let accent: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let speaker, !speaker.isEmpty {
+                Text(speaker)
+                    .font(AppTypography.badge)
+                    .foregroundStyle(AppColor.textTertiary)
+                    .tracking(0.9)
+                    .textCase(.uppercase)
+            }
+
+            Text(text)
+                .font(AppTypography.caption)
+                .foregroundStyle(foregroundColor)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(backgroundColor.opacity(0.92))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                .foregroundStyle(borderColor)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(alignment: .bottomLeading) {
+            Circle()
+                .fill(backgroundColor)
+                .frame(width: 12, height: 12)
+                .offset(x: 18, y: 16)
+        }
+        .overlay(alignment: .bottomLeading) {
+            Circle()
+                .fill(backgroundColor.opacity(0.88))
+                .frame(width: 8, height: 8)
+                .offset(x: 10, y: 28)
+        }
+        .shadow(color: AppColor.bookShadow.opacity(0.42), radius: 8, x: 0, y: 4)
+    }
+
+    private var backgroundColor: Color {
+        switch tone {
+        case .paper:
+            return AppColor.surface
+        case .ink:
+            return AppColor.textPrimary.opacity(0.96)
+        case .accent:
+            return accent.opacity(0.9)
+        case .inverse:
+            return AppColor.textOnDark
+        }
+    }
+
+    private var foregroundColor: Color {
+        switch tone {
+        case .ink, .accent:
+            return AppColor.textOnDark
+        case .paper, .inverse:
+            return AppColor.textPrimary
+        }
+    }
+
+    private var borderColor: Color {
+        switch tone {
+        case .ink, .accent:
+            return Color.white.opacity(0.24)
+        case .paper, .inverse:
+            return AppColor.textPrimary.opacity(0.54)
+        }
+    }
+}
+
+private struct ComicSFXView: View {
+    let text: String
+    let tone: ComicPageTextOverlay.Tone
+    let accent: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 24, weight: .black, design: .rounded))
+            .foregroundStyle(foregroundColor)
+            .shadow(color: shadowColor, radius: 0, x: 2, y: 2)
+            .padding(.horizontal, 2)
+    }
+
+    private var foregroundColor: Color {
+        switch tone {
+        case .paper:
+            return AppColor.textPrimary
+        case .ink:
+            return AppColor.textOnDark
+        case .accent:
+            return accent
+        case .inverse:
+            return AppColor.textOnDark
+        }
+    }
+
+    private var shadowColor: Color {
+        switch tone {
+        case .paper:
+            return AppColor.surfaceElevated
+        case .ink, .inverse:
+            return AppColor.textPrimary.opacity(0.35)
+        case .accent:
+            return AppColor.textPrimary.opacity(0.4)
+        }
+    }
+}
+
+private struct BubbleTailShape: Shape {
+    let direction: ComicPageTextOverlay.TailDirection
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        switch direction {
+        case .left:
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.minX + 3, y: rect.maxY))
+        case .right:
+            path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.maxX - 3, y: rect.maxY))
+        case .down:
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        }
+        path.closeSubpath()
+        return path
     }
 }
 

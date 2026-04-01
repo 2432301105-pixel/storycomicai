@@ -8,6 +8,7 @@ enum PageTurnDirection {
 struct PageTurnView: View {
     let leftPage: ComicPresentationPage?
     let rightPage: ComicPresentationPage?
+    let accent: Color
     let progress: CGFloat
     let direction: PageTurnDirection
     let reduceMotion: Bool
@@ -26,9 +27,9 @@ struct PageTurnView: View {
                 )
 
             HStack(spacing: 0) {
-                SpreadPage(page: leftPage, placeholderTitle: "Left page")
+                SpreadPage(page: leftPage, accent: accent, placeholderTitle: "Left page")
                 spine
-                SpreadPage(page: rightPage, placeholderTitle: "Right page")
+                SpreadPage(page: rightPage, accent: accent, placeholderTitle: "Right page")
             }
             .padding(18)
         }
@@ -66,6 +67,7 @@ struct PageTurnView: View {
 
 private struct SpreadPage: View {
     let page: ComicPresentationPage?
+    let accent: Color
     let placeholderTitle: String
 
     var body: some View {
@@ -76,15 +78,26 @@ private struct SpreadPage: View {
                     .foregroundStyle(AppColor.textTertiary)
                     .textCase(.uppercase)
 
-                OptimizedComicImageView(
-                    thumbnailURL: page.thumbnailURL,
-                    fullImageURL: page.fullImageURL,
-                    strategy: .thumbnailThenFull,
-                    contentMode: .fill,
-                    thumbnailMaxPixelSize: 920,
-                    fullMaxPixelSize: 1_800
-                )
+                ZStack {
+                    OptimizedComicImageView(
+                        thumbnailURL: page.thumbnailURL,
+                        fullImageURL: page.fullImageURL,
+                        strategy: .thumbnailThenFull,
+                        contentMode: .fill,
+                        thumbnailMaxPixelSize: 920,
+                        fullMaxPixelSize: 1_800
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: 320)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    ComicPageOverlayLayer(overlays: page.overlays, accent: accent)
+                        .padding(8)
+                }
                 .frame(maxWidth: .infinity, maxHeight: 320)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(AppColor.surfaceMuted.opacity(0.45))
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 Text(page.title)
@@ -129,6 +142,7 @@ private struct SpreadPage: View {
     PageTurnView(
         leftPage: package.pages.first,
         rightPage: package.pages.dropFirst().first,
+        accent: AppColor.accent,
         progress: 0.24,
         direction: .forward,
         reduceMotion: false

@@ -18,10 +18,9 @@ struct StoryComicAIApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                AppColor.backgroundPrimary.ignoresSafeArea()
-                AppCoordinatorView(container: container)
-            }
+            AppCoordinatorView(container: container)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(AppColor.backgroundPrimary.ignoresSafeArea())
             .environmentObject(sessionStore)
             .preferredColorScheme(.light)
         }

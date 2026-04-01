@@ -15,29 +15,37 @@ struct ExportView: View {
     }
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            ComicPresentationModePicker(
-                selectedMode: coordinator.mode,
-                onSelect: viewModel.switchMode
-            )
+        ZStack {
+            EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: true)
 
-            switch coordinator.packageState {
-            case .idle, .loading:
-                LoadingStateView(title: "Preparing Export")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: AppSpacing.lg) {
+                    ComicPresentationModePicker(
+                        selectedMode: coordinator.mode,
+                        onSelect: viewModel.switchMode
+                    )
 
-            case let .failed(message):
-                ErrorStateView(title: "Export Not Available", message: message) {
-                    Task { await coordinator.retry() }
+                    switch coordinator.packageState {
+                    case .idle, .loading:
+                        LoadingStateView(title: "Preparing Export", subtitle: "Staging a collectible file package")
+                            .frame(maxWidth: .infinity, minHeight: 420)
+
+                    case let .failed(message):
+                        ErrorStateView(title: "Export Not Available", message: message) {
+                            Task { await coordinator.retry() }
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 420)
+
+                    case let .loaded(package):
+                        loadedContent(package: package)
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            case let .loaded(package):
-                loadedContent(package: package)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.lg)
+                .padding(.bottom, AppSpacing.section)
             }
         }
-        .padding(AppSpacing.lg)
-        .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .sheet(
             isPresented: Binding(
                 get: { viewModel.shareSheetURL != nil },
@@ -52,41 +60,67 @@ struct ExportView: View {
                 ShareSheetView(items: [shareURL])
             }
         }
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
     @ViewBuilder
     private func loadedContent(package: ComicBookPackage) -> some View {
-        CardContainer {
-            VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Export & Share")
-                    .font(AppTypography.heading)
+        let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
+
+        VStack(alignment: .leading, spacing: AppSpacing.xl) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text("Export Studio")
+                    .font(AppTypography.eyebrow)
+                    .foregroundStyle(AppColor.textTertiary)
+                    .tracking(1.3)
+                    .textCase(.uppercase)
+
+                Text("Package your comic as a finished edition")
+                    .font(AppTypography.title)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("Generate a shareable file for your personalized comic.")
+                Text("Prepare a shareable PDF or image bundle without losing the premium book presentation.")
                     .font(AppTypography.body)
                     .foregroundStyle(AppColor.textSecondary)
-
-                Picker("Export Type", selection: $viewModel.selectedType) {
-                    ForEach(ComicExportType.allCases) { type in
-                        Text(type.displayTitle).tag(type)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Text(availabilityText(for: package))
-                    .font(AppTypography.footnote)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                if package.isPaywallLocked {
-                    paywallLockedSection(package: package)
-                }
-
-                actionButton(package: package)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
 
-        Spacer()
+            ComicCoverCard(
+                title: package.cover.titleText ?? package.title,
+                subtitle: package.cover.subtitleText ?? package.subtitle ?? "Collector export ready",
+                accent: AppColor.accent(for: style),
+                style: style,
+                eyebrow: package.styleLabel,
+                badge: viewModel.selectedType.displayTitle,
+                emphasize: true
+            )
+
+            CardContainer(emphasize: true) {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    Text("Export format")
+                        .font(AppTypography.section)
+                        .foregroundStyle(AppColor.textPrimary)
+
+                    Picker("Export Type", selection: $viewModel.selectedType) {
+                        ForEach(ComicExportType.allCases) { type in
+                            Text(type.displayTitle).tag(type)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text(availabilityText(for: package))
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.textSecondary)
+
+                    if package.isPaywallLocked {
+                        paywallLockedSection(package: package)
+                    }
+
+                    statusPanel(for: package)
+                    actionButton(package: package)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     @ViewBuilder
@@ -169,6 +203,74 @@ struct ExportView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColor.backgroundSecondary.opacity(0.6))
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    @ViewBuilder
+    private func statusPanel(for package: ComicBookPackage) -> some View {
+        switch viewModel.state {
+        case .idle:
+            CardContainer {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text("Collector delivery")
+                        .font(AppTypography.bodyStrong)
+                        .foregroundStyle(AppColor.textPrimary)
+                    Text("Generate a polished file package that keeps the book feeling intact when shared.")
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+        case .creating:
+            LoadingStateView(title: "Creating export", subtitle: "Binding pages into a finished delivery")
+                .frame(height: 180)
+
+        case .queued:
+            LoadingStateView(title: "Queued for export", subtitle: "The edition is waiting for packaging")
+                .frame(height: 180)
+
+        case let .running(_, progress):
+            CardContainer(emphasize: true) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Preparing your file")
+                        .font(AppTypography.section)
+                        .foregroundStyle(AppColor.textPrimary)
+                    ProgressView(value: progress ?? 0.2)
+                        .tint(AppColor.accent(for: StoryStyle(displayLabel: package.styleLabel) ?? .cinematic))
+                    Text("We are assembling a premium \(viewModel.selectedType.displayTitle.lowercased()) package for sharing or printing.")
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+        case .ready:
+            CardContainer(emphasize: true) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Export ready")
+                        .font(AppTypography.section)
+                        .foregroundStyle(AppColor.textPrimary)
+                    Text("Download the finished package and open the share sheet to send or archive it.")
+                        .font(AppTypography.footnote)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+        case .downloading:
+            LoadingStateView(title: "Downloading file", subtitle: "Pulling the finished artifact to your device")
+                .frame(height: 180)
+
+        case .sharing:
+            LoadingStateView(title: "Opening share sheet", subtitle: "Handing off the finished edition")
+                .frame(height: 180)
+
+        case let .failed(message, _):
+            ErrorStateView(title: "Export failed", message: message) {
+                viewModel.retry()
+            }
+            .frame(height: 180)
+        }
     }
 
     private func availabilityText(for package: ComicBookPackage) -> String {

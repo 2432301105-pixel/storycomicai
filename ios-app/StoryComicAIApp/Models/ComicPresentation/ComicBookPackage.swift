@@ -71,6 +71,67 @@ struct ComicPresentationPage: Identifiable, Equatable {
     let caption: String?
     let thumbnailURL: URL?
     let fullImageURL: URL?
+    let overlays: [ComicPageTextOverlay]
+}
+
+struct ComicPageTextOverlay: Identifiable, Equatable {
+    enum Kind: String, Equatable {
+        case speech
+        case narration
+        case thought
+        case sfx
+    }
+
+    enum Tone: String, Equatable {
+        case paper
+        case ink
+        case accent
+        case inverse
+    }
+
+    enum TailDirection: String, Equatable {
+        case left
+        case right
+        case down
+    }
+
+    let id: UUID
+    let kind: Kind
+    let text: String
+    let speaker: String?
+    let normalizedX: Double
+    let normalizedY: Double
+    let normalizedWidth: Double
+    let tone: Tone
+    let tailDirection: TailDirection?
+    let rotationDegrees: Double
+    let emphasisScale: Double
+
+    init(
+        id: UUID = UUID(),
+        kind: Kind,
+        text: String,
+        speaker: String? = nil,
+        normalizedX: Double,
+        normalizedY: Double,
+        normalizedWidth: Double = 0.34,
+        tone: Tone = .paper,
+        tailDirection: TailDirection? = nil,
+        rotationDegrees: Double = 0,
+        emphasisScale: Double = 1
+    ) {
+        self.id = id
+        self.kind = kind
+        self.text = text
+        self.speaker = speaker
+        self.normalizedX = normalizedX
+        self.normalizedY = normalizedY
+        self.normalizedWidth = normalizedWidth
+        self.tone = tone
+        self.tailDirection = tailDirection
+        self.rotationDegrees = rotationDegrees
+        self.emphasisScale = emphasisScale
+    }
 }
 
 struct ComicPresentationHints: Equatable {

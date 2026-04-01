@@ -99,6 +99,7 @@ private struct LibraryProjectCard: View {
                 title: project.title,
                 subtitle: project.collectionSubtitle,
                 accent: AppColor.accent(for: project.style),
+                style: project.style,
                 eyebrow: project.style.moodLabel,
                 badge: project.statusDisplayName,
                 emphasize: true

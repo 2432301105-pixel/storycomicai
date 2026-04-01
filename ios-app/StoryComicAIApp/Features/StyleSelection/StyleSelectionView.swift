@@ -106,6 +106,7 @@ private struct StyleOptionCard: View {
                     title: style.displayName,
                     subtitle: style.shortSignature,
                     accent: AppColor.accent(for: style),
+                    style: style,
                     eyebrow: style.moodLabel,
                     badge: isSelected ? "Selected" : "Edition",
                     emphasize: isSelected

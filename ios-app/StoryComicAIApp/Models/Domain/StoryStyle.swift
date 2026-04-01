@@ -9,6 +9,27 @@ enum StoryStyle: String, CaseIterable, Codable, Identifiable {
 
     var id: String { rawValue }
 
+    init?(displayLabel: String) {
+        let normalized = displayLabel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        switch normalized {
+        case "manga":
+            self = .manga
+        case "western", "western comic":
+            self = .western
+        case "cartoon":
+            self = .cartoon
+        case "cinematic":
+            self = .cinematic
+        case "children's book", "childrens book", "childrens_book":
+            self = .childrensBook
+        default:
+            return nil
+        }
+    }
+
     var displayName: String {
         switch self {
         case .manga: return "Manga"
