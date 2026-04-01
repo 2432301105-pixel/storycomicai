@@ -53,6 +53,7 @@ struct BookRevealView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private func loadedView(package: ComicBookPackage) -> some View {

@@ -36,11 +36,12 @@ struct BookPreviewView: View {
                 }
             }
             .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.lg)
-            .padding(.bottom, AppSpacing.xl)
+            .padding(.top, AppSpacing.md)
+            .padding(.bottom, AppSpacing.xl + 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        .ignoresSafeArea(edges: .bottom)
     }
 
     @ViewBuilder

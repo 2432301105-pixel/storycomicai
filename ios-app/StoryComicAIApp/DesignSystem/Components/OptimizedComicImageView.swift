@@ -81,13 +81,76 @@ struct OptimizedComicImageView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .fill(AppColor.backgroundSecondary)
-            ProgressView()
-                .tint(AppColor.accent)
-            Image(systemName: placeholderSystemImageName)
-                .font(.system(size: 28))
-                .foregroundStyle(AppColor.textSecondary.opacity(0.55))
-                .padding(.top, 36)
+            ComicCharacterPlaceholderCard()
+            VStack {
+                Spacer()
+                ProgressView()
+                    .tint(AppColor.accent)
+                    .scaleEffect(0.9)
+                    .padding(.bottom, 14)
+            }
         }
+    }
+}
+
+private struct ComicCharacterPlaceholderCard: View {
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                LinearGradient(
+                    colors: [AppColor.surfaceMuted, AppColor.pagePaper],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+
+                    ZStack {
+                        Circle()
+                            .fill(AppColor.accentSecondary.opacity(0.42))
+                            .frame(width: min(proxy.size.width, proxy.size.height) * 0.34)
+                            .offset(y: -proxy.size.height * 0.12)
+
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [AppColor.accent.opacity(0.92), AppColor.textPrimary],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: proxy.size.width * 0.42, height: proxy.size.height * 0.36)
+                            .offset(y: proxy.size.height * 0.12)
+
+                        Circle()
+                            .fill(AppColor.textPrimary)
+                            .frame(width: proxy.size.width * 0.22)
+                            .offset(y: -proxy.size.height * 0.04)
+
+                        Capsule(style: .continuous)
+                            .fill(AppColor.textPrimary.opacity(0.92))
+                            .frame(width: proxy.size.width * 0.24, height: proxy.size.height * 0.08)
+                            .offset(y: proxy.size.height * 0.09)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+
+                VStack {
+                    HStack {
+                        Text("HERO")
+                            .font(AppTypography.badge)
+                            .foregroundStyle(AppColor.textTertiary)
+                            .tracking(1.0)
+                        Spacer()
+                    }
+                    .padding(12)
+                    Spacer()
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .allowsHitTesting(false)
     }
 }
 
