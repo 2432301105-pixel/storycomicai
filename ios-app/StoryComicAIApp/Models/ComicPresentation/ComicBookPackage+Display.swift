@@ -46,10 +46,11 @@ extension ComicBookPackage {
         }
     }
 
-    func personalized(with storyPrompt: String?) -> ComicBookPackage {
-        guard let storyPrompt else { return self }
-        let storyLines = storyPrompt.storyLines
+    func personalized(with storyText: String?) -> ComicBookPackage {
+        guard let storyText else { return self }
+        let storyLines = storyText.storyLines
         guard !storyLines.isEmpty else { return self }
+        let style = StoryStyle(displayLabel: styleLabel) ?? .cinematic
 
         let personalizedCover = ComicBookCover(
             imageURL: cover.imageURL,
@@ -58,15 +59,15 @@ extension ComicBookPackage {
         )
 
         let personalizedPages = pages.enumerated().map { index, page in
-            let caption = storyLines[index % storyLines.count]
+            let beat = storyLines[index % storyLines.count]
             return ComicPresentationPage(
                 id: page.id,
                 pageNumber: page.pageNumber,
-                title: page.title,
-                caption: caption,
+                title: beat.comicHeadline(fallback: page.title),
+                caption: beat,
                 thumbnailURL: page.thumbnailURL,
                 fullImageURL: page.fullImageURL,
-                overlays: page.overlays
+                overlays: beat.comicOverlays(style: style, fallback: page.overlays)
             )
         }
 
@@ -146,5 +147,58 @@ private extension String {
     func truncated(maxLength: Int) -> String {
         guard count > maxLength else { return self }
         return String(prefix(maxLength - 1)) + "…"
+    }
+
+    func comicHeadline(fallback: String) -> String {
+        let tokens = components(separatedBy: CharacterSet.whitespacesAndNewlines)
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "\"“”'")) }
+            .filter { !$0.isEmpty }
+        guard !tokens.isEmpty else { return fallback }
+        let headline = tokens.prefix(4).joined(separator: " ")
+        return headline.capitalized
+    }
+
+    func comicOverlays(
+        style: StoryStyle,
+        fallback: [ComicPageTextOverlay]
+    ) -> [ComicPageTextOverlay] {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return fallback }
+
+        let narration = ComicPageTextOverlay(
+            kind: .narration,
+            text: trimmed.truncated(maxLength: 72),
+            normalizedX: 0.3,
+            normalizedY: 0.15,
+            normalizedWidth: 0.46,
+            tone: .accent
+        )
+
+        let reactionText: String
+        switch style {
+        case .manga:
+            reactionText = "This changes everything."
+        case .western:
+            reactionText = "Then the town just got louder."
+        case .cartoon:
+            reactionText = "Okay. That escalated fast."
+        case .cinematic:
+            reactionText = "Then the next move has to be precise."
+        case .childrensBook:
+            reactionText = "So the journey kept glowing forward."
+        }
+
+        let speech = ComicPageTextOverlay(
+            kind: .speech,
+            text: reactionText,
+            speaker: "Hero",
+            normalizedX: 0.72,
+            normalizedY: 0.72,
+            normalizedWidth: 0.34,
+            tone: .paper,
+            tailDirection: .left
+        )
+
+        return [narration, speech]
     }
 }

@@ -13,7 +13,7 @@ final class ComicPresentationCoordinator: ObservableObject {
     private let prefetcher: any ReaderAssetPrefetching
     private let analyticsService: any AnalyticsService
     private let hapticProvider: HapticProviding
-    private let storyPrompt: String?
+    private let storyText: String?
 
     private var hasStarted: Bool = false
     private var prefetchTask: Task<Void, Never>?
@@ -29,7 +29,7 @@ final class ComicPresentationCoordinator: ObservableObject {
         comicPackageService: any ComicPackageService,
         prefetcher: any ReaderAssetPrefetching = DefaultReaderAssetPrefetcher(),
         analyticsService: any AnalyticsService,
-        storyPrompt: String? = nil,
+        storyText: String? = nil,
         hapticProvider: HapticProviding = SystemHapticProvider(),
         initialMode: ComicPresentationMode = .reveal
     ) {
@@ -37,7 +37,7 @@ final class ComicPresentationCoordinator: ObservableObject {
         self.comicPackageService = comicPackageService
         self.prefetcher = prefetcher
         self.analyticsService = analyticsService
-        self.storyPrompt = storyPrompt
+        self.storyText = storyText
         self.hapticProvider = hapticProvider
         self.mode = initialMode
     }
@@ -180,7 +180,7 @@ final class ComicPresentationCoordinator: ObservableObject {
 
         do {
             let fetchedPackage = try await comicPackageService.fetchComicBookPackage(projectID: projectID)
-            let package = fetchedPackage.personalized(with: storyPrompt)
+            let package = fetchedPackage.personalized(with: storyText)
             currentPageIndex = max(0, min(package.readingProgress.currentPageIndex, package.pages.count - 1))
             lastPersistedPageIndex = currentPageIndex
             packageState = .loaded(package)

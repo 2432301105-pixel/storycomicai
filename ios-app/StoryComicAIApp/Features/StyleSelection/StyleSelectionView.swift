@@ -40,13 +40,15 @@ struct StyleSelectionView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomActionBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationDestination(isPresented: $navigateToPresentation) {
             if let projectID = presentationProjectID {
                 ComicPresentationCoordinatorView(
                     projectID: projectID,
                     container: container,
                     initialMode: .reveal,
-                    storyPrompt: flowStore.storyText
+                    storyText: flowStore.storyText
                 )
             } else {
                 ErrorStateView(

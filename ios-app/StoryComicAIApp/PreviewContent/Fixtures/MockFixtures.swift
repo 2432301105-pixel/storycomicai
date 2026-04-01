@@ -107,7 +107,7 @@ enum MockFixtures {
             ),
             ctaMetadata: ComicCTAMetadata(
                 revealHeadline: "Your Personalized Comic Is Ready",
-                revealSubheadline: "Built from your photos and story prompt.",
+                revealSubheadline: "Built from your photos and the story you wrote.",
                 revealPrimaryLabel: "Open Book",
                 revealSecondaryLabel: "Open Reader",
                 exportLabel: "Export"
@@ -118,7 +118,7 @@ enum MockFixtures {
             ),
             legacyRevealMetadata: ComicRevealMetadata(
                 headline: "Your Personalized Comic Is Ready",
-                subheadline: "Built from your photos and story prompt.",
+                subheadline: "Built from your photos and the story you wrote.",
                 personalizationTag: "Hero Edition",
                 generatedAtUTC: Date()
             ),

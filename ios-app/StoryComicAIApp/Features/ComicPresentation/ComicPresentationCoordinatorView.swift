@@ -8,7 +8,7 @@ struct ComicPresentationCoordinatorView: View {
         projectID: UUID,
         container: AppContainer,
         initialMode: ComicPresentationMode = .reveal,
-        storyPrompt: String? = nil
+        storyText: String? = nil
     ) {
         self.exportService = container.exportService
         _coordinator = StateObject(
@@ -17,7 +17,7 @@ struct ComicPresentationCoordinatorView: View {
                 comicPackageService: container.comicPackageService,
                 prefetcher: container.readerAssetPrefetcher,
                 analyticsService: container.analyticsService,
-                storyPrompt: storyPrompt,
+                storyText: storyText,
                 initialMode: initialMode
             )
         )

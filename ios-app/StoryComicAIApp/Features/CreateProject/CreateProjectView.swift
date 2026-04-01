@@ -68,6 +68,8 @@ struct CreateProjectView: View {
             }
             .padding(AppSpacing.lg)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Create Project")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

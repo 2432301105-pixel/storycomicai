@@ -93,6 +93,8 @@ struct PhotoUploadView: View {
             }
             .padding(AppSpacing.lg)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationTitle("Photo Upload")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)

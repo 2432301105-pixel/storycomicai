@@ -6,67 +6,109 @@ struct StoryInputView: View {
     let container: AppContainer
 
     @State private var navigateToStyleSelection: Bool = false
+    @FocusState private var storyFieldFocused: Bool
 
     var body: some View {
         ZStack {
             EditorialBackground(accent: AppColor.accentSecondary, showsDeskBand: false)
 
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Story Draft")
-                        .font(AppTypography.eyebrow)
-                        .foregroundStyle(AppColor.textTertiary)
-                        .tracking(1.4)
-                        .textCase(.uppercase)
-
-                    Text("Write the premise")
-                        .font(AppTypography.title)
-                        .foregroundStyle(AppColor.textPrimary)
-
-                    Text("Give the comic its conflict, tone and emotional center. The story planner will turn this into pages and panels.")
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-
-                CardContainer(emphasize: true) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                        Text("Story Prompt")
-                            .font(AppTypography.meta)
+                        Text("Story Source")
+                            .font(AppTypography.eyebrow)
                             .foregroundStyle(AppColor.textTertiary)
+                            .tracking(1.4)
                             .textCase(.uppercase)
 
-                        TextEditor(text: $flowStore.storyText)
-                            .frame(minHeight: 220)
-                            .padding(8)
-                            .background(AppColor.backgroundSecondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        Text("Tell the story")
+                            .font(AppTypography.title)
+                            .foregroundStyle(AppColor.textPrimary)
+
+                        Text("Write the actual story you want turned into a comic book. We use this text to shape scenes, captions, dialogue beats and page flow.")
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColor.textSecondary)
                     }
-                }
 
-                NavigationLink(
-                    destination: StyleSelectionView(
-                        viewModel: StyleSelectionViewModel(projectService: container.projectService),
-                        flowStore: flowStore,
-                        container: container
-                    ),
-                    isActive: $navigateToStyleSelection
-                ) {
-                    EmptyView()
-                }
-
-                PrimaryButton(title: "Continue") {
-                    if viewModel.isStoryValid(flowStore.storyText) {
-                        navigateToStyleSelection = true
+                    CardContainer {
+                        HStack(spacing: AppSpacing.sm) {
+                            storyStep(title: "Story")
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppColor.textTertiary)
+                            storyStep(title: "Scenes")
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppColor.textTertiary)
+                            storyStep(title: "Panels")
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppColor.textTertiary)
+                            storyStep(title: "Comic")
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                }
 
-                Spacer()
+                    CardContainer(emphasize: true) {
+                        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                            Text("Your Story")
+                                .font(AppTypography.meta)
+                                .foregroundStyle(AppColor.textTertiary)
+                                .textCase(.uppercase)
+
+                            TextEditor(text: $flowStore.storyText)
+                                .focused($storyFieldFocused)
+                                .frame(minHeight: 260)
+                                .padding(8)
+                                .background(AppColor.backgroundSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                            Text("Write events, conflict, emotional turns and key moments. This text becomes the comic’s narrative backbone.")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+
+                    NavigationLink(
+                        destination: StyleSelectionView(
+                            viewModel: StyleSelectionViewModel(projectService: container.projectService),
+                            flowStore: flowStore,
+                            container: container
+                        ),
+                        isActive: $navigateToStyleSelection
+                    ) {
+                        EmptyView()
+                    }
+
+                    PrimaryButton(title: "Turn this into a comic") {
+                        storyFieldFocused = false
+                        if viewModel.isStoryValid(flowStore.storyText) {
+                            navigateToStyleSelection = true
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.top, AppSpacing.xl)
+                .padding(.bottom, AppSpacing.section)
             }
-            .padding(AppSpacing.lg)
         }
-        .navigationTitle("Story")
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+    }
+
+    private func storyStep(title: String) -> some View {
+        Text(title)
+            .font(AppTypography.badge)
+            .foregroundStyle(AppColor.textPrimary)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, AppSpacing.xs)
+            .background(AppColor.surfaceInset.opacity(0.9))
+            .clipShape(Capsule())
     }
 }
 

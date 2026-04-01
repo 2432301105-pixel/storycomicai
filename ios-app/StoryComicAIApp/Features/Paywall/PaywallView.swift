@@ -126,7 +126,7 @@ struct PaywallView: View {
                     destination: ComicPresentationCoordinatorView(
                         projectID: projectID,
                         container: container,
-                        storyPrompt: flowStore.storyText
+                        storyText: flowStore.storyText
                     ),
                     isActive: $navigateToViewer
                 ) {
