@@ -6,3 +6,7 @@ struct CreateProjectRequestBody: Codable {
     let style: StoryStyle
     let targetPages: Int
 }
+
+struct ComicGenerationStartRequestBody: Codable {
+    let forceRegenerate: Bool
+}

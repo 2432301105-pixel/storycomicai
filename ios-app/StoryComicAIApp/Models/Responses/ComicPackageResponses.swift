@@ -415,6 +415,58 @@ struct ComicPanelRenderResponseDTO: Codable {
     }
 }
 
+struct ComicGenerationStartResponseDTO: Codable {
+    let jobID: UUID
+    let projectID: UUID
+    let status: String
+    let currentStage: String
+    let progressPct: Int
+    let generationBlueprint: ComicGenerationBlueprintResponseDTO?
+    let renderedPagesCount: Int
+    let renderedPanelsCount: Int
+    let providerName: String?
+    let errorMessage: String?
+
+    enum CodingKeys: String, CodingKey {
+        case jobID = "jobId"
+        case projectID = "projectId"
+        case status
+        case currentStage
+        case progressPct
+        case generationBlueprint
+        case renderedPagesCount
+        case renderedPanelsCount
+        case providerName
+        case errorMessage
+    }
+}
+
+struct ComicGenerationStatusResponseDTO: Codable {
+    let jobID: UUID
+    let projectID: UUID
+    let status: String
+    let currentStage: String
+    let progressPct: Int
+    let generationBlueprint: ComicGenerationBlueprintResponseDTO?
+    let renderedPagesCount: Int
+    let renderedPanelsCount: Int
+    let providerName: String?
+    let errorMessage: String?
+
+    enum CodingKeys: String, CodingKey {
+        case jobID = "jobId"
+        case projectID = "projectId"
+        case status
+        case currentStage
+        case progressPct
+        case generationBlueprint
+        case renderedPagesCount
+        case renderedPanelsCount
+        case providerName
+        case errorMessage
+    }
+}
+
 struct ComicQualitySignalResponseDTO: Codable {
     let name: String
     let status: String

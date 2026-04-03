@@ -71,6 +71,18 @@ final class MockAPIClient: APIClient {
             return try await decodeOutput(started, as: decode)
         }
 
+        // /v1/projects/{projectID}/comic-generation
+        if parts.count == 4,
+           parts[0] == "v1",
+           parts[1] == "projects",
+           endpoint.method == .post,
+           parts[3] == "comic-generation",
+           let projectID = UUID(uuidString: String(parts[2])) {
+            let payload = try decodeInput(ComicGenerationStartRequestBody.self, from: endpoint.body)
+            let started = await store.startComicGeneration(projectID: projectID, payload: payload)
+            return try await decodeOutput(started, as: decode)
+        }
+
         // /v1/projects/{projectID}/comic-package
         if parts.count == 4,
            parts[0] == "v1",
@@ -141,6 +153,18 @@ final class MockAPIClient: APIClient {
             return try await decodeOutput(status, as: decode)
         }
 
+        // /v1/projects/{projectID}/comic-generation/{jobID}
+        if parts.count == 5,
+           parts[0] == "v1",
+           parts[1] == "projects",
+           endpoint.method == .get,
+           parts[3] == "comic-generation",
+           let projectID = UUID(uuidString: String(parts[2])),
+           let jobID = UUID(uuidString: String(parts[4])) {
+            let status = await store.comicGenerationStatus(projectID: projectID, jobID: jobID)
+            return try await decodeOutput(status, as: decode)
+        }
+
         throw APIError.backend(code: "MOCK_ENDPOINT_NOT_IMPLEMENTED", message: "Mock endpoint not implemented: \(endpoint.path)")
     }
 
@@ -165,6 +189,9 @@ actor MockBackendStore {
     private var projects: [ProjectResponseDTO] = []
     private var heroJobs: [UUID: HeroPreviewStatusResponseDTO] = [:]
     private var heroPollCount: [UUID: Int] = [:]
+    private var comicGenerationJobs: [UUID: ComicGenerationStatusResponseDTO] = [:]
+    private var comicGenerationPollCount: [UUID: Int] = [:]
+    private var latestComicGenerationJobByProject: [UUID: UUID] = [:]
     private var readingProgressByProject: [UUID: ComicReadingProgressResponseDTO] = [:]
     private var exportJobs: [UUID: MockExportJobRecord] = [:]
     private var exportPollCount: [UUID: Int] = [:]
@@ -274,6 +301,152 @@ actor MockBackendStore {
 
         heroJobs[jobID] = nextStatus
         return nextStatus
+    }
+
+    func startComicGeneration(
+        projectID: UUID,
+        payload: ComicGenerationStartRequestBody
+    ) -> ComicGenerationStartResponseDTO {
+        let jobID = payload.forceRegenerate ? UUID() : (latestComicGenerationJobByProject[projectID] ?? UUID())
+        let blueprint = generationBlueprintDTO(projectID: projectID)
+        let queued = ComicGenerationStatusResponseDTO(
+            jobID: jobID,
+            projectID: projectID,
+            status: "queued",
+            currentStage: "story_planner",
+            progressPct: 4,
+            generationBlueprint: blueprint,
+            renderedPagesCount: 0,
+            renderedPanelsCount: 0,
+            providerName: "mock",
+            errorMessage: nil
+        )
+        comicGenerationJobs[jobID] = queued
+        comicGenerationPollCount[jobID] = 0
+        latestComicGenerationJobByProject[projectID] = jobID
+
+        return ComicGenerationStartResponseDTO(
+            jobID: jobID,
+            projectID: projectID,
+            status: queued.status,
+            currentStage: queued.currentStage,
+            progressPct: queued.progressPct,
+            generationBlueprint: blueprint,
+            renderedPagesCount: 0,
+            renderedPanelsCount: 0,
+            providerName: "mock",
+            errorMessage: nil
+        )
+    }
+
+    func comicGenerationStatus(projectID: UUID, jobID: UUID) -> ComicGenerationStatusResponseDTO {
+        let pollCount = (comicGenerationPollCount[jobID] ?? 0) + 1
+        comicGenerationPollCount[jobID] = pollCount
+
+        let blueprint = comicGenerationJobs[jobID]?.generationBlueprint ?? generationBlueprintDTO(projectID: projectID)
+        let pageCount = blueprint.pages.count
+        let panelCount = blueprint.panelRenders.count
+        let renderedPages = min(pageCount, max(0, pollCount - 4))
+        let renderedPanels = min(panelCount, max(0, renderedPages * 2))
+
+        let status: ComicGenerationStatusResponseDTO
+        switch pollCount {
+        case ..<2:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "story_planner",
+                progressPct: 12,
+                generationBlueprint: blueprint,
+                renderedPagesCount: 0,
+                renderedPanelsCount: 0,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        case ..<3:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "character_bible",
+                progressPct: 28,
+                generationBlueprint: blueprint,
+                renderedPagesCount: 0,
+                renderedPanelsCount: 0,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        case ..<4:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "style_guide",
+                progressPct: 42,
+                generationBlueprint: blueprint,
+                renderedPagesCount: 0,
+                renderedPanelsCount: 0,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        case ..<5:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "reference_taxonomy",
+                progressPct: 58,
+                generationBlueprint: blueprint,
+                renderedPagesCount: 0,
+                renderedPanelsCount: 0,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        case ..<6:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "panel_prompts",
+                progressPct: 76,
+                generationBlueprint: blueprint,
+                renderedPagesCount: renderedPages,
+                renderedPanelsCount: renderedPanels,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        case ..<7:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "running",
+                currentStage: "page_composer",
+                progressPct: 92,
+                generationBlueprint: blueprint,
+                renderedPagesCount: max(1, renderedPages),
+                renderedPanelsCount: max(2, renderedPanels),
+                providerName: "mock",
+                errorMessage: nil
+            )
+        default:
+            status = ComicGenerationStatusResponseDTO(
+                jobID: jobID,
+                projectID: projectID,
+                status: "succeeded",
+                currentStage: "completed",
+                progressPct: 100,
+                generationBlueprint: blueprint,
+                renderedPagesCount: pageCount,
+                renderedPanelsCount: panelCount,
+                providerName: "mock",
+                errorMessage: nil
+            )
+        }
+
+        comicGenerationJobs[jobID] = status
+        latestComicGenerationJobByProject[projectID] = jobID
+        return status
     }
 
     func comicPackage(projectID: UUID) -> ComicBookPackageResponseDTO {
@@ -399,7 +572,9 @@ actor MockBackendStore {
     }
 
     func generationBlueprint(projectID: UUID) -> ComicGenerationBlueprintResponseDTO {
-        generationBlueprintDTO(projectID: projectID)
+        latestComicGenerationJobByProject[projectID]
+            .flatMap { comicGenerationJobs[$0]?.generationBlueprint }
+            ?? generationBlueprintDTO(projectID: projectID)
     }
 
     private func generationBlueprintDTO(projectID: UUID) -> ComicGenerationBlueprintResponseDTO {

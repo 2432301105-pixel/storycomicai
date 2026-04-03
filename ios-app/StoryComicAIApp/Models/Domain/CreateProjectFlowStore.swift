@@ -11,6 +11,7 @@ final class CreateProjectFlowStore: ObservableObject {
 
     @Published var createdProject: Project?
     @Published var heroPreviewJob: HeroPreviewJob?
+    @Published var comicGenerationJob: ComicGenerationJob?
 
     var canStartHeroPreview: Bool {
         createdProject != nil && !uploadedPhotoIDs.isEmpty

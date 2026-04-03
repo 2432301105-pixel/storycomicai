@@ -10,6 +10,34 @@ protocol ComicPackageService: AnyObject {
     ) async throws -> ComicReadingProgress
 }
 
+protocol ComicGenerationService: AnyObject {
+    func startComicGeneration(projectID: UUID, forceRegenerate: Bool) async throws -> ComicGenerationJob
+    func fetchComicGenerationStatus(projectID: UUID, jobID: UUID) async throws -> ComicGenerationJob
+}
+
+final class DefaultComicGenerationService: ComicGenerationService {
+    private let apiClient: any APIClient
+
+    init(apiClient: any APIClient) {
+        self.apiClient = apiClient
+    }
+
+    func startComicGeneration(projectID: UUID, forceRegenerate: Bool) async throws -> ComicGenerationJob {
+        let endpoint = try ComicGenerationEndpoints.start(
+            projectID: projectID,
+            forceRegenerate: forceRegenerate
+        )
+        let dto = try await apiClient.request(endpoint, decode: ComicGenerationStartResponseDTO.self)
+        return dto.toDomain()
+    }
+
+    func fetchComicGenerationStatus(projectID: UUID, jobID: UUID) async throws -> ComicGenerationJob {
+        let endpoint = ComicGenerationEndpoints.status(projectID: projectID, jobID: jobID)
+        let dto = try await apiClient.request(endpoint, decode: ComicGenerationStatusResponseDTO.self)
+        return dto.toDomain()
+    }
+}
+
 final class DefaultComicPackageService: ComicPackageService {
     private let apiClient: any APIClient
 
@@ -470,6 +498,40 @@ private extension ComicPanelRenderResponseDTO {
             caption: caption,
             dialogue: dialogue,
             renderPrompt: renderPrompt
+        )
+    }
+}
+
+private extension ComicGenerationStartResponseDTO {
+    func toDomain() -> ComicGenerationJob {
+        ComicGenerationJob(
+            jobID: jobID,
+            projectID: projectID,
+            status: ComicGenerationJob.Status(rawValue: status) ?? .failed,
+            currentStage: currentStage,
+            progressPercent: progressPct,
+            generationBlueprint: generationBlueprint?.toDomain(),
+            renderedPagesCount: renderedPagesCount,
+            renderedPanelsCount: renderedPanelsCount,
+            providerName: providerName,
+            errorMessage: errorMessage
+        )
+    }
+}
+
+private extension ComicGenerationStatusResponseDTO {
+    func toDomain() -> ComicGenerationJob {
+        ComicGenerationJob(
+            jobID: jobID,
+            projectID: projectID,
+            status: ComicGenerationJob.Status(rawValue: status) ?? .failed,
+            currentStage: currentStage,
+            progressPercent: progressPct,
+            generationBlueprint: generationBlueprint?.toDomain(),
+            renderedPagesCount: renderedPagesCount,
+            renderedPanelsCount: renderedPanelsCount,
+            providerName: providerName,
+            errorMessage: errorMessage
         )
     }
 }

@@ -29,6 +29,14 @@ class JobQueueClient(Protocol):
         payload: dict[str, object],
     ) -> None: ...
 
+    def enqueue_comic_generation(
+        self,
+        *,
+        job_id: uuid.UUID,
+        project_id: uuid.UUID,
+        payload: dict[str, object],
+    ) -> None: ...
+
 
 class CeleryJobQueueClient:
     """Celery-backed job queue implementation."""
@@ -74,6 +82,32 @@ class CeleryJobQueueClient:
             raise DomainError(
                 code="QUEUE_ENQUEUE_FAILED",
                 message="Failed to enqueue hero preview job.",
+                status_code=503,
+            ) from exc
+
+    def enqueue_comic_generation(
+        self,
+        *,
+        job_id: uuid.UUID,
+        project_id: uuid.UUID,
+        payload: dict[str, object],
+    ) -> None:
+        try:
+            self.client.send_task(
+                name="workers.comic_generation.generate",
+                kwargs={
+                    "job_id": str(job_id),
+                    "project_id": str(project_id),
+                    "payload": payload,
+                },
+                task_id=str(job_id),
+                queue="comic_generation",
+            )
+        except Exception as exc:
+            logger.exception("Failed to enqueue comic generation job", extra={"job_id": str(job_id)})
+            raise DomainError(
+                code="QUEUE_ENQUEUE_FAILED",
+                message="Failed to enqueue comic generation job.",
                 status_code=503,
             ) from exc
 
@@ -152,6 +186,38 @@ class InlineJobQueueClient:
             ) from exc
         finally:
             db.close()
+
+    def enqueue_comic_generation(
+        self,
+        *,
+        job_id: uuid.UUID,
+        project_id: uuid.UUID,
+        payload: dict[str, object],
+    ) -> None:
+        try:
+            from workers.app.tasks.comic_generation import run_comic_generation_job
+        except ModuleNotFoundError as exc:
+            raise DomainError(
+                code="QUEUE_CLIENT_UNAVAILABLE",
+                message="Comic generation worker task is unavailable in this environment.",
+                status_code=503,
+            ) from exc
+
+        try:
+            run_comic_generation_job(
+                job_id=str(job_id),
+                project_id=str(project_id),
+                payload=payload,
+            )
+        except DomainError:
+            raise
+        except Exception as exc:
+            logger.exception("Inline comic generation execution failed", extra={"job_id": str(job_id)})
+            raise DomainError(
+                code="QUEUE_ENQUEUE_FAILED",
+                message="Failed to run inline comic generation job.",
+                status_code=503,
+            ) from exc
 
 
 def get_job_queue_client() -> JobQueueClient:

@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     export_artifact_dir: str = "/tmp/storycomicai-artifacts"
     export_download_token_ttl_seconds: int = 3600
     ai_render_provider: Literal["mock", "remote"] = "mock"
+    ai_render_provider_base_url: str | None = None
+    ai_render_provider_api_key: str | None = None
+    ai_render_provider_timeout_seconds: int = 45
+    ai_render_provider_model_id: str = "storycomicai-panel-v1"
+    ai_render_provider_adapter_id: str | None = None
 
     @field_validator("database_url", mode="before")
     @classmethod

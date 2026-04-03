@@ -34,3 +34,27 @@ struct GenerationPipelineStep: Identifiable, Equatable {
         GenerationPipelineStep(title: "Final polish", status: .pending)
     ]
 }
+
+struct ComicGenerationJob: Equatable {
+    enum Status: String, Equatable {
+        case queued
+        case running
+        case succeeded
+        case failed
+
+        var isTerminal: Bool {
+            self == .succeeded || self == .failed
+        }
+    }
+
+    let jobID: UUID
+    let projectID: UUID
+    let status: Status
+    let currentStage: String
+    let progressPercent: Int
+    let generationBlueprint: ComicGenerationBlueprint?
+    let renderedPagesCount: Int
+    let renderedPanelsCount: Int
+    let providerName: String?
+    let errorMessage: String?
+}

@@ -78,10 +78,12 @@ class ComicPackageService:
         style_label = _STYLE_LABELS.get(style_key, project.style.replace("_", " ").title())
         style_hints = _STYLE_HINTS.get(style_key, _STYLE_HINTS["cinematic"])
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
+        latest_generation = self._latest_generation_job(db=db, project_id=project.id)
         generation_blueprint = self._build_generation_blueprint(
             project=project,
             base_url=normalized_base_url,
             latest_preview=latest_preview,
+            latest_generation=latest_generation,
         )
 
         pages = self._build_pages(
@@ -170,10 +172,12 @@ class ComicPackageService:
     ) -> ComicGenerationBlueprintData:
         project = self.project_service.get_project_or_404(db=db, project_id=project_id, user_id=user.id)
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
+        latest_generation = self._latest_generation_job(db=db, project_id=project.id)
         return self._build_generation_blueprint(
             project=project,
             base_url=base_url.rstrip("/"),
             latest_preview=latest_preview,
+            latest_generation=latest_generation,
         )
 
     @staticmethod
@@ -186,7 +190,12 @@ class ComicPackageService:
         project: Project,
         base_url: str,
         latest_preview: GenerationJob | None,
+        latest_generation: GenerationJob | None,
     ) -> ComicGenerationBlueprintData:
+        if latest_generation is not None:
+            job_blueprint = self._blueprint_from_job(latest_generation)
+            if job_blueprint is not None:
+                return job_blueprint
         return self.orchestrator.build_blueprint(
             project=project,
             base_url=base_url,
@@ -373,3 +382,30 @@ class ComicPackageService:
             .order_by(desc(GenerationJob.completed_at), desc(GenerationJob.created_at))
             .limit(1)
         )
+
+    @staticmethod
+    def _latest_generation_job(db: Session, project_id: uuid.UUID) -> GenerationJob | None:
+        return db.scalar(
+            select(GenerationJob)
+            .where(
+                GenerationJob.project_id == project_id,
+                GenerationJob.job_type == JobType.COMIC_GENERATION,
+                GenerationJob.status.in_([JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.SUCCEEDED]),
+            )
+            .order_by(desc(GenerationJob.completed_at), desc(GenerationJob.created_at))
+            .limit(1)
+        )
+
+    @staticmethod
+    def _blueprint_from_job(job: GenerationJob) -> ComicGenerationBlueprintData | None:
+        for source in (job.result, job.payload):
+            if not isinstance(source, dict):
+                continue
+            blueprint_raw = source.get("generation_blueprint")
+            if not isinstance(blueprint_raw, dict):
+                continue
+            try:
+                return ComicGenerationBlueprintData.model_validate(blueprint_raw)
+            except Exception:
+                continue
+        return None

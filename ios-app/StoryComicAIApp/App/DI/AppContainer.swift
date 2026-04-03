@@ -11,6 +11,7 @@ struct AppContainer {
     let uploadService: any UploadService
     let heroPreviewService: any HeroPreviewService
     let comicPackageService: any ComicPackageService
+    let comicGenerationService: any ComicGenerationService
     let readerAssetPrefetcher: any ReaderAssetPrefetching
     let exportService: any ExportService
     let analyticsService: any AnalyticsService
@@ -34,6 +35,7 @@ struct AppContainer {
         let uploadService = DefaultUploadService(apiClient: apiClient, transferClient: uploadTransferClient)
         let heroPreviewService = DefaultHeroPreviewService(apiClient: apiClient)
         let comicPackageService = DefaultComicPackageService(apiClient: apiClient)
+        let comicGenerationService = DefaultComicGenerationService(apiClient: apiClient)
         let analyticsService = ConsoleAnalyticsService()
         let readerTelemetry = AnalyticsReaderPerformanceTelemetry(
             analyticsService: analyticsService,
@@ -59,6 +61,7 @@ struct AppContainer {
             uploadService: uploadService,
             heroPreviewService: heroPreviewService,
             comicPackageService: comicPackageService,
+            comicGenerationService: comicGenerationService,
             readerAssetPrefetcher: readerAssetPrefetcher,
             exportService: exportService,
             analyticsService: analyticsService

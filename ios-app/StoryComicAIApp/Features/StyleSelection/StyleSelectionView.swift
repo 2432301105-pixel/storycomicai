@@ -5,8 +5,8 @@ struct StyleSelectionView: View {
     @ObservedObject var flowStore: CreateProjectFlowStore
     let container: AppContainer
 
-    @State private var navigateToPresentation: Bool = false
-    @State private var presentationProjectID: UUID?
+    @State private var navigateToGeneration: Bool = false
+    @State private var generationProjectID: UUID?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
@@ -31,30 +31,34 @@ struct StyleSelectionView: View {
                 }
             }
         } footer: {
-            PrimaryButton(title: "Generate Comic", isLoading: viewModel.isCreatingProject) {
-                Task {
-                    let success = await viewModel.ensureProjectExists(for: flowStore)
-                    if (success || flowStore.createdProject != nil), let projectID = flowStore.createdProject?.id {
-                        presentationProjectID = projectID
-                        navigateToPresentation = true
+                    PrimaryButton(title: "Generate Comic", isLoading: viewModel.isCreatingProject) {
+                        Task {
+                            let success = await viewModel.ensureProjectExists(for: flowStore)
+                            if (success || flowStore.createdProject != nil), let projectID = flowStore.createdProject?.id {
+                                generationProjectID = projectID
+                                navigateToGeneration = true
+                            }
+                        }
                     }
-                }
-            }
             .disabled(viewModel.isCreatingProject)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .navigationDestination(isPresented: $navigateToPresentation) {
-            if let projectID = presentationProjectID {
-                ComicPresentationCoordinatorView(
-                    projectID: projectID,
-                    container: container,
-                    initialMode: .reveal,
-                    storyText: flowStore.storyText
+        .navigationDestination(isPresented: $navigateToGeneration) {
+            if let projectID = generationProjectID {
+                GenerationProgressView(
+                    viewModel: GenerationProgressViewModel(
+                        comicGenerationService: container.comicGenerationService,
+                        comicPackageService: container.comicPackageService,
+                        pollingIntervalSeconds: container.configuration.heroPreviewPollingIntervalSeconds,
+                        projectID: projectID
+                    ),
+                    flowStore: flowStore,
+                    container: container
                 )
             } else {
                 ErrorStateView(
-                    title: "Presentation Not Ready",
-                    message: "Project could not be prepared. Please retry."
+                    title: "Generation Not Ready",
+                    message: "Project could not be prepared for generation. Please retry."
                 ) {}
             }
         }

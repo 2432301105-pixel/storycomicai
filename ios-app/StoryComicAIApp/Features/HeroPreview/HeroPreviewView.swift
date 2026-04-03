@@ -17,7 +17,9 @@ struct HeroPreviewView: View {
                 NavigationLink(
                     destination: GenerationProgressView(
                         viewModel: GenerationProgressViewModel(
+                            comicGenerationService: container.comicGenerationService,
                             comicPackageService: container.comicPackageService,
+                            pollingIntervalSeconds: container.configuration.heroPreviewPollingIntervalSeconds,
                             projectID: flowStore.createdProject?.id ?? UUID()
                         ),
                         flowStore: flowStore,

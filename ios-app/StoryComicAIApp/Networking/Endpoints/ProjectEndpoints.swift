@@ -26,3 +26,24 @@ enum ProjectEndpoints {
         )
     }
 }
+
+enum ComicGenerationEndpoints {
+    static func start(projectID: UUID, forceRegenerate: Bool = false) throws -> APIEndpoint {
+        APIEndpoint(
+            path: "/v1/projects/\(projectID.uuidString)/comic-generation",
+            method: .post,
+            body: try APIEndpoint.encodeBody(
+                ComicGenerationStartRequestBody(forceRegenerate: forceRegenerate)
+            ),
+            requiresAuth: true
+        )
+    }
+
+    static func status(projectID: UUID, jobID: UUID) -> APIEndpoint {
+        APIEndpoint(
+            path: "/v1/projects/\(projectID.uuidString)/comic-generation/\(jobID.uuidString)",
+            method: .get,
+            requiresAuth: true
+        )
+    }
+}

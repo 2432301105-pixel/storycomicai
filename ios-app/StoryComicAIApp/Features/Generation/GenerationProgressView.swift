@@ -5,7 +5,7 @@ struct GenerationProgressView: View {
     @ObservedObject var flowStore: CreateProjectFlowStore
     let container: AppContainer
 
-    @State private var navigateToPaywall: Bool = false
+    @State private var navigateToReveal: Bool = false
 
     var body: some View {
         ZStack {
@@ -28,6 +28,10 @@ struct GenerationProgressView: View {
                             ProgressView(value: viewModel.progress, total: 1)
                                 .tint(AppColor.accent)
 
+                            Text(viewModel.currentStageTitle)
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+
                             ProgressStepListView(steps: viewModel.steps)
 
                             if let errorMessage = viewModel.errorMessage {
@@ -38,21 +42,61 @@ struct GenerationProgressView: View {
                         }
                     }
 
+                    if !viewModel.sceneBreakdown.isEmpty {
+                        CardContainer {
+                            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                                Text("Scene breakdown")
+                                    .font(AppTypography.eyebrow)
+                                    .foregroundStyle(AppColor.textTertiary)
+                                    .tracking(1.1)
+                                    .textCase(.uppercase)
+
+                                ForEach(Array(viewModel.sceneBreakdown.enumerated()), id: \.offset) { index, item in
+                                    Text("\(index + 1). \(item)")
+                                        .font(AppTypography.body)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
+
+                    CardContainer {
+                        VStack(alignment: .leading, spacing: AppSpacing.md) {
+                            Text("Rendered pages")
+                                .font(AppTypography.eyebrow)
+                                .foregroundStyle(AppColor.textTertiary)
+                                .tracking(1.1)
+                                .textCase(.uppercase)
+
+                            if viewModel.renderedPageSummary.isEmpty {
+                                Text("Preparing the first comic pages.")
+                                    .font(AppTypography.body)
+                                    .foregroundStyle(AppColor.textSecondary)
+                            } else {
+                                ForEach(Array(viewModel.renderedPageSummary.enumerated()), id: \.offset) { _, item in
+                                    Text(item)
+                                        .font(AppTypography.body)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
+
                     NavigationLink(
-                        destination: PaywallView(
-                            viewModel: PaywallViewModel(
-                                comicPackageService: container.comicPackageService,
-                                analyticsService: container.analyticsService
-                            ),
-                            flowStore: flowStore,
-                            container: container
+                        destination: ComicPresentationCoordinatorView(
+                            projectID: flowStore.createdProject?.id ?? UUID(),
+                            container: container,
+                            initialMode: .reveal,
+                            storyText: flowStore.storyText
                         ),
-                        isActive: $navigateToPaywall
+                        isActive: $navigateToReveal
                     ) { EmptyView() }
 
-                    PrimaryButton(title: viewModel.isComplete ? "Continue to reveal" : "Preparing preview", isLoading: !viewModel.isComplete) {
+                    PrimaryButton(title: viewModel.isComplete ? "Continue to reveal" : "Rendering comic", isLoading: !viewModel.isComplete) {
                         if viewModel.isComplete {
-                            navigateToPaywall = true
+                            navigateToReveal = true
                         }
                     }
                     .disabled(!viewModel.isComplete)
@@ -65,7 +109,7 @@ struct GenerationProgressView: View {
         .navigationTitle("Generation")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .onAppear { viewModel.startIfNeeded() }
+        .onAppear { viewModel.startIfNeeded(flowStore: flowStore) }
     }
 
     private var generationBoard: some View {
@@ -111,7 +155,9 @@ struct GenerationProgressView: View {
 #Preview {
     GenerationProgressView(
         viewModel: GenerationProgressViewModel(
+            comicGenerationService: DefaultComicGenerationService(apiClient: MockAPIClient()),
             comicPackageService: AppContainer.preview().comicPackageService,
+            pollingIntervalSeconds: 1,
             projectID: UUID()
         ),
         flowStore: CreateProjectFlowStore(),

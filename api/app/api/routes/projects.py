@@ -15,6 +15,11 @@ from api.app.api.responses import success_response
 from api.app.db.session import get_db_session
 from api.app.models.user import User
 from api.app.schemas.comic_package import ComicPackageData
+from api.app.schemas.comic_generation import (
+    ComicGenerationStartData,
+    ComicGenerationStartRequest,
+    ComicGenerationStatusData,
+)
 from api.app.schemas.export import ExportCreateData, ExportCreateRequest, ExportStatusData
 from api.app.schemas.hero_preview import HeroPreviewStartRequest
 from api.app.schemas.ai.generation import ComicGenerationBlueprintData
@@ -22,6 +27,7 @@ from api.app.schemas.project import CreateProjectRequest
 from api.app.schemas.reading_progress import ReadingProgressData, ReadingProgressUpdateRequest
 from api.app.schemas.upload import PhotoCompleteRequest, PhotoPresignRequest
 from api.app.services.comic_package_service import ComicPackageService
+from api.app.services.comic_generation_service import ComicGenerationService
 from api.app.services.export_service import ExportService
 from api.app.services.generation_job_service import GenerationJobService
 from api.app.services.hero_preview_service import HeroPreviewService
@@ -36,6 +42,7 @@ upload_service = UploadService()
 hero_preview_service = HeroPreviewService()
 generation_job_service = GenerationJobService()
 comic_package_service = ComicPackageService()
+comic_generation_service = ComicGenerationService()
 reading_progress_service = ReadingProgressService()
 export_service = ExportService()
 
@@ -158,6 +165,41 @@ def get_generation_blueprint(
         user=current_user,
         project_id=project_id,
         base_url=str(request.base_url),
+    )
+    return success_response(request=request, data=data, status_code=200)
+
+
+@router.post("/{project_id}/comic-generation")
+def start_comic_generation(
+    request: Request,
+    project_id: uuid.UUID,
+    payload: ComicGenerationStartRequest,
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    data: ComicGenerationStartData = comic_generation_service.start_comic_generation(
+        db=db,
+        user=current_user,
+        project_id=project_id,
+        payload=payload,
+        base_url=str(request.base_url),
+    )
+    return success_response(request=request, data=data, status_code=202)
+
+
+@router.get("/{project_id}/comic-generation/{job_id}")
+def get_comic_generation_status(
+    request: Request,
+    project_id: uuid.UUID,
+    job_id: uuid.UUID,
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    data: ComicGenerationStatusData = comic_generation_service.get_comic_generation_status(
+        db=db,
+        user=current_user,
+        project_id=project_id,
+        job_id=job_id,
     )
     return success_response(request=request, data=data, status_code=200)
 

@@ -27,6 +27,7 @@ class UploadStatus(StrEnum):
 
 class JobType(StrEnum):
     HERO_PREVIEW = "hero_preview"
+    COMIC_GENERATION = "comic_generation"
 
 
 class JobStatus(StrEnum):
@@ -48,4 +49,3 @@ class TimestampMixin:
         server_default=func.now(),
         onupdate=func.now(),
     )
-
