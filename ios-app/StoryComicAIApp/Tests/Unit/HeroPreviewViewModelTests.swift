@@ -43,6 +43,7 @@ final class HeroPreviewViewModelTests: XCTestCase {
         flowStore.createdProject = Project(
             id: projectID,
             title: "Test",
+            storyText: "A masked runner races through the rain to stop a citywide blackout.",
             style: .manga,
             targetPages: 12,
             freePreviewPages: 3,

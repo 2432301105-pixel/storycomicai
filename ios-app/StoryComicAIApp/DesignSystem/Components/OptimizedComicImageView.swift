@@ -82,13 +82,6 @@ struct OptimizedComicImageView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(AppColor.backgroundSecondary)
             ComicCharacterPlaceholderCard()
-            VStack {
-                Spacer()
-                ProgressView()
-                    .tint(AppColor.accent)
-                    .scaleEffect(0.9)
-                    .padding(.bottom, 14)
-            }
         }
     }
 }
@@ -98,40 +91,60 @@ private struct ComicCharacterPlaceholderCard: View {
         GeometryReader { proxy in
             ZStack {
                 LinearGradient(
-                    colors: [AppColor.surfaceMuted, AppColor.pagePaper],
+                    colors: [AppColor.surfaceMuted, AppColor.pagePaper, AppColor.backgroundCanvas],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
+
+                RadialGradient(
+                    colors: [AppColor.accentSecondary.opacity(0.34), .clear],
+                    center: .top,
+                    startRadius: 10,
+                    endRadius: proxy.size.width * 0.8
+                )
+
+                ForEach(0..<8, id: \.self) { index in
+                    Capsule(style: .continuous)
+                        .fill(AppColor.accent.opacity(index.isMultiple(of: 2) ? 0.12 : 0.08))
+                        .frame(width: proxy.size.width * 0.7, height: 10)
+                        .rotationEffect(.degrees(Double(index) * 18 - 48))
+                }
+                .offset(y: -proxy.size.height * 0.08)
 
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
 
                     ZStack {
                         Circle()
-                            .fill(AppColor.accentSecondary.opacity(0.42))
-                            .frame(width: min(proxy.size.width, proxy.size.height) * 0.34)
-                            .offset(y: -proxy.size.height * 0.12)
+                            .fill(AppColor.accentSecondary.opacity(0.48))
+                            .frame(width: min(proxy.size.width, proxy.size.height) * 0.4)
+                            .offset(y: -proxy.size.height * 0.16)
+
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(AppColor.textPrimary.opacity(0.08))
+                            .frame(width: proxy.size.width * 0.74, height: proxy.size.height * 0.12)
+                            .offset(y: proxy.size.height * 0.24)
 
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [AppColor.accent.opacity(0.92), AppColor.textPrimary],
+                                    colors: [AppColor.accent.opacity(0.98), AppColor.textPrimary, AppColor.textPrimary],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
                             )
-                            .frame(width: proxy.size.width * 0.42, height: proxy.size.height * 0.36)
-                            .offset(y: proxy.size.height * 0.12)
+                            .frame(width: proxy.size.width * 0.46, height: proxy.size.height * 0.42)
+                            .offset(y: proxy.size.height * 0.1)
 
                         Circle()
-                            .fill(AppColor.textPrimary)
-                            .frame(width: proxy.size.width * 0.22)
-                            .offset(y: -proxy.size.height * 0.04)
+                            .fill(AppColor.textPrimary.opacity(0.98))
+                            .frame(width: proxy.size.width * 0.24)
+                            .offset(y: -proxy.size.height * 0.08)
 
                         Capsule(style: .continuous)
                             .fill(AppColor.textPrimary.opacity(0.92))
-                            .frame(width: proxy.size.width * 0.24, height: proxy.size.height * 0.08)
-                            .offset(y: proxy.size.height * 0.09)
+                            .frame(width: proxy.size.width * 0.26, height: proxy.size.height * 0.09)
+                            .offset(y: proxy.size.height * 0.06)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -145,7 +158,20 @@ private struct ComicCharacterPlaceholderCard: View {
                         Spacer()
                     }
                     .padding(12)
+
                     Spacer()
+
+                    HStack {
+                        Spacer()
+                        Text("Character panel loading")
+                            .font(AppTypography.badge)
+                            .foregroundStyle(AppColor.textSecondary.opacity(0.82))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(AppColor.surfaceElevated.opacity(0.88))
+                            .clipShape(Capsule())
+                    }
+                    .padding(12)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

@@ -124,4 +124,19 @@ enum StoryStyle: String, CaseIterable, Codable, Identifiable {
             return "Story"
         }
     }
+
+    var accentHex: String {
+        switch self {
+        case .manga:
+            return "E63946"
+        case .western:
+            return "D62828"
+        case .cartoon:
+            return "F4A261"
+        case .cinematic:
+            return "C9A84C"
+        case .childrensBook:
+            return "48CAE4"
+        }
+    }
 }

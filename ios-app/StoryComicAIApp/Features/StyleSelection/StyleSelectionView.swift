@@ -7,6 +7,7 @@ struct StyleSelectionView: View {
 
     @State private var navigateToPresentation: Bool = false
     @State private var presentationProjectID: UUID?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         FloatingPanelScreen(accent: AppColor.accentSecondary) {
@@ -33,7 +34,7 @@ struct StyleSelectionView: View {
             PrimaryButton(title: "Generate Comic", isLoading: viewModel.isCreatingProject) {
                 Task {
                     let success = await viewModel.ensureProjectExists(for: flowStore)
-                    if success, let projectID = flowStore.createdProject?.id {
+                    if (success || flowStore.createdProject != nil), let projectID = flowStore.createdProject?.id {
                         presentationProjectID = projectID
                         navigateToPresentation = true
                     }
@@ -77,50 +78,68 @@ struct StyleSelectionView: View {
 private struct StyleOptionCard: View {
     let style: StoryStyle
     let isSelected: Bool
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         CardContainer(emphasize: isSelected) {
-            HStack(alignment: .top, spacing: AppSpacing.md) {
-                ComicCoverCard(
-                    title: style.coverTitle,
-                    subtitle: style.coverSubtitle,
-                    accent: AppColor.accent(for: style),
-                    style: style,
-                    eyebrow: style.coverEyebrow,
-                    badge: isSelected ? "Selected" : nil,
-                    emphasize: isSelected
-                )
-                .frame(width: 94)
-
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(style.displayName)
-                        .font(AppTypography.heading)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-
-                    Text(style.editorialBlurb)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textSecondary)
-                        .lineLimit(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-
-                    HStack(spacing: AppSpacing.xs) {
-                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
-                        Text(isSelected ? "Selected for render" : "Tap to choose")
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColor.textSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
+            Group {
+                if horizontalSizeClass == .compact {
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        cover
+                            .frame(height: 190)
+                        styleMeta
                     }
-                    .padding(.top, AppSpacing.xs)
+                } else {
+                    HStack(alignment: .top, spacing: AppSpacing.md) {
+                        cover
+                            .frame(width: 94)
+                        styleMeta
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private var cover: some View {
+        ComicCoverCard(
+            title: style.coverTitle,
+            subtitle: style.coverSubtitle,
+            accent: AppColor.accent(for: style),
+            style: style,
+            eyebrow: style.coverEyebrow,
+            badge: isSelected ? "Selected" : nil,
+            emphasize: isSelected
+        )
+    }
+
+    private var styleMeta: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(style.displayName)
+                .font(AppTypography.heading)
+                .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.84)
+
+            Text(style.editorialBlurb)
+                .font(AppTypography.footnote)
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(horizontalSizeClass == .compact ? 3 : 4)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
+                Text(isSelected ? "Selected for render" : "Tap to choose")
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.92)
+            }
+            .padding(.top, AppSpacing.xs)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

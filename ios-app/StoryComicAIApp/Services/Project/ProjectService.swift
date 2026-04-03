@@ -1,7 +1,7 @@
 import Foundation
 
 protocol ProjectService: AnyObject {
-    func createProject(title: String, style: StoryStyle, targetPages: Int) async throws -> Project
+    func createProject(title: String, storyText: String, style: StoryStyle, targetPages: Int) async throws -> Project
     func listProjects(limit: Int) async throws -> [Project]
 }
 
@@ -12,8 +12,13 @@ final class DefaultProjectService: ProjectService {
         self.apiClient = apiClient
     }
 
-    func createProject(title: String, style: StoryStyle, targetPages: Int) async throws -> Project {
-        let endpoint = try ProjectEndpoints.createProject(title: title, style: style, targetPages: targetPages)
+    func createProject(title: String, storyText: String, style: StoryStyle, targetPages: Int) async throws -> Project {
+        let endpoint = try ProjectEndpoints.createProject(
+            title: title,
+            storyText: storyText,
+            style: style,
+            targetPages: targetPages
+        )
         do {
             let dto = try await apiClient.request(endpoint, decode: ProjectResponseDTO.self)
             return dto.toDomain()
@@ -23,6 +28,7 @@ final class DefaultProjectService: ProjectService {
                 return Project(
                     id: UUID(),
                     title: title,
+                    storyText: storyText,
                     style: style,
                     targetPages: targetPages,
                     freePreviewPages: 3,
@@ -63,6 +69,7 @@ private extension ProjectResponseDTO {
         Project(
             id: id,
             title: title,
+            storyText: storyText,
             style: style,
             targetPages: targetPages,
             freePreviewPages: freePreviewPages,

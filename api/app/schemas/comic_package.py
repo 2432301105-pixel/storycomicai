@@ -8,6 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from api.app.schemas.ai.generation import ComicGenerationBlueprintData
+
 
 class FocalPointData(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
@@ -126,5 +128,9 @@ class ComicPackageData(BaseModel):
     cta_metadata: ComicCTAMetadataData | None = Field(alias="ctaMetadata", default=None)
     legacy_reveal_metadata: ComicRevealMetadataData | None = Field(
         alias="legacyRevealMetadata",
+        default=None,
+    )
+    generation_blueprint: ComicGenerationBlueprintData | None = Field(
+        alias="generationBlueprint",
         default=None,
     )

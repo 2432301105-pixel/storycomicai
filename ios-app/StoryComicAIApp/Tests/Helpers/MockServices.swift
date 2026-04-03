@@ -5,11 +5,12 @@ final class MockProjectServiceForTests: ProjectService {
     var createResult: Project?
     var listResult: [Project] = []
 
-    func createProject(title: String, style: StoryStyle, targetPages: Int) async throws -> Project {
+    func createProject(title: String, storyText: String, style: StoryStyle, targetPages: Int) async throws -> Project {
         if let createResult { return createResult }
         return Project(
             id: UUID(),
             title: title,
+            storyText: storyText,
             style: style,
             targetPages: targetPages,
             freePreviewPages: 3,
@@ -70,6 +71,7 @@ final class MockHeroPreviewServiceForTests: HeroPreviewService {
 
 final class MockComicPackageServiceForTests: ComicPackageService {
     var package: ComicBookPackage = MockFixtures.sampleComicBookPackage(projectID: UUID(), source: .mock)
+    var generationBlueprint: ComicGenerationBlueprint?
     private(set) var updateCalls: [(projectID: UUID, pageIndex: Int)] = []
 
     func fetchComicBookPackage(projectID: UUID) async throws -> ComicBookPackage {
@@ -87,7 +89,19 @@ final class MockComicPackageServiceForTests: ComicPackageService {
             ctaMetadata: package.ctaMetadata,
             readingProgress: package.readingProgress,
             legacyRevealMetadata: package.legacyRevealMetadata,
+            generationBlueprint: package.generationBlueprint,
             source: package.source
+        )
+    }
+
+    func fetchGenerationBlueprint(projectID: UUID) async throws -> ComicGenerationBlueprint {
+        if let generationBlueprint {
+            return generationBlueprint
+        }
+        return MockFixtures.sampleGenerationBlueprint(
+            projectID: projectID,
+            style: .cinematic,
+            storyText: "A personalized comic is being generated from the story you wrote."
         )
     }
 

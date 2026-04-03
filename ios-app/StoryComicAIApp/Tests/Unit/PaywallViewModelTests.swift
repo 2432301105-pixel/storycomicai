@@ -113,6 +113,7 @@ final class PaywallViewModelTests: XCTestCase {
             ),
             readingProgress: package.readingProgress,
             legacyRevealMetadata: package.legacyRevealMetadata,
+            generationBlueprint: package.generationBlueprint,
             source: package.source
         )
 
@@ -163,6 +164,7 @@ final class PaywallViewModelTests: XCTestCase {
             ctaMetadata: package.ctaMetadata,
             readingProgress: package.readingProgress,
             legacyRevealMetadata: package.legacyRevealMetadata,
+            generationBlueprint: package.generationBlueprint,
             source: package.source
         )
 
@@ -226,6 +228,7 @@ final class PaywallViewModelTests: XCTestCase {
             ctaMetadata: package.ctaMetadata,
             readingProgress: package.readingProgress,
             legacyRevealMetadata: package.legacyRevealMetadata,
+            generationBlueprint: package.generationBlueprint,
             source: package.source
         )
 

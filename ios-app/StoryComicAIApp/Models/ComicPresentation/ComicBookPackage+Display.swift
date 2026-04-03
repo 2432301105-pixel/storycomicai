@@ -85,6 +85,7 @@ extension ComicBookPackage {
             ctaMetadata: ctaMetadata,
             readingProgress: readingProgress,
             legacyRevealMetadata: legacyRevealMetadata,
+            generationBlueprint: generationBlueprint,
             source: source
         )
     }

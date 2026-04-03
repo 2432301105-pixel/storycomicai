@@ -29,6 +29,12 @@ struct GenerationProgressView: View {
                                 .tint(AppColor.accent)
 
                             ProgressStepListView(steps: viewModel.steps)
+
+                            if let errorMessage = viewModel.errorMessage {
+                                Text(errorMessage)
+                                    .font(AppTypography.footnote)
+                                    .foregroundStyle(AppColor.error)
+                            }
                         }
                     }
 
@@ -104,7 +110,10 @@ struct GenerationProgressView: View {
 #if !CI_DISABLE_PREVIEWS
 #Preview {
     GenerationProgressView(
-        viewModel: GenerationProgressViewModel(),
+        viewModel: GenerationProgressViewModel(
+            comicPackageService: AppContainer.preview().comicPackageService,
+            projectID: UUID()
+        ),
         flowStore: CreateProjectFlowStore(),
         container: .preview()
     )

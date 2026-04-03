@@ -20,6 +20,7 @@ class ProjectService:
         project = Project(
             user_id=user.id,
             title=payload.title,
+            story_text=payload.story_text,
             style=payload.style.value,
             target_pages=payload.target_pages,
         )
@@ -56,6 +57,7 @@ class ProjectService:
         return ProjectData(
             id=project.id,
             title=project.title,
+            story_text=project.story_text,
             style=project.style,
             target_pages=project.target_pages,
             free_preview_pages=project.free_preview_pages,
@@ -64,4 +66,3 @@ class ProjectService:
             created_at_utc=project.created_at,
             updated_at_utc=project.updated_at,
         )
-

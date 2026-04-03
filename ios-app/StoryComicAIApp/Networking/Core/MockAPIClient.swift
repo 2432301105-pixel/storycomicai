@@ -82,6 +82,17 @@ final class MockAPIClient: APIClient {
             return try await decodeOutput(package, as: decode)
         }
 
+        // /v1/projects/{projectID}/generation-blueprint
+        if parts.count == 4,
+           parts[0] == "v1",
+           parts[1] == "projects",
+           endpoint.method == .get,
+           parts[3] == "generation-blueprint",
+           let projectID = UUID(uuidString: String(parts[2])) {
+            let blueprint = await store.generationBlueprint(projectID: projectID)
+            return try await decodeOutput(blueprint, as: decode)
+        }
+
         // /v1/projects/{projectID}/reading-progress
         if parts.count == 4,
            parts[0] == "v1",
@@ -163,6 +174,7 @@ actor MockBackendStore {
         let dto = ProjectResponseDTO(
             id: UUID(),
             title: payload.title,
+            storyText: payload.storyText,
             style: payload.style,
             targetPages: payload.targetPages,
             freePreviewPages: 3,
@@ -271,6 +283,11 @@ actor MockBackendStore {
         let basePackage: ComicBookPackage
         if let project {
             let isUnlocked = project.isUnlocked
+            let blueprint = MockFixtures.sampleGenerationBlueprint(
+                projectID: projectID,
+                style: project.style,
+                storyText: project.storyText
+            )
             basePackage = ComicBookPackage(
                 projectID: projectID,
                 title: project.title,
@@ -299,6 +316,7 @@ actor MockBackendStore {
                     )
                 } ?? fallbackPackage.readingProgress,
                 legacyRevealMetadata: fallbackPackage.legacyRevealMetadata,
+                generationBlueprint: blueprint,
                 source: .mock
             )
         } else {
@@ -375,8 +393,25 @@ actor MockBackendStore {
                     personalizationTag: $0.personalizationTag,
                     generatedAtUTC: $0.generatedAtUTC
                 )
-            }
+            },
+            generationBlueprint: generationBlueprintDTO(projectID: projectID)
         )
+    }
+
+    func generationBlueprint(projectID: UUID) -> ComicGenerationBlueprintResponseDTO {
+        generationBlueprintDTO(projectID: projectID)
+    }
+
+    private func generationBlueprintDTO(projectID: UUID) -> ComicGenerationBlueprintResponseDTO {
+        let project = projects.first { $0.id == projectID }
+        let blueprint = MockFixtures.sampleGenerationBlueprint(
+            projectID: projectID,
+            style: project?.style ?? .cinematic,
+            storyText: project?.storyText.isEmpty == false
+                ? project?.storyText ?? ""
+                : "A personalized comic is being generated from the story you wrote."
+        )
+        return blueprint.toDTO()
     }
 
     func updateReadingProgress(
@@ -492,4 +527,110 @@ private struct MockExportJobRecord {
     let type: ComicExportType
     let createdAtUTC: Date
     let artifactURL: URL?
+}
+
+private extension ComicGenerationBlueprint {
+    func toDTO() -> ComicGenerationBlueprintResponseDTO {
+        ComicGenerationBlueprintResponseDTO(
+            storyPlan: ComicStoryPlanResponseDTO(
+                logline: storyPlan.logline,
+                tone: storyPlan.tone,
+                beats: storyPlan.beats.map {
+                    ComicStoryBeatResponseDTO(
+                        beatID: $0.id,
+                        title: $0.title,
+                        summary: $0.summary,
+                        emotionalIntent: $0.emotionalIntent,
+                        sceneType: $0.sceneType,
+                        panelCountHint: $0.panelCountHint,
+                        keyMoment: $0.keyMoment
+                    )
+                }
+            ),
+            characterBible: ComicCharacterBibleResponseDTO(
+                codename: characterBible.codename,
+                essence: characterBible.essence,
+                physicalTraits: characterBible.physicalTraits,
+                wardrobeKeywords: characterBible.wardrobeKeywords,
+                paletteHexes: characterBible.paletteHexes,
+                silhouetteKeywords: characterBible.silhouetteKeywords,
+                continuityRules: characterBible.continuityRules,
+                sourcePhotoCount: characterBible.sourcePhotoCount
+            ),
+            styleGuide: ComicStyleGuideResponseDTO(
+                styleID: styleGuide.styleID,
+                displayLabel: styleGuide.displayLabel,
+                lineWeight: styleGuide.lineWeight,
+                shading: styleGuide.shading,
+                framingRules: styleGuide.framingRules,
+                paletteNotes: styleGuide.paletteNotes,
+                bubbleLanguage: styleGuide.bubbleLanguage,
+                pageLayoutLanguage: styleGuide.pageLayoutLanguage
+            ),
+            referenceAssets: referenceAssets.map {
+                ComicReferenceAssetResponseDTO(
+                    assetID: $0.id,
+                    title: $0.title,
+                    source: $0.source,
+                    tags: ComicReferenceAssetTagsResponseDTO(
+                        style: $0.tags.style,
+                        shotType: $0.tags.shotType,
+                        sceneType: $0.tags.sceneType,
+                        lighting: $0.tags.lighting,
+                        mood: $0.tags.mood,
+                        environment: $0.tags.environment,
+                        characterPose: $0.tags.characterPose,
+                        panelDensity: $0.tags.panelDensity,
+                        panelRole: $0.tags.panelRole,
+                        renderTraits: $0.tags.renderTraits,
+                        speechDensity: $0.tags.speechDensity
+                    ),
+                    retrievalReason: $0.retrievalReason,
+                    usagePrompt: $0.usagePrompt
+                )
+            },
+            pages: pages.map {
+                ComicGenerationPageResponseDTO(
+                    pageNumber: $0.pageNumber,
+                    title: $0.title,
+                    narrativePurpose: $0.narrativePurpose,
+                    panelSpecs: $0.panelSpecs.map {
+                        ComicGenerationPanelSpecResponseDTO(
+                            panelID: $0.id,
+                            beatID: $0.beatID,
+                            pageNumber: $0.pageNumber,
+                            panelIndex: $0.panelIndex,
+                            shotType: $0.shotType,
+                            environment: $0.environment,
+                            mood: $0.mood,
+                            action: $0.action,
+                            narration: $0.narration,
+                            dialogue: $0.dialogue,
+                            continuityNotes: $0.continuityNotes,
+                            referenceAssetIDs: $0.referenceAssetIDs,
+                            renderPrompt: $0.renderPrompt
+                        )
+                    }
+                )
+            },
+            panelRenders: panelRenders.map {
+                ComicPanelRenderResponseDTO(
+                    panelID: $0.id,
+                    pageNumber: $0.pageNumber,
+                    imageURL: $0.imageURL,
+                    thumbnailURL: $0.thumbnailURL,
+                    caption: $0.caption,
+                    dialogue: $0.dialogue,
+                    renderPrompt: $0.renderPrompt
+                )
+            },
+            qualitySignals: qualitySignals.map {
+                ComicQualitySignalResponseDTO(
+                    name: $0.name,
+                    status: $0.status,
+                    message: $0.message
+                )
+            }
+        )
+    }
 }

@@ -110,6 +110,7 @@ final class ExportViewModelTests: XCTestCase {
             ctaMetadata: basePackage.ctaMetadata,
             readingProgress: basePackage.readingProgress,
             legacyRevealMetadata: basePackage.legacyRevealMetadata,
+            generationBlueprint: basePackage.generationBlueprint,
             source: basePackage.source
         )
         let exportService = MockExportServiceForTests()

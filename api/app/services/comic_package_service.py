@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlencode
 import uuid
 
 from sqlalchemy import desc, select
@@ -11,6 +12,7 @@ from api.app.models.common import JobStatus, JobType
 from api.app.models.generation_job import GenerationJob
 from api.app.models.project import Project
 from api.app.models.user import User
+from api.app.schemas.ai.generation import ComicGenerationBlueprintData
 from api.app.schemas.comic_package import (
     ComicCTAMetadataData,
     ComicCoverData,
@@ -24,6 +26,7 @@ from api.app.schemas.comic_package import (
     ComicRevealMetadataData,
     FocalPointData,
 )
+from api.app.services.ai.comic_generation_orchestrator import ComicGenerationOrchestrator
 from api.app.services.project_service import ProjectService
 
 _PAGE_TEMPLATE_TITLES = (
@@ -59,6 +62,7 @@ class ComicPackageService:
 
     def __init__(self) -> None:
         self.project_service = ProjectService()
+        self.orchestrator = ComicGenerationOrchestrator()
 
     def get_comic_package(
         self,
@@ -74,33 +78,19 @@ class ComicPackageService:
         style_label = _STYLE_LABELS.get(style_key, project.style.replace("_", " ").title())
         style_hints = _STYLE_HINTS.get(style_key, _STYLE_HINTS["cinematic"])
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
+        generation_blueprint = self._build_generation_blueprint(
+            project=project,
+            base_url=normalized_base_url,
+            latest_preview=latest_preview,
+        )
 
-        page_count = max(project.target_pages, project.free_preview_pages)
-        pages = [
-            ComicPageData(
-                id=self._deterministic_uuid(project.id, page_number),
-                pageNumber=page_number,
-                title=self._page_title(project.title, page_number),
-                caption=self._page_caption(project.title, style_label, page_number),
-                thumbnailUrl=self._asset_url(
-                    base_url=normalized_base_url,
-                    project_id=project.id,
-                    asset_kind="page",
-                    asset_id=str(page_number),
-                    variant="thumbnail",
-                ),
-                fullImageUrl=self._asset_url(
-                    base_url=normalized_base_url,
-                    project_id=project.id,
-                    asset_kind="page",
-                    asset_id=str(page_number),
-                    variant="full",
-                ),
-                width=1536,
-                height=2048,
-            )
-            for page_number in range(1, page_count + 1)
-        ]
+        pages = self._build_pages(
+            project=project,
+            style_label=style_label,
+            base_url=normalized_base_url,
+            generation_blueprint=generation_blueprint,
+        )
+        page_count = len(pages)
 
         paywall_locked = not project.is_unlocked
         offers = [] if not paywall_locked else [
@@ -167,11 +157,118 @@ class ComicPackageService:
                 personalizationTag="Personal Edition",
                 generatedAtUtc=latest_preview.completed_at if latest_preview else project.updated_at,
             ),
+            generationBlueprint=generation_blueprint,
+        )
+
+    def get_generation_blueprint(
+        self,
+        *,
+        db: Session,
+        user: User,
+        project_id: uuid.UUID,
+        base_url: str,
+    ) -> ComicGenerationBlueprintData:
+        project = self.project_service.get_project_or_404(db=db, project_id=project_id, user_id=user.id)
+        latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
+        return self._build_generation_blueprint(
+            project=project,
+            base_url=base_url.rstrip("/"),
+            latest_preview=latest_preview,
         )
 
     @staticmethod
     def page_count(project: Project) -> int:
         return max(project.target_pages, project.free_preview_pages)
+
+    def _build_generation_blueprint(
+        self,
+        *,
+        project: Project,
+        base_url: str,
+        latest_preview: GenerationJob | None,
+    ) -> ComicGenerationBlueprintData:
+        return self.orchestrator.build_blueprint(
+            project=project,
+            base_url=base_url,
+            latest_preview=latest_preview,
+        )
+
+    def _build_pages(
+        self,
+        *,
+        project: Project,
+        style_label: str,
+        base_url: str,
+        generation_blueprint: ComicGenerationBlueprintData,
+    ) -> list[ComicPageData]:
+        captions_by_page: dict[int, str | None] = {}
+
+        for render in generation_blueprint.panel_renders:
+            if render.caption and render.page_number not in captions_by_page:
+                captions_by_page[render.page_number] = render.caption
+
+        pages: list[ComicPageData] = []
+        for page in generation_blueprint.pages:
+            fallback_title = self._page_title(project.title, page.page_number)
+            fallback_caption = self._page_caption(project.title, style_label, page.page_number)
+            pages.append(
+                ComicPageData(
+                    id=self._deterministic_uuid(project.id, page.page_number),
+                    pageNumber=page.page_number,
+                    title=page.title or fallback_title,
+                    caption=captions_by_page.get(page.page_number) or page.narrative_purpose or fallback_caption,
+                    thumbnailUrl=self._page_asset_url(
+                        base_url=base_url,
+                        project_id=project.id,
+                        style_key=project.style,
+                        page=page,
+                        caption=captions_by_page.get(page.page_number) or page.narrative_purpose or fallback_caption,
+                        variant="thumbnail",
+                    ),
+                    fullImageUrl=self._page_asset_url(
+                        base_url=base_url,
+                        project_id=project.id,
+                        style_key=project.style,
+                        page=page,
+                        caption=captions_by_page.get(page.page_number) or page.narrative_purpose or fallback_caption,
+                        variant="full",
+                    ),
+                    width=1536,
+                    height=2048,
+                )
+            )
+
+        if pages:
+            return pages
+
+        page_count = max(project.target_pages, project.free_preview_pages)
+        return [
+            ComicPageData(
+                id=self._deterministic_uuid(project.id, page_number),
+                pageNumber=page_number,
+                title=self._page_title(project.title, page_number),
+                caption=self._page_caption(project.title, style_label, page_number),
+                thumbnailUrl=self._asset_url(
+                    base_url=base_url,
+                    project_id=project.id,
+                    asset_kind="page",
+                    asset_id=str(page_number),
+                    variant="thumbnail",
+                    query_params={"style": project.style},
+                ),
+                fullImageUrl=self._asset_url(
+                    base_url=base_url,
+                    project_id=project.id,
+                    asset_kind="page",
+                    asset_id=str(page_number),
+                    variant="full",
+                    query_params={"style": project.style},
+                ),
+                width=1536,
+                height=2048,
+            )
+            for page_number in range(1, page_count + 1)
+        ]
 
     @staticmethod
     def _deterministic_uuid(project_id: uuid.UUID, page_number: int) -> uuid.UUID:
@@ -196,10 +293,14 @@ class ComicPackageService:
         asset_kind: str,
         asset_id: str,
         variant: str,
+        query_params: dict[str, str | None] | None = None,
     ) -> str:
+        params = {"variant": variant}
+        if query_params:
+            params.update({key: value for key, value in query_params.items() if value})
         return (
             f"{base_url}/v1/projects/{project_id}/rendered-assets/"
-            f"{asset_kind}/{asset_id}?variant={variant}"
+            f"{asset_kind}/{asset_id}?{urlencode(params)}"
         )
 
     def _cover_url(
@@ -223,6 +324,41 @@ class ComicPackageService:
             asset_kind="cover",
             asset_id="front",
             variant="full",
+            query_params={
+                "style": project.style,
+                "title": project.title,
+                "subtitle": "Your story begins",
+            },
+        )
+
+    def _page_asset_url(
+        self,
+        *,
+        base_url: str,
+        project_id: uuid.UUID,
+        style_key: str,
+        page,
+        caption: str,
+        variant: str,
+    ) -> str:
+        dialogues = [spec.dialogue for spec in page.panel_specs if spec.dialogue]
+        shots = [spec.shot_type for spec in page.panel_specs if spec.shot_type]
+        moods = [spec.mood for spec in page.panel_specs if spec.mood]
+        return self._asset_url(
+            base_url=base_url,
+            project_id=project_id,
+            asset_kind="page",
+            asset_id=str(page.page_number),
+            variant=variant,
+            query_params={
+                "style": style_key,
+                "title": page.title,
+                "caption": caption,
+                "dialogue": " | ".join(dialogues[:2]) if dialogues else None,
+                "shot": shots[0] if shots else None,
+                "mood": moods[0] if moods else None,
+                "panels": str(len(page.panel_specs)),
+            },
         )
 
     @staticmethod

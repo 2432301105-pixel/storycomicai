@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, SmallInteger, String
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, SmallInteger, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from api.app.core.constants import DEFAULT_FREE_PREVIEW_PAGES
@@ -32,6 +32,7 @@ class Project(TimestampMixin, Base):
         index=True,
     )
     title: Mapped[str] = mapped_column(String(120), nullable=False)
+    story_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     style: Mapped[str] = mapped_column(String(40), nullable=False)
     target_pages: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=12)
     free_preview_pages: Mapped[int] = mapped_column(

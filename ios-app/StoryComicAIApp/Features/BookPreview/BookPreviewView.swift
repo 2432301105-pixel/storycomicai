@@ -4,6 +4,7 @@ struct BookPreviewView: View {
     @ObservedObject var coordinator: ComicPresentationCoordinator
     @StateObject private var viewModel: BookPreviewViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     init(coordinator: ComicPresentationCoordinator) {
         self.coordinator = coordinator
@@ -48,6 +49,7 @@ struct BookPreviewView: View {
     private func loadedView(package: ComicBookPackage) -> some View {
         let spread = pageSpread(for: package)
         let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
+        let isCompactLayout = horizontalSizeClass == .compact
 
         VStack(spacing: AppSpacing.lg) {
             VStack(alignment: .leading, spacing: AppSpacing.xs) {
@@ -67,7 +69,8 @@ struct BookPreviewView: View {
                     accent: AppColor.accent(for: style),
                     progress: viewModel.turnProgress,
                     direction: viewModel.turnDirection,
-                    reduceMotion: reduceMotion
+                    reduceMotion: reduceMotion,
+                    isCompactLayout: isCompactLayout
                 )
                 .gesture(
                     DragGesture(minimumDistance: 6)
@@ -94,7 +97,7 @@ struct BookPreviewView: View {
                 )
                 .animation(AppMotion.pageTurn(reduceMotion: reduceMotion), value: coordinator.currentPageIndex)
             }
-            .frame(height: 540)
+            .frame(height: isCompactLayout ? 620 : 540)
 
             CardContainer {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -159,6 +162,9 @@ struct BookPreviewView: View {
     private func pageSpread(for package: ComicBookPackage) -> (left: ComicPresentationPage?, right: ComicPresentationPage?) {
         guard !package.pages.isEmpty else { return (nil, nil) }
         let currentIndex = min(max(coordinator.currentPageIndex, 0), package.pages.count - 1)
+        if horizontalSizeClass == .compact {
+            return (package.pages[currentIndex], nil)
+        }
         let nextIndex = min(currentIndex + 1, package.pages.count - 1)
         let rightPage: ComicPresentationPage? = nextIndex == currentIndex ? nil : package.pages[nextIndex]
         return (package.pages[currentIndex], rightPage)

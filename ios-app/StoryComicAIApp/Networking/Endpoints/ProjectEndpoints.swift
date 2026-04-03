@@ -1,13 +1,14 @@
 import Foundation
 
 enum ProjectEndpoints {
-    static func createProject(title: String, style: StoryStyle, targetPages: Int) throws -> APIEndpoint {
+    static func createProject(title: String, storyText: String, style: StoryStyle, targetPages: Int) throws -> APIEndpoint {
         APIEndpoint(
             path: "/v1/projects",
             method: .post,
             body: try APIEndpoint.encodeBody(
                 CreateProjectRequestBody(
                     title: title,
+                    storyText: storyText,
                     style: style,
                     targetPages: targetPages
                 )

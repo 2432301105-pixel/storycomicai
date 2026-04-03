@@ -14,6 +14,7 @@ struct ComicBookPackageResponseDTO: Codable {
     let readingProgress: ComicReadingProgressResponseDTO?
     let ctaMetadata: ComicCTAMetadataResponseDTO?
     let legacyRevealMetadata: ComicRevealMetadataResponseDTO?
+    let generationBlueprint: ComicGenerationBlueprintResponseDTO?
 
     enum CodingKeys: String, CodingKey {
         case projectID = "projectId"
@@ -29,6 +30,7 @@ struct ComicBookPackageResponseDTO: Codable {
         case readingProgress
         case ctaMetadata
         case legacyRevealMetadata
+        case generationBlueprint
         case revealMetadata
     }
 
@@ -45,7 +47,8 @@ struct ComicBookPackageResponseDTO: Codable {
         paywallMetadata: ComicPaywallMetadataResponseDTO?,
         readingProgress: ComicReadingProgressResponseDTO?,
         ctaMetadata: ComicCTAMetadataResponseDTO?,
-        legacyRevealMetadata: ComicRevealMetadataResponseDTO?
+        legacyRevealMetadata: ComicRevealMetadataResponseDTO?,
+        generationBlueprint: ComicGenerationBlueprintResponseDTO?
     ) {
         self.projectID = projectID
         self.title = title
@@ -60,6 +63,7 @@ struct ComicBookPackageResponseDTO: Codable {
         self.readingProgress = readingProgress
         self.ctaMetadata = ctaMetadata
         self.legacyRevealMetadata = legacyRevealMetadata
+        self.generationBlueprint = generationBlueprint
     }
 
     init(from decoder: Decoder) throws {
@@ -86,6 +90,7 @@ struct ComicBookPackageResponseDTO: Codable {
         ctaMetadata = try container.decodeIfPresent(ComicCTAMetadataResponseDTO.self, forKey: .ctaMetadata)
         legacyRevealMetadata = try container.decodeIfPresent(ComicRevealMetadataResponseDTO.self, forKey: .legacyRevealMetadata)
             ?? container.decodeIfPresent(ComicRevealMetadataResponseDTO.self, forKey: .revealMetadata)
+        generationBlueprint = try container.decodeIfPresent(ComicGenerationBlueprintResponseDTO.self, forKey: .generationBlueprint)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -103,6 +108,7 @@ struct ComicBookPackageResponseDTO: Codable {
         try container.encodeIfPresent(readingProgress, forKey: .readingProgress)
         try container.encodeIfPresent(ctaMetadata, forKey: .ctaMetadata)
         try container.encodeIfPresent(legacyRevealMetadata, forKey: .legacyRevealMetadata)
+        try container.encodeIfPresent(generationBlueprint, forKey: .generationBlueprint)
     }
 }
 
@@ -247,4 +253,170 @@ struct ComicReadingProgressResponseDTO: Codable {
         case currentPageIndex
         case lastOpenedAtUTC = "lastOpenedAtUtc"
     }
+}
+
+struct ComicGenerationBlueprintResponseDTO: Codable {
+    let storyPlan: ComicStoryPlanResponseDTO
+    let characterBible: ComicCharacterBibleResponseDTO
+    let styleGuide: ComicStyleGuideResponseDTO
+    let referenceAssets: [ComicReferenceAssetResponseDTO]
+    let pages: [ComicGenerationPageResponseDTO]
+    let panelRenders: [ComicPanelRenderResponseDTO]
+    let qualitySignals: [ComicQualitySignalResponseDTO]
+}
+
+struct ComicStoryPlanResponseDTO: Codable {
+    let logline: String
+    let tone: String
+    let beats: [ComicStoryBeatResponseDTO]
+}
+
+struct ComicStoryBeatResponseDTO: Codable {
+    let beatID: String
+    let title: String
+    let summary: String
+    let emotionalIntent: String
+    let sceneType: String
+    let panelCountHint: Int
+    let keyMoment: String
+
+    enum CodingKeys: String, CodingKey {
+        case beatID = "beatId"
+        case title
+        case summary
+        case emotionalIntent
+        case sceneType
+        case panelCountHint
+        case keyMoment
+    }
+}
+
+struct ComicCharacterBibleResponseDTO: Codable {
+    let codename: String
+    let essence: String
+    let physicalTraits: [String]
+    let wardrobeKeywords: [String]
+    let paletteHexes: [String]
+    let silhouetteKeywords: [String]
+    let continuityRules: [String]
+    let sourcePhotoCount: Int
+}
+
+struct ComicStyleGuideResponseDTO: Codable {
+    let styleID: String
+    let displayLabel: String
+    let lineWeight: String
+    let shading: String
+    let framingRules: [String]
+    let paletteNotes: [String]
+    let bubbleLanguage: String
+    let pageLayoutLanguage: String
+
+    enum CodingKeys: String, CodingKey {
+        case styleID = "styleId"
+        case displayLabel
+        case lineWeight
+        case shading
+        case framingRules
+        case paletteNotes
+        case bubbleLanguage
+        case pageLayoutLanguage
+    }
+}
+
+struct ComicReferenceAssetResponseDTO: Codable {
+    let assetID: String
+    let title: String
+    let source: String
+    let tags: ComicReferenceAssetTagsResponseDTO
+    let retrievalReason: String
+    let usagePrompt: String
+
+    enum CodingKeys: String, CodingKey {
+        case assetID = "assetId"
+        case title
+        case source
+        case tags
+        case retrievalReason
+        case usagePrompt
+    }
+}
+
+struct ComicReferenceAssetTagsResponseDTO: Codable {
+    let style: String
+    let shotType: String
+    let sceneType: String
+    let lighting: String
+    let mood: String
+    let environment: String?
+    let characterPose: String?
+    let panelDensity: String?
+    let panelRole: String?
+    let renderTraits: [String]
+    let speechDensity: String?
+}
+
+struct ComicGenerationPageResponseDTO: Codable {
+    let pageNumber: Int
+    let title: String
+    let narrativePurpose: String
+    let panelSpecs: [ComicGenerationPanelSpecResponseDTO]
+}
+
+struct ComicGenerationPanelSpecResponseDTO: Codable {
+    let panelID: String
+    let beatID: String
+    let pageNumber: Int
+    let panelIndex: Int
+    let shotType: String
+    let environment: String?
+    let mood: String
+    let action: String
+    let narration: String?
+    let dialogue: String?
+    let continuityNotes: [String]
+    let referenceAssetIDs: [String]
+    let renderPrompt: String
+
+    enum CodingKeys: String, CodingKey {
+        case panelID = "panelId"
+        case beatID = "beatId"
+        case pageNumber
+        case panelIndex
+        case shotType
+        case environment
+        case mood
+        case action
+        case narration
+        case dialogue
+        case continuityNotes
+        case referenceAssetIDs = "referenceAssetIds"
+        case renderPrompt
+    }
+}
+
+struct ComicPanelRenderResponseDTO: Codable {
+    let panelID: String
+    let pageNumber: Int
+    let imageURL: URL?
+    let thumbnailURL: URL?
+    let caption: String?
+    let dialogue: String?
+    let renderPrompt: String
+
+    enum CodingKeys: String, CodingKey {
+        case panelID = "panelId"
+        case pageNumber
+        case imageURL = "imageUrl"
+        case thumbnailURL = "thumbnailUrl"
+        case caption
+        case dialogue
+        case renderPrompt
+    }
+}
+
+struct ComicQualitySignalResponseDTO: Codable {
+    let name: String
+    let status: String
+    let message: String
 }

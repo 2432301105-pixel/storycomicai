@@ -20,6 +20,7 @@ enum MockFixtures {
             Project(
                 id: UUID(),
                 title: "Night Runner",
+                storyText: "A lone courier races through a neon city after discovering a conspiracy hidden inside the overnight dispatch route.",
                 style: .manga,
                 targetPages: 12,
                 freePreviewPages: 3,
@@ -31,6 +32,7 @@ enum MockFixtures {
             Project(
                 id: UUID(),
                 title: "Parallel Hearts",
+                storyText: "Two strangers keep meeting across the same city on the night every timeline begins to split apart.",
                 style: .cinematic,
                 targetPages: 16,
                 freePreviewPages: 3,
@@ -57,15 +59,22 @@ enum MockFixtures {
     ) -> ComicBookPackage {
         let title = coverTitle(for: style)
         let subtitle = coverSubtitle(for: style)
+        let storyText = sampleStoryText(for: style)
+        let generationBlueprint = sampleGenerationBlueprint(
+            projectID: projectID,
+            style: style,
+            storyText: storyText
+        )
         let pageCount = 10
         let pages: [ComicPresentationPage] = (1...pageCount).map { pageNumber in
-            ComicPresentationPage(
+            let generatedRender = generationBlueprint.panelRenders.first { $0.pageNumber == pageNumber }
+            return ComicPresentationPage(
                 id: UUID(),
                 pageNumber: pageNumber,
                 title: pageNumber == 1 ? "Cover" : "Chapter \(pageNumber - 1)",
                 caption: pageCaption(for: pageNumber, style: style),
-                thumbnailURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/thumb-\(pageNumber).jpg"),
-                fullImageURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/full-\(pageNumber).jpg"),
+                thumbnailURL: generatedRender?.thumbnailURL ?? URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/thumb-\(pageNumber).jpg"),
+                fullImageURL: generatedRender?.imageURL ?? URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/full-\(pageNumber).jpg"),
                 overlays: pageOverlays(for: pageNumber, style: style)
             )
         }
@@ -122,7 +131,158 @@ enum MockFixtures {
                 personalizationTag: "Hero Edition",
                 generatedAtUTC: Date()
             ),
+            generationBlueprint: generationBlueprint,
             source: source
+        )
+    }
+
+    static func sampleGenerationBlueprint(
+        projectID: UUID,
+        style: StoryStyle = .cinematic,
+        storyText: String
+    ) -> ComicGenerationBlueprint {
+        let codename = coverTitle(for: style)
+        let beatTitles = [
+            "Opening Mystery",
+            "First Encounter",
+            "The Hidden Pattern",
+            "Escalation",
+            "Midnight Promise",
+            "Climax"
+        ]
+        let panelSpecs: [ComicGenerationPanelSpec] = beatTitles.enumerated().flatMap { index, beatTitle in
+            let pageNumber = index + 1
+            return [
+                ComicGenerationPanelSpec(
+                    id: "page-\(pageNumber)-panel-1",
+                    beatID: "beat-\(pageNumber)",
+                    pageNumber: pageNumber,
+                    panelIndex: 1,
+                    shotType: index == 0 ? "establishing" : "medium",
+                    environment: style == .western ? "frontier town" : "neon city",
+                    mood: style.moodLabel.lowercased(),
+                    action: "\(beatTitle) framed as the first visual beat of the page.",
+                    narration: storyText.storyLines[safe: index]?.prefix(90).description,
+                    dialogue: nil,
+                    continuityNotes: [
+                        "Keep the hero silhouette consistent across every panel.",
+                        "Preserve the \(style.displayName.lowercased()) rendering language."
+                    ],
+                    referenceAssetIDs: ["\(style.rawValue)-ref-\(pageNumber)-1"],
+                    renderPrompt: "\(style.displayName) comic panel, \(beatTitle.lowercased()), dramatic composition, main character centered, readable comic composition"
+                ),
+                ComicGenerationPanelSpec(
+                    id: "page-\(pageNumber)-panel-2",
+                    beatID: "beat-\(pageNumber)",
+                    pageNumber: pageNumber,
+                    panelIndex: 2,
+                    shotType: "close_up",
+                    environment: style == .childrensBook ? "storybook street" : "story scene",
+                    mood: index >= 3 ? "tense" : "hopeful",
+                    action: "Close-up reaction panel that lands the page emotion.",
+                    narration: nil,
+                    dialogue: index.isMultiple(of: 2) ? "Then the next move has to be precise." : "We only get one chance at this.",
+                    continuityNotes: [
+                        "Face shape, wardrobe, and palette must stay locked.",
+                        "Panel should connect directly to the previous shot."
+                    ],
+                    referenceAssetIDs: ["\(style.rawValue)-ref-\(pageNumber)-2"],
+                    renderPrompt: "\(style.displayName) comic close-up, emotional beat, strong facial acting, cinematic comic lighting"
+                )
+            ]
+        }
+
+        let pages: [ComicGenerationPage] = beatTitles.enumerated().map { index, beatTitle in
+            let pageNumber = index + 1
+            return ComicGenerationPage(
+                id: "page-\(pageNumber)",
+                pageNumber: pageNumber,
+                title: beatTitle,
+                narrativePurpose: index == 0 ? "Establish the hero, world, and problem." : "Advance the story beat with clear comic pacing.",
+                panelSpecs: panelSpecs.filter { $0.pageNumber == pageNumber }
+            )
+        }
+
+        let panelRenders: [ComicPanelRender] = pages.map { page in
+            ComicPanelRender(
+                id: "render-\(page.id)",
+                pageNumber: page.pageNumber,
+                imageURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/page-\(page.pageNumber).jpg"),
+                thumbnailURL: URL(string: "https://mock.storycomicai.local/comic/\(projectID.uuidString)/thumb-\(page.pageNumber).jpg"),
+                caption: storyText.storyLines[safe: page.pageNumber - 1] ?? page.narrativePurpose,
+                dialogue: page.panelSpecs.last?.dialogue,
+                renderPrompt: page.panelSpecs.map(\.renderPrompt).joined(separator: " | ")
+            )
+        }
+
+        return ComicGenerationBlueprint(
+            storyPlan: ComicStoryPlan(
+                logline: storyText.storyLines.first ?? "A personalized comic adventure built from your story.",
+                tone: style.editorialBlurb,
+                beats: beatTitles.enumerated().map { index, beatTitle in
+                    ComicStoryBeat(
+                        id: "beat-\(index + 1)",
+                        title: beatTitle,
+                        summary: storyText.storyLines[safe: index] ?? "Story beat \(index + 1)",
+                        emotionalIntent: index < 2 ? "Curiosity" : index < 4 ? "Tension" : "Resolve",
+                        sceneType: index == 0 ? "reveal" : index == beatTitles.count - 1 ? "climax" : "dialogue",
+                        panelCountHint: 2,
+                        keyMoment: "Key visual beat for \(beatTitle.lowercased())"
+                    )
+                }
+            ),
+            characterBible: ComicCharacterBible(
+                codename: codename,
+                essence: "A hero shaped by the user's story and anchored to a premium comic silhouette.",
+                physicalTraits: ["heroic jawline", "expressive eyes", "clear silhouette"],
+                wardrobeKeywords: ["signature outerwear", "story-specific accent color", style.displayName.lowercased()],
+                paletteHexes: [style.accentHex, "F4F1EA", "1A1714"],
+                silhouetteKeywords: ["confident stance", "recognizable profile", "graphic shape language"],
+                continuityRules: [
+                    "Keep the face, hair, and costume family consistent.",
+                    "Never drift away from the chosen \(style.displayName.lowercased()) language."
+                ],
+                sourcePhotoCount: 2
+            ),
+            styleGuide: ComicStyleGuide(
+                styleID: style.rawValue,
+                displayLabel: style.displayName,
+                lineWeight: style == .manga ? "ink-heavy" : "clean-medium",
+                shading: style == .cartoon ? "flat cel shading" : "soft comic shading",
+                framingRules: ["Lead with a strong opener.", "Alternate wide context with emotional close-up."],
+                paletteNotes: ["Accent with \(style.moodLabel.lowercased()) energy.", "Keep the paper tone visible."],
+                bubbleLanguage: style == .western ? "bold pulp" : "premium comic dialogue",
+                pageLayoutLanguage: "two-panel prestige layout"
+            ),
+            referenceAssets: [
+                ComicReferenceAsset(
+                    id: "\(style.rawValue)-ref-1-1",
+                    title: "\(style.displayName) establishing mood",
+                    source: "manual_moodboard",
+                    tags: ComicReferenceAssetTags(
+                        style: style.rawValue,
+                        shotType: "establishing",
+                        sceneType: "reveal",
+                        lighting: style == .cinematic ? "neon night" : "graphic spotlight",
+                        mood: "mysterious",
+                        environment: "city",
+                        characterPose: "standing_heroic",
+                        panelDensity: "medium",
+                        panelRole: "opener",
+                        renderTraits: ["comic", "editorial", "premium"],
+                        speechDensity: "light"
+                    ),
+                    retrievalReason: "Matches the chosen style and opening beat.",
+                    usagePrompt: "Use as abstract guidance for framing and tone, not as a copied composition."
+                )
+            ],
+            pages: pages,
+            panelRenders: panelRenders,
+            qualitySignals: [
+                ComicQualitySignal(name: "story_planner", status: "planned", message: "Story beats are synchronized to page order."),
+                ComicQualitySignal(name: "character_bible", status: "locked", message: "Core silhouette and palette are anchored for consistency."),
+                ComicQualitySignal(name: "page_composer", status: "planned", message: "Panel density and reading order are resolved for comic layout.")
+            ]
         )
     }
 
@@ -290,5 +450,35 @@ enum MockFixtures {
                 )
             ]
         }
+    }
+
+    private static func sampleStoryText(for style: StoryStyle) -> String {
+        switch style {
+        case .manga:
+            return "A courier discovers that every delivery note predicts the next disaster in the city. To stop the final one, the courier becomes the masked runner the headlines fear."
+        case .western:
+            return "A lone rider returns to a frontier town carrying proof that the railroad bought every badge in the county. The last honest stand begins at sundown."
+        case .cartoon:
+            return "A quick-thinking hero turns a citywide mix-up into a race across rooftops, parades, and impossible escapes before the mayor's celebration begins."
+        case .cinematic:
+            return "When encrypted signals start appearing in the midnight rain, one investigator realizes the city has been staging its own cover-up for years. The only way out is through the story at the center of it."
+        case .childrensBook:
+            return "A brave child follows a moonlit map through the sleeping town and learns that every small act of courage can light the way for someone else."
+        }
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
+    }
+}
+
+private extension String {
+    var storyLines: [String] {
+        split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
     }
 }

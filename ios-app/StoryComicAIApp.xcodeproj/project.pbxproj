@@ -39,6 +39,7 @@
 		37AD42B575C0C58421E7044E /* AnalyticsSchemaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2BD0A6CF3AD79FBE91E6EB /* AnalyticsSchemaTests.swift */; };
 		387BAD6B1EEB68C039B0DE0B /* ComicPackageResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD545008B58C48E6CDC48B61 /* ComicPackageResponses.swift */; };
 		399DE0D301FC0AE476E3D494 /* AppCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD757C876684A5FC83958317 /* AppCoordinatorView.swift */; };
+		3A9F7654B10D47C2A4A16E2D /* WindowSurfaceNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9810D0E4C54C9E8B5F0E21 /* WindowSurfaceNormalizer.swift */; };
 		3D3F71407B21A1C89FAE4FC8 /* Coding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D335518061FB8365052F855E /* Coding.swift */; };
 		3DB3DDBEB8ECBE73C12E7E50 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56ED830863160D7F876B29A5 /* PrimaryButton.swift */; };
 		4199E9A4188DB3859ECE52BA /* ComicPackageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A444F6F87BC89378D39C0C /* ComicPackageService.swift */; };
@@ -214,6 +215,7 @@
 		78623BF40740F4D98D1402A1 /* MockServices.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MockServices.swift; path = StoryComicAIApp/Tests/Helpers/MockServices.swift; sourceTree = "<group>"; };
 		79FCC9ECD56B3E2E8D6CDE95 /* LibraryViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LibraryViewModel.swift; path = StoryComicAIApp/Features/Library/LibraryViewModel.swift; sourceTree = "<group>"; };
 		7A0D452FBABE8D82E66F59B1 /* CreateProjectView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CreateProjectView.swift; path = StoryComicAIApp/Features/CreateProject/CreateProjectView.swift; sourceTree = "<group>"; };
+		7B9810D0E4C54C9E8B5F0E21 /* WindowSurfaceNormalizer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WindowSurfaceNormalizer.swift; path = StoryComicAIApp/App/WindowSurfaceNormalizer.swift; sourceTree = "<group>"; };
 		7A13EB07FAEB61C575A3D406 /* ReaderAssetPrefetcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReaderAssetPrefetcher.swift; path = StoryComicAIApp/Services/ComicPackage/ReaderAssetPrefetcher.swift; sourceTree = "<group>"; };
 		7A4CC0A4A12D52EF035BD1F4 /* ComicPresentationMode.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ComicPresentationMode.swift; path = StoryComicAIApp/Models/ComicPresentation/ComicPresentationMode.swift; sourceTree = "<group>"; };
 		7C24049BF3E34D8EC391C2CE /* HTTPMethod.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HTTPMethod.swift; path = StoryComicAIApp/Networking/Core/HTTPMethod.swift; sourceTree = "<group>"; };
@@ -543,6 +545,7 @@
 				CF219BD3FCD753074FCA2D4B /* Navigation */,
 				69845DAEDABF6E04B6A516BA /* State */,
 				5D32B48A63EC1D11586BA693 /* StoryComicAIApp.swift */,
+				7B9810D0E4C54C9E8B5F0E21 /* WindowSurfaceNormalizer.swift */,
 			);
 			name = App;
 			sourceTree = "<group>";
@@ -1047,6 +1050,7 @@
 				D4F601B4FC6DCE6148D834D5 /* MainTabView.swift in Sources */,
 				2B633885536ECFC002B2EC1E /* AppSessionStore.swift in Sources */,
 				7981A811B79E946DA9D0DA8B /* StoryComicAIApp.swift in Sources */,
+				3A9F7654B10D47C2A4A16E2D /* WindowSurfaceNormalizer.swift in Sources */,
 				C24AB06A6F8B25A5E5B6D766 /* Color+Hex.swift in Sources */,
 				8A39A81D0131129CEB0D7312 /* Error+UserMessage.swift in Sources */,
 				34FB09847F3E94DEF4713DA9 /* LoadableState.swift in Sources */,
@@ -1183,15 +1187,17 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+					INFOPLIST_KEY_UIRequiresFullScreen = YES;
+					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.storycomicai.app;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = CI_DISABLE_PREVIEWS;
 				SWIFT_VERSION = 5.10;
-				TARGETED_DEVICE_FAMILY = "1,2";
+					TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1203,16 +1209,18 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+					CURRENT_PROJECT_VERSION = 1;
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+					INFOPLIST_KEY_UIRequiresFullScreen = YES;
+					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.storycomicai.app;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG CI_DISABLE_PREVIEWS";
 				SWIFT_VERSION = 5.10;
-				TARGETED_DEVICE_FAMILY = "1,2";
+					TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

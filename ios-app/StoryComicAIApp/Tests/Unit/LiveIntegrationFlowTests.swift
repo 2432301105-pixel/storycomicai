@@ -34,6 +34,7 @@ final class LiveIntegrationFlowTests: XCTestCase {
 
         let project = try await projectService.createProject(
             title: "Live Flow \(Int(Date().timeIntervalSince1970))",
+            storyText: "A lone hero follows a coded trail across the city to stop a midnight conspiracy before dawn.",
             style: .manga,
             targetPages: 12
         )

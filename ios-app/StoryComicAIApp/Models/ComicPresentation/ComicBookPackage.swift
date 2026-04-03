@@ -16,6 +16,7 @@ struct ComicBookPackage: Identifiable, Equatable {
     let readingProgress: ComicReadingProgress
     // Temporary fallback while backend transitions away from reveal_metadata.
     let legacyRevealMetadata: ComicRevealMetadata?
+    let generationBlueprint: ComicGenerationBlueprint?
     let source: ComicPackageSource
 
     init(
@@ -32,6 +33,7 @@ struct ComicBookPackage: Identifiable, Equatable {
         ctaMetadata: ComicCTAMetadata,
         readingProgress: ComicReadingProgress,
         legacyRevealMetadata: ComicRevealMetadata?,
+        generationBlueprint: ComicGenerationBlueprint?,
         source: ComicPackageSource
     ) {
         self.id = projectID
@@ -48,6 +50,7 @@ struct ComicBookPackage: Identifiable, Equatable {
         self.ctaMetadata = ctaMetadata
         self.readingProgress = readingProgress
         self.legacyRevealMetadata = legacyRevealMetadata
+        self.generationBlueprint = generationBlueprint
         self.source = source
     }
 }
@@ -209,4 +212,115 @@ struct ComicCTAMetadata: Equatable {
 struct ComicReadingProgress: Equatable {
     let currentPageIndex: Int
     let lastOpenedAtUTC: Date?
+}
+
+struct ComicGenerationBlueprint: Equatable {
+    let storyPlan: ComicStoryPlan
+    let characterBible: ComicCharacterBible
+    let styleGuide: ComicStyleGuide
+    let referenceAssets: [ComicReferenceAsset]
+    let pages: [ComicGenerationPage]
+    let panelRenders: [ComicPanelRender]
+    let qualitySignals: [ComicQualitySignal]
+}
+
+struct ComicStoryPlan: Equatable {
+    let logline: String
+    let tone: String
+    let beats: [ComicStoryBeat]
+}
+
+struct ComicStoryBeat: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let summary: String
+    let emotionalIntent: String
+    let sceneType: String
+    let panelCountHint: Int
+    let keyMoment: String
+}
+
+struct ComicCharacterBible: Equatable {
+    let codename: String
+    let essence: String
+    let physicalTraits: [String]
+    let wardrobeKeywords: [String]
+    let paletteHexes: [String]
+    let silhouetteKeywords: [String]
+    let continuityRules: [String]
+    let sourcePhotoCount: Int
+}
+
+struct ComicStyleGuide: Equatable {
+    let styleID: String
+    let displayLabel: String
+    let lineWeight: String
+    let shading: String
+    let framingRules: [String]
+    let paletteNotes: [String]
+    let bubbleLanguage: String
+    let pageLayoutLanguage: String
+}
+
+struct ComicReferenceAsset: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let source: String
+    let tags: ComicReferenceAssetTags
+    let retrievalReason: String
+    let usagePrompt: String
+}
+
+struct ComicReferenceAssetTags: Equatable {
+    let style: String
+    let shotType: String
+    let sceneType: String
+    let lighting: String
+    let mood: String
+    let environment: String?
+    let characterPose: String?
+    let panelDensity: String?
+    let panelRole: String?
+    let renderTraits: [String]
+    let speechDensity: String?
+}
+
+struct ComicGenerationPage: Identifiable, Equatable {
+    let id: String
+    let pageNumber: Int
+    let title: String
+    let narrativePurpose: String
+    let panelSpecs: [ComicGenerationPanelSpec]
+}
+
+struct ComicGenerationPanelSpec: Identifiable, Equatable {
+    let id: String
+    let beatID: String
+    let pageNumber: Int
+    let panelIndex: Int
+    let shotType: String
+    let environment: String?
+    let mood: String
+    let action: String
+    let narration: String?
+    let dialogue: String?
+    let continuityNotes: [String]
+    let referenceAssetIDs: [String]
+    let renderPrompt: String
+}
+
+struct ComicPanelRender: Identifiable, Equatable {
+    let id: String
+    let pageNumber: Int
+    let imageURL: URL?
+    let thumbnailURL: URL?
+    let caption: String?
+    let dialogue: String?
+    let renderPrompt: String
+}
+
+struct ComicQualitySignal: Equatable {
+    let name: String
+    let status: String
+    let message: String
 }

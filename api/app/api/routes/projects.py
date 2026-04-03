@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -16,6 +17,7 @@ from api.app.models.user import User
 from api.app.schemas.comic_package import ComicPackageData
 from api.app.schemas.export import ExportCreateData, ExportCreateRequest, ExportStatusData
 from api.app.schemas.hero_preview import HeroPreviewStartRequest
+from api.app.schemas.ai.generation import ComicGenerationBlueprintData
 from api.app.schemas.project import CreateProjectRequest
 from api.app.schemas.reading_progress import ReadingProgressData, ReadingProgressUpdateRequest
 from api.app.schemas.upload import PhotoCompleteRequest, PhotoPresignRequest
@@ -144,6 +146,22 @@ def get_comic_package(
     return success_response(request=request, data=data, status_code=200)
 
 
+@router.get("/{project_id}/generation-blueprint")
+def get_generation_blueprint(
+    request: Request,
+    project_id: uuid.UUID,
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    data: ComicGenerationBlueprintData = comic_package_service.get_generation_blueprint(
+        db=db,
+        user=current_user,
+        project_id=project_id,
+        base_url=str(request.base_url),
+    )
+    return success_response(request=request, data=data, status_code=200)
+
+
 @router.patch("/{project_id}/reading-progress")
 def update_reading_progress(
     request: Request,
@@ -213,27 +231,80 @@ def download_export_artifact(
 
 @router.get("/{project_id}/rendered-assets/{asset_kind}/{asset_id}")
 def get_rendered_asset(
+    request: Request,
     project_id: uuid.UUID,
     asset_kind: str,
     asset_id: str,
     variant: str = Query(default="full"),
 ) -> Response:
+    params = request.query_params
     safe_kind = html.escape(asset_kind.replace("_", " ").title())
     safe_asset_id = html.escape(asset_id)
     safe_variant = html.escape(variant.title())
-    fill = "#131722" if asset_kind == "cover" else "#1A1F29"
+    style = html.escape(params.get("style", "cinematic").replace("_", " ").title())
+    title = html.escape(params.get("title", safe_asset_id.replace("-", " ").title()))
+    subtitle = html.escape(params.get("subtitle", "StoryComicAI"))
+    caption = html.escape(params.get("caption", "A premium comic scene is being prepared."))
+    dialogue = html.escape(params.get("dialogue", ""))
+    shot = html.escape(params.get("shot", "medium").replace("_", " ").title())
+    mood = html.escape(params.get("mood", "mysterious").replace("_", " ").title())
+    panel_count = html.escape(params.get("panels", "2"))
+    palette_raw = params.get("palette", "C2A878,1A1F29,F4F1EA")
+    palette = [token for token in palette_raw.split(",") if re.fullmatch(r"[0-9A-Fa-f]{6}", token)]
+    accent = f"#{palette[0]}" if palette else "#C2A878"
+    ink = f"#{palette[1]}" if len(palette) > 1 else "#1A1F29"
+    paper = f"#{palette[2]}" if len(palette) > 2 else "#F4F1EA"
+
+    if asset_kind == "cover":
+        svg = (
+            "<svg xmlns='http://www.w3.org/2000/svg' width='1536' height='2048' viewBox='0 0 1536 2048'>"
+            f"<rect width='1536' height='2048' fill='{ink}'/>"
+            f"<rect x='92' y='92' width='1352' height='1864' rx='58' fill='{paper}'/>"
+            f"<rect x='164' y='182' width='1208' height='1120' rx='42' fill='{accent}' opacity='0.18'/>"
+            f"<path d='M768 360 C640 360 560 470 560 590 C560 690 610 760 680 840 L632 1110 L768 1020 L904 1110 L856 840 C926 760 976 690 976 590 C976 470 896 360 768 360 Z' fill='{ink}' opacity='0.88'/>"
+            f"<text x='190' y='1440' font-size='84' font-family='Helvetica-Bold' fill='{ink}'>{title}</text>"
+            f"<text x='190' y='1528' font-size='34' font-family='Helvetica' fill='{ink}' opacity='0.65'>{subtitle}</text>"
+            f"<text x='190' y='1680' font-size='26' font-family='Helvetica' fill='{accent}'>{style} • {safe_variant}</text>"
+            "</svg>"
+        )
+        return Response(content=svg, media_type="image/svg+xml")
+
+    if asset_kind == "page":
+        bubble = ""
+        if dialogue:
+            bubble = (
+                f"<rect x='892' y='300' width='430' height='220' rx='36' fill='white' stroke='{ink}' stroke-width='4'/>"
+                f"<text x='928' y='384' font-size='30' font-family='Helvetica-Bold' fill='{ink}'>DIALOGUE</text>"
+                f"<text x='928' y='438' font-size='30' font-family='Helvetica' fill='{ink}'>{dialogue[:52]}</text>"
+            )
+        svg = (
+            "<svg xmlns='http://www.w3.org/2000/svg' width='1536' height='2048' viewBox='0 0 1536 2048'>"
+            f"<rect width='1536' height='2048' fill='{paper}'/>"
+            f"<rect x='90' y='90' width='1356' height='1868' rx='24' fill='white' stroke='{accent}' stroke-width='6'/>"
+            f"<rect x='160' y='178' width='520' height='1160' rx='30' fill='{accent}' opacity='0.12'/>"
+            f"<rect x='742' y='178' width='634' height='560' rx='30' fill='{accent}' opacity='0.18'/>"
+            f"<path d='M420 470 C352 470 312 524 312 596 C312 662 344 720 398 770 L362 1040 L420 986 L478 1040 L442 770 C496 720 528 662 528 596 C528 524 488 470 420 470 Z' fill='{ink}' opacity='0.92'/>"
+            f"<rect x='836' y='860' width='458' height='660' rx='42' fill='{paper}' stroke='{ink}' stroke-width='4'/>"
+            f"<text x='880' y='940' font-size='34' font-family='Helvetica-Bold' fill='{ink}'>{safe_kind}</text>"
+            f"<text x='880' y='1012' font-size='28' font-family='Helvetica' fill='{ink}'>{shot}</text>"
+            f"<text x='880' y='1088' font-size='54' font-family='Helvetica-Bold' fill='{ink}'>{title[:20]}</text>"
+            f"<text x='190' y='1454' font-size='64' font-family='Helvetica-Bold' fill='{ink}'>{title[:24]}</text>"
+            f"<text x='190' y='1540' font-size='32' font-family='Helvetica' fill='{ink}' opacity='0.72'>{caption[:78]}</text>"
+            f"<text x='190' y='1650' font-size='24' font-family='Helvetica' fill='{accent}'>{style} • {mood} • {panel_count} panels</text>"
+            f"{bubble}"
+            "</svg>"
+        )
+        return Response(content=svg, media_type="image/svg+xml")
+
     svg = (
         "<svg xmlns='http://www.w3.org/2000/svg' width='1536' height='2048' viewBox='0 0 1536 2048'>"
-        f"<rect width='1536' height='2048' fill='{fill}'/>"
-        "<rect x='80' y='80' width='1376' height='1888' rx='42' fill='#F4F1EA'/>"
-        "<text x='768' y='880' text-anchor='middle' font-size='60' font-family='Helvetica' fill='#0F1218'>"
-        "StoryComicAI</text>"
-        "<text x='768' y='980' text-anchor='middle' font-size='34' font-family='Helvetica' fill='#555B66'>"
-        f"{safe_kind} • {safe_variant}</text>"
-        "<text x='768' y='1070' text-anchor='middle' font-size='28' font-family='Helvetica' fill='#555B66'>"
-        f"{safe_asset_id}</text>"
-        "<text x='768' y='1180' text-anchor='middle' font-size='20' font-family='Helvetica' fill='#7A808B'>"
-        f"{project_id}</text>"
+        f"<rect width='1536' height='2048' fill='{ink}'/>"
+        f"<rect x='110' y='110' width='1316' height='1828' rx='54' fill='{paper}'/>"
+        f"<rect x='160' y='182' width='1216' height='820' rx='40' fill='{accent}' opacity='0.16'/>"
+        f"<path d='M768 400 C648 400 580 500 580 620 C580 730 636 816 716 900 L668 1188 L768 1108 L868 1188 L820 900 C900 816 956 730 956 620 C956 500 888 400 768 400 Z' fill='{ink}' opacity='0.92'/>"
+        f"<text x='768' y='1390' text-anchor='middle' font-size='56' font-family='Helvetica-Bold' fill='{ink}'>{style}</text>"
+        f"<text x='768' y='1476' text-anchor='middle' font-size='34' font-family='Helvetica' fill='{ink}' opacity='0.7'>{safe_kind} • {safe_variant}</text>"
+        f"<text x='768' y='1560' text-anchor='middle' font-size='28' font-family='Helvetica' fill='{accent}'>{caption[:72]}</text>"
         "</svg>"
     )
     return Response(content=svg, media_type="image/svg+xml")

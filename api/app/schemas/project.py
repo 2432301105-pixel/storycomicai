@@ -27,6 +27,7 @@ class CreateProjectRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=3, max_length=120)
+    story_text: str = Field(min_length=1, max_length=12_000)
     style: StylePreset
     target_pages: int = Field(default=12, ge=MIN_PROJECT_PAGE_COUNT, le=MAX_PROJECT_PAGE_COUNT)
 
@@ -34,6 +35,7 @@ class CreateProjectRequest(BaseModel):
 class ProjectData(BaseModel):
     id: uuid.UUID
     title: str
+    story_text: str
     style: str
     target_pages: int
     free_preview_pages: int = DEFAULT_FREE_PREVIEW_PAGES
@@ -46,4 +48,3 @@ class ProjectData(BaseModel):
 class ProjectListData(BaseModel):
     items: list[ProjectData]
     next_cursor: str | None = None
-

@@ -9,6 +9,14 @@ enum ComicPackageEndpoints {
         )
     }
 
+    static func fetchGenerationBlueprint(projectID: UUID) -> APIEndpoint {
+        APIEndpoint(
+            path: "/v1/projects/\(projectID.uuidString)/generation-blueprint",
+            method: .get,
+            requiresAuth: true
+        )
+    }
+
     static func updateReadingProgress(
         projectID: UUID,
         currentPageIndex: Int,

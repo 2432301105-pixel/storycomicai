@@ -27,83 +27,69 @@ struct MainTabView: View {
     let container: AppContainer
 
     @State private var selectedTab: MainTab = .home
+    @State private var homeDepth: Int = 1
+    @State private var libraryDepth: Int = 1
+    @State private var settingsDepth: Int = 1
 
     init(container: AppContainer) {
         self.container = container
-        Self.configureTabBarAppearanceIfNeeded()
+        Self.configureNavigationAppearanceIfNeeded()
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                HomeView(viewModel: HomeViewModel(projectService: container.projectService), container: container)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label(MainTab.home.title, systemImage: MainTab.home.systemImage)
-            }
-            .tag(MainTab.home)
-
-            NavigationStack {
-                LibraryView(
-                    viewModel: LibraryViewModel(projectService: container.projectService),
-                    container: container
-                )
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label(MainTab.library.title, systemImage: MainTab.library.systemImage)
-            }
-            .tag(MainTab.library)
-
-            NavigationStack {
-                SettingsView(viewModel: SettingsViewModel())
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppColor.backgroundPrimary.ignoresSafeArea())
-            .tabItem {
-                Label(MainTab.settings.title, systemImage: MainTab.settings.systemImage)
-            }
-            .tag(MainTab.settings)
+        ZStack {
+            tabNavigationLayer(.home)
+            tabNavigationLayer(.library)
+            tabNavigationLayer(.settings)
         }
-        .tint(AppColor.accent)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
     }
 
-    private static var hasConfiguredTabBarAppearance = false
+    private func tabNavigationLayer(_ tab: MainTab) -> some View {
+        NavigationStack {
+            rootView(for: tab)
+                .background(
+                    NavigationDepthReader { depth in
+                        updateDepth(depth, for: tab)
+                    }
+                )
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if selectedTab == tab && depth(for: tab) <= 1 {
+                        PremiumTabBar(selectedTab: selectedTab) { nextTab in
+                            selectedTab = nextTab
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.bottom, 10)
+                    }
+                }
+                .background(AppColor.backgroundPrimary.ignoresSafeArea())
+        }
+        .opacity(selectedTab == tab ? 1 : 0)
+        .allowsHitTesting(selectedTab == tab)
+        .zIndex(selectedTab == tab ? 1 : 0)
+    }
 
-    private static func configureTabBarAppearanceIfNeeded() {
-        guard !hasConfiguredTabBarAppearance else { return }
-        hasConfiguredTabBarAppearance = true
+    @ViewBuilder
+    private func rootView(for tab: MainTab) -> some View {
+        switch tab {
+        case .home:
+            HomeView(viewModel: HomeViewModel(projectService: container.projectService), container: container)
+        case .library:
+            LibraryView(
+                viewModel: LibraryViewModel(projectService: container.projectService),
+                container: container
+            )
+        case .settings:
+            SettingsView(viewModel: SettingsViewModel())
+        }
+    }
 
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(AppColor.tabBarBackground)
-        appearance.shadowColor = UIColor(AppColor.tabBarBorder)
-        appearance.stackedLayoutAppearance.normal.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
-        appearance.stackedLayoutAppearance.selected.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
+    private static var hasConfiguredNavigationAppearance = false
 
-        let normalItemColor = UIColor(AppColor.textTertiary)
-        let selectedItemColor = UIColor(AppColor.accent)
-        appearance.stackedLayoutAppearance.normal.iconColor = normalItemColor
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: normalItemColor,
-            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
-        ]
-        appearance.stackedLayoutAppearance.selected.iconColor = selectedItemColor
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: selectedItemColor,
-            .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
-        ]
-
-        let proxy = UITabBar.appearance()
-        proxy.standardAppearance = appearance
-        proxy.scrollEdgeAppearance = appearance
-        proxy.isTranslucent = false
-        proxy.isHidden = false
+    private static func configureNavigationAppearanceIfNeeded() {
+        guard !hasConfiguredNavigationAppearance else { return }
+        hasConfiguredNavigationAppearance = true
 
         let navigationAppearance = UINavigationBarAppearance()
         navigationAppearance.configureWithOpaqueBackground()
@@ -117,6 +103,71 @@ struct MainTabView: View {
         navigationProxy.scrollEdgeAppearance = navigationAppearance
         navigationProxy.compactAppearance = navigationAppearance
         navigationProxy.tintColor = UIColor(AppColor.textPrimary)
+    }
+
+    private func depth(for tab: MainTab) -> Int {
+        switch tab {
+        case .home:
+            return homeDepth
+        case .library:
+            return libraryDepth
+        case .settings:
+            return settingsDepth
+        }
+    }
+
+    private func updateDepth(_ depth: Int, for tab: MainTab) {
+        let resolvedDepth = max(depth, 1)
+        switch tab {
+        case .home:
+            homeDepth = resolvedDepth
+        case .library:
+            libraryDepth = resolvedDepth
+        case .settings:
+            settingsDepth = resolvedDepth
+        }
+    }
+}
+
+private struct NavigationDepthReader: UIViewControllerRepresentable {
+    let onChange: (Int) -> Void
+
+    func makeUIViewController(context: Context) -> NavigationDepthProbeController {
+        let controller = NavigationDepthProbeController()
+        controller.onChange = onChange
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: NavigationDepthProbeController, context: Context) {
+        uiViewController.onChange = onChange
+        uiViewController.reportDepth()
+    }
+}
+
+final class NavigationDepthProbeController: UIViewController {
+    var onChange: ((Int) -> Void)?
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        reportDepth()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        reportDepth()
+    }
+
+    override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        reportDepth()
+    }
+
+    func reportDepth() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let depth = self.navigationController?.viewControllers.count ?? 1
+            self.onChange?(depth)
+        }
     }
 }
 

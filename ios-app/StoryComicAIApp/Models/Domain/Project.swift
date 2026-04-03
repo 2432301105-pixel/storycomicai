@@ -3,6 +3,7 @@ import Foundation
 struct Project: Identifiable, Hashable {
     let id: UUID
     let title: String
+    let storyText: String
     let style: StoryStyle
     let targetPages: Int
     let freePreviewPages: Int

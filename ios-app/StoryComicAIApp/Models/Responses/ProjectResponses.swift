@@ -3,6 +3,7 @@ import Foundation
 struct ProjectResponseDTO: Codable, Identifiable {
     let id: UUID
     let title: String
+    let storyText: String
     let style: StoryStyle
     let targetPages: Int
     let freePreviewPages: Int
@@ -14,6 +15,7 @@ struct ProjectResponseDTO: Codable, Identifiable {
     init(
         id: UUID,
         title: String,
+        storyText: String,
         style: StoryStyle,
         targetPages: Int,
         freePreviewPages: Int,
@@ -24,6 +26,7 @@ struct ProjectResponseDTO: Codable, Identifiable {
     ) {
         self.id = id
         self.title = title
+        self.storyText = storyText
         self.style = style
         self.targetPages = targetPages
         self.freePreviewPages = freePreviewPages
@@ -37,6 +40,7 @@ struct ProjectResponseDTO: Codable, Identifiable {
         let container = try decoder.container(keyedBy: AnyCodingKey.self)
         id = try container.decode(UUID.self, forAnyKey: ["id"])
         title = try container.decode(String.self, forAnyKey: ["title"])
+        storyText = try container.decodeIfPresent(String.self, forAnyKey: ["storyText", "story_text"]) ?? ""
         style = try container.decode(StoryStyle.self, forAnyKey: ["style"])
         targetPages = try container.decode(Int.self, forAnyKey: ["targetPages", "target_pages"])
         freePreviewPages = try container.decodeIfPresent(Int.self, forAnyKey: ["freePreviewPages", "free_preview_pages"]) ?? 3
@@ -50,6 +54,7 @@ struct ProjectResponseDTO: Codable, Identifiable {
         var container = encoder.container(keyedBy: AnyCodingKey.self)
         try container.encode(id, forKey: AnyCodingKey("id"))
         try container.encode(title, forKey: AnyCodingKey("title"))
+        try container.encode(storyText, forKey: AnyCodingKey("storyText"))
         try container.encode(style, forKey: AnyCodingKey("style"))
         try container.encode(targetPages, forKey: AnyCodingKey("targetPages"))
         try container.encode(freePreviewPages, forKey: AnyCodingKey("freePreviewPages"))

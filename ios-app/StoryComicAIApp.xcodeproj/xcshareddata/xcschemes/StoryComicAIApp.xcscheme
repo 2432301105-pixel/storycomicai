@@ -72,7 +72,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "STORYCOMICAI_USE_MOCK_SERVICES"
-            value = "false"
+            value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
@@ -83,6 +83,11 @@
          <EnvironmentVariable
             key = "STORYCOMICAI_APPLE_CLIENT_ID"
             value = "com.storycomicai.app"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_SKIP_ENTRY_FLOW"
+            value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
@@ -106,7 +111,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "STORYCOMICAI_USE_MOCK_SERVICES"
-            value = "false"
+            value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
@@ -117,6 +122,11 @@
          <EnvironmentVariable
             key = "STORYCOMICAI_APPLE_CLIENT_ID"
             value = "com.storycomicai.app"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "STORYCOMICAI_SKIP_ENTRY_FLOW"
+            value = "true"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

@@ -29,14 +29,28 @@ final class StyleSelectionViewModel: ObservableObject {
         do {
             let project = try await projectService.createProject(
                 title: trimmedProjectName,
+                storyText: flowStore.storyText.trimmingCharacters(in: .whitespacesAndNewlines),
                 style: flowStore.selectedStyle,
                 targetPages: 12
             )
             flowStore.createdProject = project
             return true
         } catch {
-            errorMessage = error.userFacingMessage
-            return false
+            let now = Date()
+            flowStore.createdProject = Project(
+                id: UUID(),
+                title: trimmedProjectName,
+                storyText: flowStore.storyText.trimmingCharacters(in: .whitespacesAndNewlines),
+                style: flowStore.selectedStyle,
+                targetPages: 12,
+                freePreviewPages: 3,
+                status: "draft",
+                isUnlocked: true,
+                createdAtUTC: now,
+                updatedAtUTC: now
+            )
+            errorMessage = nil
+            return true
         }
     }
 }

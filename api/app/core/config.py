@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     storage_presign_ttl_seconds: int = 900
     export_artifact_dir: str = "/tmp/storycomicai-artifacts"
     export_download_token_ttl_seconds: int = 3600
+    ai_render_provider: Literal["mock", "remote"] = "mock"
 
     @field_validator("database_url", mode="before")
     @classmethod

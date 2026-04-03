@@ -12,6 +12,7 @@ struct PageTurnView: View {
     let progress: CGFloat
     let direction: PageTurnDirection
     let reduceMotion: Bool
+    let isCompactLayout: Bool
 
     var body: some View {
         let clampedProgress = min(max(progress, 0), 1)
@@ -26,12 +27,17 @@ struct PageTurnView: View {
                     y: AppElevation.Book.pageYOffset
                 )
 
-            HStack(spacing: 0) {
-                SpreadPage(page: leftPage, accent: accent, placeholderTitle: "Left page")
-                spine
-                SpreadPage(page: rightPage, accent: accent, placeholderTitle: "Right page")
+            if isCompactLayout {
+                SpreadPage(page: leftPage, accent: accent, placeholderTitle: "Page")
+                    .padding(18)
+            } else {
+                HStack(spacing: 0) {
+                    SpreadPage(page: leftPage, accent: accent, placeholderTitle: "Left page")
+                    spine
+                    SpreadPage(page: rightPage, accent: accent, placeholderTitle: "Right page")
+                }
+                .padding(18)
             }
-            .padding(18)
         }
         .rotation3DEffect(
             .degrees(rotationDegrees),
@@ -145,7 +151,8 @@ private struct SpreadPage: View {
         accent: AppColor.accent,
         progress: 0.24,
         direction: .forward,
-        reduceMotion: false
+        reduceMotion: false,
+        isCompactLayout: false
     )
     .padding()
     .background(AppColor.backgroundPrimary)
