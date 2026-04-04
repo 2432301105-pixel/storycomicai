@@ -85,12 +85,14 @@ class ComicPackageService:
             latest_preview=latest_preview,
             latest_generation=latest_generation,
         )
+        rendered_assets = self._rendered_assets_from_job(latest_generation)
 
         pages = self._build_pages(
             project=project,
             style_label=style_label,
             base_url=normalized_base_url,
             generation_blueprint=generation_blueprint,
+            rendered_assets=rendered_assets,
         )
         page_count = len(pages)
 
@@ -116,6 +118,7 @@ class ComicPackageService:
                     base_url=normalized_base_url,
                     project=project,
                     latest_preview=latest_preview,
+                    rendered_assets=rendered_assets,
                 ),
                 titleText=project.title,
                 subtitleText="Your story begins",
@@ -209,8 +212,10 @@ class ComicPackageService:
         style_label: str,
         base_url: str,
         generation_blueprint: ComicGenerationBlueprintData,
+        rendered_assets: dict[str, object] | None,
     ) -> list[ComicPageData]:
         captions_by_page: dict[int, str | None] = {}
+        rendered_pages = self._rendered_page_asset_map(rendered_assets)
 
         for render in generation_blueprint.panel_renders:
             if render.caption and render.page_number not in captions_by_page:
@@ -226,7 +231,10 @@ class ComicPackageService:
                     pageNumber=page.page_number,
                     title=page.title or fallback_title,
                     caption=captions_by_page.get(page.page_number) or page.narrative_purpose or fallback_caption,
-                    thumbnailUrl=self._page_asset_url(
+                    thumbnailUrl=self._rendered_page_url(
+                        rendered_pages.get(page.page_number),
+                        "thumbnailUrl",
+                    ) or self._page_asset_url(
                         base_url=base_url,
                         project_id=project.id,
                         style_key=project.style,
@@ -234,7 +242,10 @@ class ComicPackageService:
                         caption=captions_by_page.get(page.page_number) or page.narrative_purpose or fallback_caption,
                         variant="thumbnail",
                     ),
-                    fullImageUrl=self._page_asset_url(
+                    fullImageUrl=self._rendered_page_url(
+                        rendered_pages.get(page.page_number),
+                        "fullUrl",
+                    ) or self._page_asset_url(
                         base_url=base_url,
                         project_id=project.id,
                         style_key=project.style,
@@ -318,7 +329,11 @@ class ComicPackageService:
         base_url: str,
         project: Project,
         latest_preview: GenerationJob | None,
+        rendered_assets: dict[str, object] | None,
     ) -> str:
+        rendered_cover = self._rendered_cover_url(rendered_assets)
+        if rendered_cover:
+            return rendered_cover
         preview_assets = (latest_preview.result or {}).get("preview_assets", {}) if latest_preview else {}
         front_url = preview_assets.get("front")
         if (
@@ -395,6 +410,50 @@ class ComicPackageService:
             .order_by(desc(GenerationJob.completed_at), desc(GenerationJob.created_at))
             .limit(1)
         )
+
+    @staticmethod
+    def _rendered_assets_from_job(job: GenerationJob | None) -> dict[str, object] | None:
+        if job is None or not isinstance(job.result, dict):
+            return None
+        rendered_assets = job.result.get("rendered_assets")
+        return rendered_assets if isinstance(rendered_assets, dict) else None
+
+    @staticmethod
+    def _rendered_cover_url(rendered_assets: dict[str, object] | None) -> str | None:
+        if not isinstance(rendered_assets, dict):
+            return None
+        cover = rendered_assets.get("cover")
+        if not isinstance(cover, dict):
+            return None
+        full_url = cover.get("fullUrl")
+        return full_url if isinstance(full_url, str) and full_url.startswith(("http://", "https://")) else None
+
+    @staticmethod
+    def _rendered_page_asset_map(rendered_assets: dict[str, object] | None) -> dict[int, dict[str, object]]:
+        if not isinstance(rendered_assets, dict):
+            return {}
+        pages = rendered_assets.get("pages")
+        if not isinstance(pages, list):
+            return {}
+
+        by_page_number: dict[int, dict[str, object]] = {}
+        for item in pages:
+            if not isinstance(item, dict):
+                continue
+            raw_page_number = item.get("pageNumber")
+            try:
+                page_number = int(raw_page_number)
+            except (TypeError, ValueError):
+                continue
+            by_page_number[page_number] = item
+        return by_page_number
+
+    @staticmethod
+    def _rendered_page_url(page_asset: dict[str, object] | None, field_name: str) -> str | None:
+        if not isinstance(page_asset, dict):
+            return None
+        value = page_asset.get(field_name)
+        return value if isinstance(value, str) and value.startswith(("http://", "https://")) else None
 
     @staticmethod
     def _blueprint_from_job(job: GenerationJob) -> ComicGenerationBlueprintData | None:

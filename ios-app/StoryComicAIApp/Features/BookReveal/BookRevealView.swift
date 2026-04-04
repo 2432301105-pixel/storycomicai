@@ -60,22 +60,39 @@ struct BookRevealView: View {
         let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
 
         return VStack(alignment: .leading, spacing: AppSpacing.xl) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(package.legacyRevealMetadata?.personalizationTag ?? "Personal Edition")
-                    .font(AppTypography.eyebrow)
-                    .foregroundStyle(AppColor.textTertiary)
-                    .tracking(1.2)
-                    .textCase(.uppercase)
+            HStack(alignment: .top, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text(package.legacyRevealMetadata?.personalizationTag ?? "Personal Edition")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.2)
+                        .textCase(.uppercase)
 
-                Text(revealHeadline(for: package))
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColor.textPrimary)
+                    Text(revealHeadline(for: package))
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
 
-                if let subheadline = revealSubheadline(for: package) {
-                    Text(subheadline)
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppColor.textSecondary)
+                    if let subheadline = revealSubheadline(for: package) {
+                        Text(subheadline)
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
                 }
+
+                Spacer(minLength: 0)
+
+                ComicCoverCard(
+                    title: package.cover.titleText ?? package.title,
+                    subtitle: style.shortSignature,
+                    accent: AppColor.accent(for: style),
+                    style: style,
+                    eyebrow: style.coverEyebrow,
+                    badge: package.isPaywallLocked ? "LOCKED" : "READY",
+                    emphasize: false,
+                    presentation: .compact,
+                    compactVariant: CompactCoverVariant.productDefault(for: style)
+                )
+                .frame(width: 110)
             }
 
             ZStack(alignment: .bottom) {

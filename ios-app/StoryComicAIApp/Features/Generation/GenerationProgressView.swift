@@ -13,13 +13,32 @@ struct GenerationProgressView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    Text(L10n.string("generation.title"))
-                        .font(AppTypography.title)
-                        .foregroundStyle(AppColor.textPrimary)
+                    HStack(alignment: .top, spacing: AppSpacing.md) {
+                        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                            Text(L10n.string("generation.title"))
+                                .font(AppTypography.title)
+                                .foregroundStyle(AppColor.textPrimary)
 
-                    Text(L10n.string("generation.subtitle"))
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppColor.textSecondary)
+                            Text(L10n.string("generation.subtitle"))
+                                .font(AppTypography.body)
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        ComicCoverCard(
+                            title: flowStore.projectName.isEmpty ? flowStore.selectedStyle.coverTitle : flowStore.projectName,
+                            subtitle: flowStore.selectedStyle.shortSignature,
+                            accent: AppColor.accent(for: flowStore.selectedStyle),
+                            style: flowStore.selectedStyle,
+                            eyebrow: flowStore.selectedStyle.coverEyebrow,
+                            badge: viewModel.isComplete ? "READY" : "RENDER",
+                            emphasize: false,
+                            presentation: .compact,
+                            compactVariant: CompactCoverVariant.productDefault(for: flowStore.selectedStyle)
+                        )
+                        .frame(width: 106)
+                    }
 
                     CardContainer(emphasize: true) {
                         VStack(alignment: .leading, spacing: AppSpacing.lg) {

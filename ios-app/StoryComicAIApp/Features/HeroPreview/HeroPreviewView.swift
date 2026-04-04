@@ -67,13 +67,32 @@ struct HeroPreviewView: View {
         case let .loaded(job):
             CardContainer(emphasize: true) {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text(L10n.string("hero.status_prefix", job.status.displayTitle))
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppColor.textPrimary)
+                    HStack(alignment: .top, spacing: AppSpacing.md) {
+                        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                            Text(L10n.string("hero.status_prefix", job.status.displayTitle))
+                                .font(AppTypography.body)
+                                .foregroundStyle(AppColor.textPrimary)
 
-                    Text(L10n.string("hero.stage_prefix", localizedStageTitle(job.currentStage)))
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textSecondary)
+                            Text(L10n.string("hero.stage_prefix", localizedStageTitle(job.currentStage)))
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        ComicCoverCard(
+                            title: flowStore.projectName.isEmpty ? flowStore.selectedStyle.coverTitle : flowStore.projectName,
+                            subtitle: flowStore.selectedStyle.shortSignature,
+                            accent: AppColor.accent(for: flowStore.selectedStyle),
+                            style: flowStore.selectedStyle,
+                            eyebrow: flowStore.selectedStyle.coverEyebrow,
+                            badge: job.status.displayTitle,
+                            emphasize: false,
+                            presentation: .compact,
+                            compactVariant: CompactCoverVariant.productDefault(for: flowStore.selectedStyle)
+                        )
+                        .frame(width: 106)
+                    }
 
                     ProgressView(value: Double(job.progressPercent), total: 100)
                         .tint(AppColor.accent)

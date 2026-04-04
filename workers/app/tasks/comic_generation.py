@@ -17,6 +17,7 @@ from api.app.models.generation_job import GenerationJob
 from api.app.models.project import Project
 from api.app.schemas.ai.generation import ComicGenerationBlueprintData
 from api.app.services.ai.comic_generation_orchestrator import ComicGenerationOrchestrator
+from api.app.services.ai.rendered_asset_pipeline_service import RenderedAssetPipelineService
 from api.app.services.exceptions import DomainError
 
 logger = logging.getLogger(__name__)
@@ -74,19 +75,30 @@ def run_comic_generation_job(
         db.commit()
 
         generation_blueprint = _resolve_generation_blueprint(db=db, project=project, payload=payload)
+        latest_preview = _latest_succeeded_preview_job(db=db, project_id=project.id)
+        provider_name = payload.get("provider_name") or payload.get("provider_mode") or "mock"
+        base_url = str(payload.get("base_url") or "http://localhost:8000").rstrip("/")
+        rendered_assets = RenderedAssetPipelineService().build_manifest(
+            project=project,
+            base_url=base_url,
+            generation_blueprint=generation_blueprint,
+            provider_name=provider_name,
+            latest_preview=latest_preview,
+        )
         for stage_name, stage_progress in _STAGE_FLOW:
             job.current_stage = stage_name
             job.progress_pct = stage_progress
             db.add(job)
             db.commit()
 
-        rendered_pages_count = len(generation_blueprint.pages)
-        rendered_panels_count = len(generation_blueprint.panel_renders)
+        rendered_pages_count = len(rendered_assets.get("pages", []))
+        rendered_panels_count = len(rendered_assets.get("panels", []))
         result = {
             "generation_blueprint": generation_blueprint.model_dump(by_alias=True),
+            "rendered_assets": rendered_assets,
             "rendered_pages_count": rendered_pages_count,
             "rendered_panels_count": rendered_panels_count,
-            "provider_name": payload.get("provider_name") or payload.get("provider_mode") or "mock",
+            "provider_name": provider_name,
         }
 
         job.status = JobStatus.SUCCEEDED
@@ -135,16 +147,7 @@ def _resolve_generation_blueprint(
     if isinstance(blueprint_payload, dict):
         return ComicGenerationBlueprintData.model_validate(blueprint_payload)
 
-    latest_preview = db.scalar(
-        select(GenerationJob)
-        .where(
-            GenerationJob.project_id == project.id,
-            GenerationJob.job_type == JobType.HERO_PREVIEW,
-            GenerationJob.status == JobStatus.SUCCEEDED,
-        )
-        .order_by(desc(GenerationJob.completed_at), desc(GenerationJob.created_at))
-        .limit(1)
-    )
+    latest_preview = _latest_succeeded_preview_job(db=db, project_id=project.id)
     base_url = str(payload.get("base_url") or "http://localhost:8000").rstrip("/")
     orchestrator = ComicGenerationOrchestrator()
     return orchestrator.build_blueprint(
@@ -155,7 +158,12 @@ def _resolve_generation_blueprint(
 
 
 def _fallback_project_status(*, db: Session, project_id: uuid.UUID) -> ProjectStatus:
-    preview_job = db.scalar(
+    preview_job = _latest_succeeded_preview_job(db=db, project_id=project_id)
+    return ProjectStatus.HERO_PREVIEW_READY if preview_job is not None else ProjectStatus.DRAFT
+
+
+def _latest_succeeded_preview_job(*, db: Session, project_id: uuid.UUID) -> GenerationJob | None:
+    return db.scalar(
         select(GenerationJob)
         .where(
             GenerationJob.project_id == project_id,
@@ -165,4 +173,3 @@ def _fallback_project_status(*, db: Session, project_id: uuid.UUID) -> ProjectSt
         .order_by(desc(GenerationJob.completed_at), desc(GenerationJob.created_at))
         .limit(1)
     )
-    return ProjectStatus.HERO_PREVIEW_READY if preview_job is not None else ProjectStatus.DRAFT
