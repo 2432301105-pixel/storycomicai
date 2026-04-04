@@ -28,6 +28,10 @@ StoryComicAI does not need a generic image classifier. It needs a story-to-comic
   - Produces continuity-aware prompts for each panel.
 - `panel_generation_service.py`
   - Converts panel specs into render-ready placeholders or future model requests.
+  - Talks only to the provider contract, never directly to a model vendor.
+- `render_provider.py`
+  - Normalizes external render services behind one backend contract.
+  - Supports direct panel responses and async job-based providers.
 - `page_composer_service.py`
   - Groups panels into comic pages with narrative purpose.
 - `comic_generation_orchestrator.py`
@@ -63,6 +67,37 @@ Near-term backend-driven UI should rely on:
   - returns generated pages plus `generationBlueprint`
 - `GET /v1/projects/{project_id}/generation-blueprint`
   - returns blueprint alone for generation-progress UI
+
+## Render Provider Adapter Contract
+The render layer is provider-driven, not model-driven.
+
+Required environment variables:
+- `SC_AI_RENDER_PROVIDER=mock|remote_http`
+- `SC_AI_RENDER_PROVIDER_BASE_URL`
+
+Optional environment variables:
+- `SC_AI_RENDER_PROVIDER_API_KEY`
+- `SC_AI_RENDER_PROVIDER_MODEL_ID`
+- `SC_AI_RENDER_PROVIDER_ADAPTER_ID`
+- `SC_AI_RENDER_PROVIDER_SUBMIT_PATH`
+- `SC_AI_RENDER_PROVIDER_STATUS_PATH_TEMPLATE`
+- `SC_AI_RENDER_PROVIDER_POLL_INTERVAL_MS`
+- `SC_AI_RENDER_PROVIDER_MAX_POLL_SECONDS`
+- `SC_AI_RENDER_PROVIDER_AUTH_HEADER`
+- `SC_AI_RENDER_PROVIDER_AUTH_SCHEME`
+
+Expected provider behaviors:
+1. Direct mode
+   - `POST {submit_path}` returns `{ panels: [...] }`
+2. Async mode
+   - `POST {submit_path}` returns `{ jobId, status }`
+   - backend polls `{status_path_template}` until `{ panels: [...] }` is available
+
+This keeps StoryComicAI free to swap providers without changing:
+- story planning
+- character bible synthesis
+- style guide generation
+- iOS generation progress UI
 
 ## iOS Expectations
 iOS should treat generation as a structured pipeline, not a spinner:

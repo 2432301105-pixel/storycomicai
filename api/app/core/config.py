@@ -44,12 +44,18 @@ class Settings(BaseSettings):
     storage_presign_ttl_seconds: int = 900
     export_artifact_dir: str = "/tmp/storycomicai-artifacts"
     export_download_token_ttl_seconds: int = 3600
-    ai_render_provider: Literal["mock", "remote"] = "mock"
+    ai_render_provider: Literal["mock", "remote", "remote_http"] = "mock"
     ai_render_provider_base_url: str | None = None
     ai_render_provider_api_key: str | None = None
     ai_render_provider_timeout_seconds: int = 45
     ai_render_provider_model_id: str = "storycomicai-panel-v1"
     ai_render_provider_adapter_id: str | None = None
+    ai_render_provider_submit_path: str = "/render/panels"
+    ai_render_provider_status_path_template: str = "/render/jobs/{job_id}"
+    ai_render_provider_poll_interval_ms: int = 1000
+    ai_render_provider_max_poll_seconds: int = 90
+    ai_render_provider_auth_header: str = "Authorization"
+    ai_render_provider_auth_scheme: str = "Bearer"
 
     @field_validator("database_url", mode="before")
     @classmethod
@@ -64,6 +70,16 @@ class Settings(BaseSettings):
             return normalized.replace("postgres://", "postgresql+psycopg://", 1)
         if normalized.startswith("postgresql://"):
             return normalized.replace("postgresql://", "postgresql+psycopg://", 1)
+        return normalized
+
+    @field_validator("ai_render_provider", mode="before")
+    @classmethod
+    def normalize_render_provider(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        normalized = value.strip().lower()
+        if normalized == "remote":
+            return "remote_http"
         return normalized
 
 
