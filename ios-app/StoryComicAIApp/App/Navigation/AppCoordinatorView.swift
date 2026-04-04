@@ -4,12 +4,28 @@ struct AppCoordinatorView: View {
     let container: AppContainer
     @EnvironmentObject private var sessionStore: AppSessionStore
 
+    private var showsCompactCoverGallery: Bool {
+        ProcessInfo.processInfo.environment["STORYCOMICAI_SHOW_COVER_GALLERY"] == "1"
+    }
+
+    private var singleCompactCoverVariant: CompactCoverVariant? {
+        guard let value = ProcessInfo.processInfo.environment["STORYCOMICAI_SHOW_COVER_VARIANT"] else {
+            return nil
+        }
+
+        return CompactCoverVariant(rawValue: value)
+    }
+
     var body: some View {
         ZStack {
             AppColor.backgroundPrimary.ignoresSafeArea()
 
             Group {
-                if sessionStore.shouldBypassEntryFlow {
+                if let singleCompactCoverVariant {
+                    SingleCompactCoverPreviewView(variant: singleCompactCoverVariant)
+                } else if showsCompactCoverGallery {
+                    CompactCoverGalleryView()
+                } else if sessionStore.shouldBypassEntryFlow {
                     if sessionStore.isBootstrappingLaunchSession && !sessionStore.isAuthenticated {
                         LaunchBootView()
                     } else {

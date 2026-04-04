@@ -35,6 +35,16 @@ enum AppColor {
     static let warning = Color(hex: "A56C22")
     static let error = Color(hex: "A64646")
 
+    static let comicInk = Color(hex: "17120F")
+    static let comicCream = Color(hex: "FFF4DF")
+    static let comicRed = Color(hex: "F0442E")
+    static let comicYellow = Color(hex: "FFD84A")
+    static let comicBlue = Color(hex: "3B68FF")
+    static let comicTeal = Color(hex: "2FAE9D")
+    static let comicBerry = Color(hex: "E24A76")
+    static let comicViolet = Color(hex: "6B56C9")
+    static let comicOrange = Color(hex: "F3963E")
+
     static let tabBarBackground = Color(hex: "FCF8F1")
     static let tabBarShadow = Color.black.opacity(0.06)
     static let tabBarBorder = Color(hex: "E2D5C5")
