@@ -8,9 +8,9 @@ enum MainTab: Hashable, CaseIterable {
 
     var title: String {
         switch self {
-        case .home: return "Home"
-        case .library: return "Library"
-        case .settings: return "Settings"
+        case .home: return L10n.string("tab.home")
+        case .library: return L10n.string("tab.library")
+        case .settings: return L10n.string("tab.settings")
         }
     }
 

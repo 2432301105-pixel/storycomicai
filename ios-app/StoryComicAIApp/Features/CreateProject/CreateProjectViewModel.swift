@@ -7,7 +7,7 @@ final class CreateProjectViewModel: ObservableObject {
     func validateProjectName(_ name: String) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 3 else {
-            validationMessage = "Project title must be at least 3 characters."
+            validationMessage = L10n.string("create.validation.short")
             return false
         }
         validationMessage = nil

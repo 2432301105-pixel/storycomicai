@@ -4,7 +4,7 @@ struct LoadingStateView: View {
     let title: String
     let subtitle: String?
 
-    init(title: String = "Loading", subtitle: String? = nil) {
+    init(title: String = L10n.string("loading.default_title"), subtitle: String? = nil) {
         self.title = title
         self.subtitle = subtitle
     }
@@ -25,7 +25,7 @@ struct LoadingStateView: View {
                 }
             }
 
-            Text("Preparing your comic studio")
+            Text(L10n.string("loading.preparing_studio"))
                 .font(AppTypography.meta)
                 .foregroundStyle(AppColor.textTertiary)
                 .textCase(.uppercase)
@@ -58,6 +58,6 @@ struct LoadingStateView: View {
 
 #if !CI_DISABLE_PREVIEWS
 #Preview {
-    LoadingStateView(title: "Preparing Hero", subtitle: "Generating your preview...")
+    LoadingStateView(title: L10n.string("hero.loading_title"), subtitle: L10n.string("hero.loading_subtitle"))
 }
 #endif

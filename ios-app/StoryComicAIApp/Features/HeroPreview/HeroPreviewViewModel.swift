@@ -29,11 +29,11 @@ final class HeroPreviewViewModel: ObservableObject {
 
     private func start(flowStore: CreateProjectFlowStore) async {
         guard let projectID = flowStore.createdProject?.id else {
-            state = .failed("Project is not ready.")
+            state = .failed(L10n.string("hero.error.project_not_ready"))
             return
         }
         guard !flowStore.uploadedPhotoIDs.isEmpty else {
-            state = .failed("Upload photos before starting hero preview.")
+            state = .failed(L10n.string("hero.error.upload_first"))
             return
         }
 

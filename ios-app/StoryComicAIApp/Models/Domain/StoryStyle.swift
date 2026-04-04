@@ -32,96 +32,81 @@ enum StoryStyle: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .manga: return "Manga"
-        case .western: return "Western Comic"
-        case .cartoon: return "Cartoon"
-        case .cinematic: return "Cinematic"
-        case .childrensBook: return "Children's Book"
+        case .manga: return L10n.string("style.manga.name")
+        case .western: return L10n.string("style.western.name")
+        case .cartoon: return L10n.string("style.cartoon.name")
+        case .cinematic: return L10n.string("style.cinematic.name")
+        case .childrensBook: return L10n.string("style.childrens.name")
         }
     }
 
     var editorialBlurb: String {
         switch self {
         case .manga:
-            return "Ink-forward, dramatic framing and high-contrast momentum."
+            return L10n.string("style.manga.blurb")
         case .western:
-            return "Vintage pulp energy with bold color and collector-print charm."
+            return L10n.string("style.western.blurb")
         case .cartoon:
-            return "Stylized character acting with playful shapes and clean rhythm."
+            return L10n.string("style.cartoon.blurb")
         case .cinematic:
-            return "Prestige-cover storytelling with dramatic light and polished pacing."
+            return L10n.string("style.cinematic.blurb")
         case .childrensBook:
-            return "Warm storybook softness built for giftable keepsake moments."
+            return L10n.string("style.childrens.blurb")
         }
     }
 
     var moodLabel: String {
         switch self {
-        case .manga: return "Ink Edition"
-        case .western: return "Collector Issue"
-        case .cartoon: return "Animated Edition"
-        case .cinematic: return "Prestige Edition"
-        case .childrensBook: return "Storybook Edition"
+        case .manga: return L10n.string("style.manga.mood")
+        case .western: return L10n.string("style.western.mood")
+        case .cartoon: return L10n.string("style.cartoon.mood")
+        case .cinematic: return L10n.string("style.cinematic.mood")
+        case .childrensBook: return L10n.string("style.childrens.mood")
         }
     }
 
     var shortSignature: String {
         switch self {
         case .manga:
-            return "High-contrast speed lines and ink-forward drama."
+            return L10n.string("style.manga.signature")
         case .western:
-            return "Vintage pulp color with bold collector energy."
+            return L10n.string("style.western.signature")
         case .cartoon:
-            return "Expressive shapes and clean animated rhythm."
+            return L10n.string("style.cartoon.signature")
         case .cinematic:
-            return "Prestige framing, dramatic light and premium pacing."
+            return L10n.string("style.cinematic.signature")
         case .childrensBook:
-            return "Warm storybook softness for giftable keepsakes."
+            return L10n.string("style.childrens.signature")
         }
     }
 
     var coverTitle: String {
         switch self {
-        case .manga:
-            return "Manga"
-        case .western:
-            return "Western"
-        case .cartoon:
-            return "Cartoon"
-        case .cinematic:
-            return "Cinema"
-        case .childrensBook:
-            return "Storybook"
+        case .manga: return L10n.string("style.manga.cover_title")
+        case .western: return L10n.string("style.western.cover_title")
+        case .cartoon: return L10n.string("style.cartoon.cover_title")
+        case .cinematic: return L10n.string("style.cinematic.cover_title")
+        case .childrensBook: return L10n.string("style.childrens.cover_title")
         }
     }
 
     var coverSubtitle: String {
         switch self {
-        case .manga:
-            return "Ink drama"
-        case .western:
-            return "Collector pulp"
-        case .cartoon:
-            return "Clean shapes"
-        case .cinematic:
-            return "Prestige pace"
-        case .childrensBook:
-            return "Warm keepsake"
+        case .manga: return L10n.string("style.manga.cover_subtitle")
+        case .western: return L10n.string("style.western.cover_subtitle")
+        case .cartoon: return L10n.string("style.cartoon.cover_subtitle")
+        case .cinematic: return L10n.string("style.cinematic.cover_subtitle")
+        case .childrensBook: return L10n.string("style.childrens.cover_subtitle")
         }
     }
 
     var coverEyebrow: String {
         switch self {
-        case .manga:
-            return "Ink"
-        case .western:
-            return "Issue"
-        case .cartoon:
-            return "Edition"
-        case .cinematic:
-            return "Prestige"
-        case .childrensBook:
-            return "Story"
+        case .manga: return L10n.string("style.manga.cover_eyebrow")
+        case .western: return L10n.string("style.western.cover_eyebrow")
+        case .cartoon: return L10n.string("style.cartoon.cover_eyebrow")
+        case .cinematic: return L10n.string("style.cinematic.cover_eyebrow")
+        case .childrensBook: return L10n.string("style.childrens.cover_eyebrow")
         }
     }
 

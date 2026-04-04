@@ -18,7 +18,7 @@ final class StyleSelectionViewModel: ObservableObject {
 
         let trimmedProjectName = flowStore.projectName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedProjectName.count >= 3 else {
-            errorMessage = "Project title is missing. Go back and set a valid title."
+            errorMessage = L10n.string("style.error.title_missing")
             return false
         }
 

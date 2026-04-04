@@ -16,10 +16,10 @@ struct LibraryView: View {
             Group {
                 switch viewModel.state {
                 case .idle, .loading:
-                    LoadingStateView(title: "Loading your shelf", subtitle: "Arranging your finished editions")
+                    LoadingStateView(title: L10n.string("library.loading_title"), subtitle: L10n.string("library.loading_subtitle"))
 
                 case let .failed(message):
-                    ErrorStateView(title: "Failed to load library", message: message) {
+                    ErrorStateView(title: L10n.string("library.error_title"), message: message) {
                         Task { await viewModel.loadProjects() }
                     }
 
@@ -31,10 +31,10 @@ struct LibraryView: View {
                             if projects.isEmpty {
                                 CardContainer(emphasize: true) {
                                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                                        Text("Your first comic belongs here")
+                                        Text(L10n.string("library.empty_title"))
                                             .font(AppTypography.section)
                                             .foregroundStyle(AppColor.textPrimary)
-                                        Text("Once a project is generated, its finished edition will appear on this shelf.")
+                                        Text(L10n.string("library.empty_body"))
                                             .font(AppTypography.body)
                                             .foregroundStyle(AppColor.textSecondary)
                                     }
@@ -76,17 +76,17 @@ struct LibraryView: View {
 
     private func header(projectCount: Int) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text("Collection")
+            Text(L10n.string("library.eyebrow"))
                 .font(AppTypography.eyebrow)
                 .foregroundStyle(AppColor.textTertiary)
                 .tracking(1.4)
                 .textCase(.uppercase)
 
-            Text("Your Comic Shelf")
+            Text(L10n.string("library.title"))
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
 
-            Text(projectCount == 0 ? "Your collection is waiting for its first edition." : "\(projectCount) comic editions in your collection")
+            Text(projectCount == 0 ? L10n.string("library.subtitle_empty") : L10n.string("library.subtitle_count", projectCount))
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
         }

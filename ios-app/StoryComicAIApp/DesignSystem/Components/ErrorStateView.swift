@@ -28,7 +28,7 @@ struct ErrorStateView: View {
             }
 
             if let retryAction {
-                PrimaryButton(title: "Try Again", action: retryAction)
+                PrimaryButton(title: L10n.string("action.try_again"), action: retryAction)
                     .frame(maxWidth: 240)
             }
         }
@@ -40,6 +40,6 @@ struct ErrorStateView: View {
 
 #if !CI_DISABLE_PREVIEWS
 #Preview {
-    ErrorStateView(title: "Something went wrong", message: "Please try again.", retryAction: {})
+    ErrorStateView(title: L10n.string("error.default_title"), message: L10n.string("error.default_message"), retryAction: {})
 }
 #endif

@@ -31,7 +31,7 @@ struct StyleSelectionView: View {
                 }
             }
         } footer: {
-                    PrimaryButton(title: "Generate Comic", isLoading: viewModel.isCreatingProject) {
+                    PrimaryButton(title: L10n.string("action.generate_comic"), isLoading: viewModel.isCreatingProject) {
                         Task {
                             let success = await viewModel.ensureProjectExists(for: flowStore)
                             if (success || flowStore.createdProject != nil), let projectID = flowStore.createdProject?.id {
@@ -57,22 +57,22 @@ struct StyleSelectionView: View {
                 )
             } else {
                 ErrorStateView(
-                    title: "Generation Not Ready",
-                    message: "Project could not be prepared for generation. Please retry."
+                    title: L10n.string("generation.not_ready_title"),
+                    message: L10n.string("generation.not_ready_message")
                 ) {}
             }
         }
-        .navigationTitle("Style")
+        .navigationTitle(L10n.string("style.nav"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("Choose The Edition")
+            Text(L10n.string("style.header_title"))
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
-            Text("Each style changes the cover language, page tone and final collectible feel of your comic.")
+            Text(L10n.string("style.header_subtitle"))
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
         }
@@ -136,7 +136,7 @@ private struct StyleOptionCard: View {
             HStack(spacing: AppSpacing.xs) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
-                Text(isSelected ? "Selected" : "Tap to choose")
+                Text(isSelected ? L10n.string("style.selected_for_rendering") : L10n.string("common.tap_to_choose"))
                     .font(AppTypography.footnote)
                     .foregroundStyle(AppColor.textSecondary)
                     .lineLimit(1)

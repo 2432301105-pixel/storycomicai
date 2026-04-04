@@ -11,17 +11,17 @@ struct StoryInputView: View {
     var body: some View {
         FloatingPanelScreen(accent: AppColor.accentSecondary) {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text("Story Source")
+                Text(L10n.string("story.eyebrow"))
                     .font(AppTypography.eyebrow)
                     .foregroundStyle(AppColor.textTertiary)
                     .tracking(1.4)
                     .textCase(.uppercase)
 
-                Text("Tell the story")
+                Text(L10n.string("story.title"))
                     .font(AppTypography.title)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("Write the actual story you want turned into a comic book. We use this text to shape scenes, captions, dialogue beats and page flow.")
+                Text(L10n.string("story.subtitle"))
                     .font(AppTypography.body)
                     .foregroundStyle(AppColor.textSecondary)
             }
@@ -29,25 +29,25 @@ struct StoryInputView: View {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 CardContainer {
                     HStack(spacing: AppSpacing.sm) {
-                        storyStep(title: "Story")
+                        storyStep(title: L10n.string("common.story"))
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppColor.textTertiary)
-                        storyStep(title: "Scenes")
+                        storyStep(title: L10n.string("common.scenes"))
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppColor.textTertiary)
-                        storyStep(title: "Panels")
+                        storyStep(title: L10n.string("common.panels"))
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppColor.textTertiary)
-                        storyStep(title: "Comic")
+                        storyStep(title: L10n.string("common.comic"))
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Your Story")
+                    Text(L10n.string("story.field"))
                         .font(AppTypography.meta)
                         .foregroundStyle(AppColor.textTertiary)
                         .textCase(.uppercase)
@@ -59,7 +59,7 @@ struct StoryInputView: View {
                         .background(AppColor.backgroundSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                    Text("Write events, conflict, emotional turns and key moments. This text becomes the comic’s narrative backbone.")
+                    Text(L10n.string("story.help"))
                         .font(AppTypography.footnote)
                         .foregroundStyle(AppColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -77,7 +77,7 @@ struct StoryInputView: View {
                 EmptyView()
             }
 
-            PrimaryButton(title: "Turn this into a comic") {
+            PrimaryButton(title: L10n.string("action.turn_story_into_comic")) {
                 storyFieldFocused = false
                 if viewModel.isStoryValid(flowStore.storyText) {
                     navigateToStyleSelection = true

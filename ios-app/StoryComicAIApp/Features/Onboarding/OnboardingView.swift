@@ -12,13 +12,13 @@ struct OnboardingView: View {
                 Spacer()
 
                 VStack(spacing: AppSpacing.sm) {
-                    Text("StoryComicAI")
+                    Text(L10n.string("app.name"))
                         .font(AppTypography.eyebrow)
                         .foregroundStyle(AppColor.textTertiary)
                         .tracking(1.4)
                         .textCase(.uppercase)
 
-                    Text("A comic book app,\nnot an AI tool.")
+                    Text(L10n.string("onboarding.headline"))
                         .font(AppTypography.title)
                         .foregroundStyle(AppColor.textPrimary)
                         .multilineTextAlignment(.center)
@@ -50,7 +50,7 @@ struct OnboardingView: View {
                     .frame(height: 320)
                 }
 
-                PrimaryButton(title: viewModel.isLastPage ? "Get Started" : "Next") {
+                PrimaryButton(title: viewModel.isLastPage ? L10n.string("action.get_started") : L10n.string("action.next")) {
                     if viewModel.isLastPage {
                         onFinish()
                     } else {

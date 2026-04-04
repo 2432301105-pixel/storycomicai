@@ -10,31 +10,31 @@ struct CreateProjectView: View {
     var body: some View {
         FloatingPanelScreen(accent: AppColor.accent) {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Edition Setup")
+                    Text(L10n.string("create.eyebrow"))
                         .font(AppTypography.eyebrow)
                         .foregroundStyle(AppColor.textTertiary)
                         .tracking(1.4)
                         .textCase(.uppercase)
 
-                    Text("Name your comic")
+                    Text(L10n.string("create.title"))
                         .font(AppTypography.title)
                         .foregroundStyle(AppColor.textPrimary)
 
-                    Text("Give this edition a strong title before you build the story world around it.")
+                    Text(L10n.string("create.subtitle"))
                         .font(AppTypography.body)
                         .foregroundStyle(AppColor.textSecondary)
             }
         } content: {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                Text("Project Name")
+                Text(L10n.string("create.field"))
                     .font(AppTypography.meta)
                     .foregroundStyle(AppColor.textTertiary)
                     .textCase(.uppercase)
 
-                TextField("Example: Shadow of Istanbul", text: $flowStore.projectName)
+                TextField(L10n.string("create.placeholder"), text: $flowStore.projectName)
                     .textFieldStyle(.roundedBorder)
 
-                Text("This title becomes the cover headline of the comic book edition.")
+                Text(L10n.string("create.help"))
                     .font(AppTypography.footnote)
                     .foregroundStyle(AppColor.textSecondary)
 
@@ -57,13 +57,13 @@ struct CreateProjectView: View {
                 EmptyView()
             }
 
-            PrimaryButton(title: "Continue") {
+            PrimaryButton(title: L10n.string("action.continue")) {
                 if viewModel.validateProjectName(flowStore.projectName) {
                     navigateToStoryInput = true
                 }
             }
         }
-        .navigationTitle("Create Project")
+        .navigationTitle(L10n.string("create.nav"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
     }

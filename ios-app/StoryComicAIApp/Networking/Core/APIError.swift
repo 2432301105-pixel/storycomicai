@@ -15,21 +15,21 @@ extension APIError {
     var userMessage: String {
         switch self {
         case .invalidURL:
-            return "Invalid server URL."
+            return L10n.string("api.invalid_url")
         case .invalidResponse:
-            return "Server response was invalid."
+            return L10n.string("api.invalid_response")
         case .unauthorized:
-            return "Your session is not authorized."
+            return L10n.string("api.unauthorized")
         case let .transport(underlying):
-            return "Network error: \(underlying.localizedDescription)"
+            return L10n.string("api.transport", underlying.localizedDescription)
         case let .backend(_, message):
             return message
         case .server:
-            return "Server error occurred. Please try again."
+            return L10n.string("api.server")
         case .decoding:
-            return "Could not process server response."
+            return L10n.string("api.decoding")
         case .emptyResponseData:
-            return "Server returned empty data."
+            return L10n.string("api.empty_response")
         }
     }
 }

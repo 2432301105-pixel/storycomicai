@@ -15,20 +15,20 @@ struct Project: Identifiable, Hashable {
     var statusDisplayName: String {
         switch status.lowercased() {
         case "completed":
-            return "Complete"
+            return L10n.string("project.status.complete")
         case "free_preview_ready":
-            return "Preview Ready"
+            return L10n.string("project.status.preview_ready")
         case "hero_preview_ready":
-            return "Hero Ready"
+            return L10n.string("project.status.hero_ready")
         case "generating", "queued", "running":
-            return "In Production"
+            return L10n.string("project.status.in_production")
         default:
             return status.replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
 
     var collectionSubtitle: String {
-        let unlockLabel = isUnlocked ? "Unlocked" : "Preview"
-        return "\(style.displayName) | \(unlockLabel)"
+        let unlockLabel = isUnlocked ? L10n.string("project.unlock.unlocked") : L10n.string("project.unlock.preview")
+        return L10n.string("project.collection_subtitle", style.displayName, unlockLabel)
     }
 }

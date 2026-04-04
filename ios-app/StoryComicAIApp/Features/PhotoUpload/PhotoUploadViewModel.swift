@@ -13,11 +13,11 @@ final class PhotoUploadViewModel: ObservableObject {
 
     func uploadSelectedPhotos(for flowStore: CreateProjectFlowStore) async -> Bool {
         guard let projectID = flowStore.createdProject?.id else {
-            uploadErrorMessage = "Project is missing."
+            uploadErrorMessage = L10n.string("photo.error.project_missing")
             return false
         }
         guard !flowStore.selectedLocalPhotos.isEmpty else {
-            uploadErrorMessage = "Please add at least one photo."
+            uploadErrorMessage = L10n.string("photo.error.add_photo")
             return false
         }
 

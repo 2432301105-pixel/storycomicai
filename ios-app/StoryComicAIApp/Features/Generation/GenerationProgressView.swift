@@ -13,11 +13,11 @@ struct GenerationProgressView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    Text("Building your preview edition")
+                    Text(L10n.string("generation.title"))
                         .font(AppTypography.title)
                         .foregroundStyle(AppColor.textPrimary)
 
-                    Text("We are planning the first pages, laying out the panels and preparing the book reveal.")
+                    Text(L10n.string("generation.subtitle"))
                         .font(AppTypography.body)
                         .foregroundStyle(AppColor.textSecondary)
 
@@ -45,7 +45,7 @@ struct GenerationProgressView: View {
                     if !viewModel.sceneBreakdown.isEmpty {
                         CardContainer {
                             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                                Text("Scene breakdown")
+                                Text(L10n.string("generation.scene_breakdown"))
                                     .font(AppTypography.eyebrow)
                                     .foregroundStyle(AppColor.textTertiary)
                                     .tracking(1.1)
@@ -63,14 +63,14 @@ struct GenerationProgressView: View {
 
                     CardContainer {
                         VStack(alignment: .leading, spacing: AppSpacing.md) {
-                            Text("Rendered pages")
+                            Text(L10n.string("generation.rendered_pages"))
                                 .font(AppTypography.eyebrow)
                                 .foregroundStyle(AppColor.textTertiary)
                                 .tracking(1.1)
                                 .textCase(.uppercase)
 
                             if viewModel.renderedPageSummary.isEmpty {
-                                Text("Preparing the first comic pages.")
+                                Text(L10n.string("generation.rendered_pages_preparing"))
                                     .font(AppTypography.body)
                                     .foregroundStyle(AppColor.textSecondary)
                             } else {
@@ -94,7 +94,7 @@ struct GenerationProgressView: View {
                         isActive: $navigateToReveal
                     ) { EmptyView() }
 
-                    PrimaryButton(title: viewModel.isComplete ? "Continue to reveal" : "Rendering comic", isLoading: !viewModel.isComplete) {
+                    PrimaryButton(title: viewModel.isComplete ? L10n.string("action.continue_reveal") : L10n.string("action.rendering_comic"), isLoading: !viewModel.isComplete) {
                         if viewModel.isComplete {
                             navigateToReveal = true
                         }
@@ -106,7 +106,7 @@ struct GenerationProgressView: View {
                 .padding(.bottom, AppSpacing.section)
             }
         }
-        .navigationTitle("Generation")
+        .navigationTitle(L10n.string("generation.nav"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .onAppear { viewModel.startIfNeeded(flowStore: flowStore) }
@@ -114,7 +114,7 @@ struct GenerationProgressView: View {
 
     private var generationBoard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Preview panels")
+            Text(L10n.string("generation.preview_panels"))
                 .font(AppTypography.eyebrow)
                 .foregroundStyle(AppColor.textTertiary)
                 .tracking(1.1)

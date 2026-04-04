@@ -10,24 +10,24 @@ struct PhotoUploadView: View {
     var body: some View {
         FloatingPanelScreen(accent: AppColor.accentSecondary) {
             VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text("Hero Source")
+                Text(L10n.string("photo.eyebrow"))
                     .font(AppTypography.eyebrow)
                     .foregroundStyle(AppColor.textTertiary)
                     .tracking(1.4)
                     .textCase(.uppercase)
 
-                Text("Choose reference photos")
+                Text(L10n.string("photo.title"))
                     .font(AppTypography.title)
                     .foregroundStyle(AppColor.textPrimary)
 
-                Text("These images define the face and identity that should persist across the comic.")
+                Text(L10n.string("photo.subtitle"))
                     .font(AppTypography.body)
                     .foregroundStyle(AppColor.textSecondary)
             }
         } content: {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Uploaded Photos")
+                    Text(L10n.string("photo.uploaded"))
                         .font(AppTypography.meta)
                         .foregroundStyle(AppColor.textTertiary)
                         .textCase(.uppercase)
@@ -35,7 +35,7 @@ struct PhotoUploadView: View {
                     CardContainer(emphasize: true) {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
                             if flowStore.selectedLocalPhotos.isEmpty {
-                                Text("No photos selected yet.")
+                                Text(L10n.string("photo.empty"))
                                     .font(AppTypography.footnote)
                                     .foregroundStyle(AppColor.textSecondary)
                             } else {
@@ -55,11 +55,11 @@ struct PhotoUploadView: View {
                 }
 
                 HStack(spacing: AppSpacing.sm) {
-                    PrimaryButton(title: "Add Demo Photo") {
+                    PrimaryButton(title: L10n.string("action.add_demo_photo")) {
                         viewModel.addMockPhoto(to: flowStore)
                     }
 
-                    PrimaryButton(title: "Use Fixture") {
+                    PrimaryButton(title: L10n.string("action.use_fixture")) {
                         flowStore.selectedLocalPhotos = MockFixtures.samplePhotos()
                     }
                 }
@@ -84,14 +84,14 @@ struct PhotoUploadView: View {
                 isActive: $navigateToHeroPreview
             ) { EmptyView() }
 
-            PrimaryButton(title: "Upload and Continue", isLoading: viewModel.isUploading) {
+            PrimaryButton(title: L10n.string("action.upload_continue"), isLoading: viewModel.isUploading) {
                 Task {
                     let success = await viewModel.uploadSelectedPhotos(for: flowStore)
                     if success { navigateToHeroPreview = true }
                 }
             }
         }
-        .navigationTitle("Photo Upload")
+        .navigationTitle(L10n.string("photo.nav"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
     }

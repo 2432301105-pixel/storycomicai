@@ -9,23 +9,25 @@ final class OnboardingViewModel: ObservableObject {
         let systemImage: String
     }
 
-    let pages: [Page] = [
-        Page(
-            title: "Turn Yourself Into The Hero",
-            subtitle: "Upload photos and build a personal comic with consistent character identity.",
-            systemImage: "person.crop.square"
-        ),
-        Page(
-            title: "Structured Story Pipeline",
-            subtitle: "Scenes and panels are generated in sequence for a coherent reading flow.",
-            systemImage: "text.book.closed"
-        ),
-        Page(
-            title: "Premium Comic Experience",
-            subtitle: "Cover pages, polished typography, and smooth page-by-page storytelling.",
-            systemImage: "sparkles.rectangle.stack"
-        )
-    ]
+    var pages: [Page] {
+        [
+            Page(
+                title: L10n.string("onboarding.page1.title"),
+                subtitle: L10n.string("onboarding.page1.subtitle"),
+                systemImage: "person.crop.square"
+            ),
+            Page(
+                title: L10n.string("onboarding.page2.title"),
+                subtitle: L10n.string("onboarding.page2.subtitle"),
+                systemImage: "text.book.closed"
+            ),
+            Page(
+                title: L10n.string("onboarding.page3.title"),
+                subtitle: L10n.string("onboarding.page3.subtitle"),
+                systemImage: "sparkles.rectangle.stack"
+            )
+        ]
+    }
 
     @Published var currentIndex: Int = 0
 

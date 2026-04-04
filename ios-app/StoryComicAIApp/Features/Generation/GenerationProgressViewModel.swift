@@ -6,7 +6,7 @@ final class GenerationProgressViewModel: ObservableObject {
     @Published private(set) var progress: Double = 0
     @Published private(set) var isComplete: Bool = false
     @Published private(set) var errorMessage: String?
-    @Published private(set) var currentStageTitle: String = "Queued"
+    @Published private(set) var currentStageTitle: String = L10n.string("generation.stage.queued")
     @Published private(set) var sceneBreakdown: [String] = []
     @Published private(set) var renderedPageSummary: [String] = []
 
@@ -93,7 +93,7 @@ final class GenerationProgressViewModel: ObservableObject {
         currentStageTitle = Self.displayTitle(for: job.currentStage)
         sceneBreakdown = Self.makeSceneBreakdown(from: blueprint)
         renderedPageSummary = Self.makeRenderedPageSummary(job: job, blueprint: blueprint)
-        errorMessage = job.status == .failed ? (job.errorMessage ?? "Comic generation failed.") : nil
+        errorMessage = job.status == .failed ? (job.errorMessage ?? L10n.string("generation.error_failed")) : nil
         isComplete = job.status == .succeeded
     }
 
@@ -101,7 +101,7 @@ final class GenerationProgressViewModel: ObservableObject {
         do {
             let package = try await comicPackageService.fetchComicBookPackage(projectID: projectID)
             let summaries = package.pages.prefix(max(1, min(4, package.pages.count))).map {
-                "Page \($0.pageNumber) • \($0.title)"
+                L10n.string("generation.page_summary", $0.pageNumber, $0.title)
             }
             if !summaries.isEmpty {
                 renderedPageSummary = summaries
@@ -113,12 +113,12 @@ final class GenerationProgressViewModel: ObservableObject {
 
     private static func baseSteps() -> [GenerationPipelineStep] {
         [
-            GenerationPipelineStep(title: "Story planner", status: .pending),
-            GenerationPipelineStep(title: "Character bible", status: .pending),
-            GenerationPipelineStep(title: "Style guide", status: .pending),
-            GenerationPipelineStep(title: "Reference taxonomy", status: .pending),
-            GenerationPipelineStep(title: "Panel prompts", status: .pending),
-            GenerationPipelineStep(title: "Page composer", status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.story_planner"), status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.character_bible"), status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.style_guide"), status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.reference_taxonomy"), status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.panel_prompts"), status: .pending),
+            GenerationPipelineStep(title: L10n.string("generation.step.page_composer"), status: .pending),
         ]
     }
 
@@ -132,27 +132,39 @@ final class GenerationProgressViewModel: ObservableObject {
         let pageCount = blueprint?.pages.count ?? 0
         let steps = [
             GenerationPipelineStep(
-                title: "Story planner" + (blueprint.map { " (\($0.storyPlan.beats.count) beats)" } ?? ""),
+                title: blueprint.map {
+                    L10n.string("generation.step.story_planner_beats", $0.storyPlan.beats.count)
+                } ?? L10n.string("generation.step.story_planner"),
                 status: .pending
             ),
             GenerationPipelineStep(
-                title: "Character bible" + (blueprint.map { " (\($0.characterBible.codename))" } ?? ""),
+                title: blueprint.map {
+                    L10n.string("generation.step.character_bible_codename", $0.characterBible.codename)
+                } ?? L10n.string("generation.step.character_bible"),
                 status: .pending
             ),
             GenerationPipelineStep(
-                title: "Style guide" + (blueprint.map { " (\($0.styleGuide.displayLabel))" } ?? ""),
+                title: blueprint.map {
+                    L10n.string("generation.step.style_guide_label", $0.styleGuide.displayLabel)
+                } ?? L10n.string("generation.step.style_guide"),
                 status: .pending
             ),
             GenerationPipelineStep(
-                title: referenceCount > 0 ? "Reference taxonomy (\(referenceCount))" : "Reference taxonomy",
+                title: referenceCount > 0
+                    ? L10n.string("generation.step.reference_taxonomy_count", referenceCount)
+                    : L10n.string("generation.step.reference_taxonomy"),
                 status: .pending
             ),
             GenerationPipelineStep(
-                title: panelCount > 0 ? "Panel prompts (\(panelCount))" : "Panel prompts",
+                title: panelCount > 0
+                    ? L10n.string("generation.step.panel_prompts_count", panelCount)
+                    : L10n.string("generation.step.panel_prompts"),
                 status: .pending
             ),
             GenerationPipelineStep(
-                title: pageCount > 0 ? "Page composer (\(pageCount) pages)" : "Page composer",
+                title: pageCount > 0
+                    ? L10n.string("generation.step.page_composer_count", pageCount)
+                    : L10n.string("generation.step.page_composer"),
                 status: .pending
             ),
         ]
@@ -228,26 +240,26 @@ final class GenerationProgressViewModel: ObservableObject {
         let renderedCount = max(job.renderedPagesCount, job.status == .succeeded ? blueprint.pages.count : 0)
         if renderedCount > 0 {
             return blueprint.pages.prefix(renderedCount).map {
-                "Page \($0.pageNumber) • \($0.title)"
+                L10n.string("generation.page_summary", $0.pageNumber, $0.title)
             }
         }
 
         return blueprint.pages.prefix(2).map {
-            "Preparing page \($0.pageNumber) • \($0.title)"
+            L10n.string("generation.preparing_page_summary", $0.pageNumber, $0.title)
         }
     }
 
     private static func displayTitle(for stage: String) -> String {
         switch normalizedStage(stage) {
-        case "story_planner": return "Story planner"
-        case "character_bible": return "Character bible"
-        case "style_guide": return "Style guide"
-        case "reference_taxonomy": return "Reference taxonomy"
-        case "panel_prompts": return "Panel prompts"
-        case "page_composer": return "Page composer"
-        case "completed": return "Completed"
-        case "failed": return "Failed"
-        default: return "Queued"
+        case "story_planner": return L10n.string("generation.stage.story_planner")
+        case "character_bible": return L10n.string("generation.stage.character_bible")
+        case "style_guide": return L10n.string("generation.stage.style_guide")
+        case "reference_taxonomy": return L10n.string("generation.stage.reference_taxonomy")
+        case "panel_prompts": return L10n.string("generation.stage.panel_prompts")
+        case "page_composer": return L10n.string("generation.stage.page_composer")
+        case "completed": return L10n.string("generation.stage.completed")
+        case "failed": return L10n.string("generation.stage.failed")
+        default: return L10n.string("generation.stage.queued")
         }
     }
 

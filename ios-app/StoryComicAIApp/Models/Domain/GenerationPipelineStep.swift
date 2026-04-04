@@ -9,10 +9,10 @@ struct GenerationPipelineStep: Identifiable, Equatable {
 
         var title: String {
             switch self {
-            case .pending: return "Pending"
-            case .active: return "In Progress"
-            case .completed: return "Done"
-            case .failed: return "Failed"
+            case .pending: return L10n.string("step.pending")
+            case .active: return L10n.string("step.active")
+            case .completed: return L10n.string("step.completed")
+            case .failed: return L10n.string("step.failed")
             }
         }
     }
@@ -28,10 +28,10 @@ struct GenerationPipelineStep: Identifiable, Equatable {
     }
 
     static let previewSteps: [GenerationPipelineStep] = [
-        GenerationPipelineStep(title: "Story planning", status: .completed),
-        GenerationPipelineStep(title: "Panel generation", status: .active),
-        GenerationPipelineStep(title: "Dialogue layout", status: .pending),
-        GenerationPipelineStep(title: "Final polish", status: .pending)
+        GenerationPipelineStep(title: L10n.string("generation.step.story_planner"), status: .completed),
+        GenerationPipelineStep(title: L10n.string("generation.step.panel_prompts"), status: .active),
+        GenerationPipelineStep(title: L10n.string("generation.scene_breakdown"), status: .pending),
+        GenerationPipelineStep(title: L10n.string("generation.stage.completed"), status: .pending)
     ]
 }
 

@@ -36,17 +36,17 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text("StoryComicAI")
+            Text(L10n.string("home.brand"))
                 .font(AppTypography.eyebrow)
                 .foregroundStyle(AppColor.textTertiary)
                 .tracking(1.4)
                 .textCase(.uppercase)
 
-            Text("Your personal comic studio")
+            Text(L10n.string("home.title"))
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
 
-            Text("Turn your photos and story into a calm, premium comic edition you can open like a finished book.")
+            Text(L10n.string("home.subtitle"))
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -60,11 +60,11 @@ struct HomeView: View {
             CardContainer(emphasize: true) {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        Text("Start a new edition")
+                        Text(L10n.string("home.start_title"))
                             .font(AppTypography.heading)
                             .foregroundStyle(AppColor.textPrimary)
 
-                        Text("Upload photos, write the story, choose a visual edition and reveal the finished comic like a bound book.")
+                        Text(L10n.string("home.start_body"))
                             .font(AppTypography.body)
                             .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -72,7 +72,7 @@ struct HomeView: View {
 
                     HStack(alignment: .bottom, spacing: AppSpacing.md) {
                         HStack(spacing: AppSpacing.xs) {
-                            Text("Create your comic")
+                            Text(L10n.string("home.create_cta"))
                                 .font(AppTypography.button)
                             Image(systemName: "arrow.right")
                                 .font(.system(size: 13, weight: .semibold))
@@ -82,11 +82,11 @@ struct HomeView: View {
                         Spacer(minLength: 0)
 
                         ComicCoverCard(
-                            title: "Personal Edition",
-                            subtitle: "Bound for one",
+                            title: L10n.string("home.hero_cover_title"),
+                            subtitle: L10n.string("home.hero_cover_subtitle"),
                             accent: AppColor.accent(for: .cinematic),
                             style: .cinematic,
-                            eyebrow: "Edition",
+                            eyebrow: L10n.string("home.hero_cover_eyebrow"),
                             badge: nil,
                             emphasize: false,
                             presentation: .compact
@@ -103,12 +103,12 @@ struct HomeView: View {
     private var recentProjectsSection: some View {
         switch viewModel.recentProjectsState {
         case .idle, .loading:
-            LoadingStateView(title: "Loading your collection", subtitle: "Gathering recent editions")
+            LoadingStateView(title: L10n.string("home.loading_title"), subtitle: L10n.string("home.loading_subtitle"))
                 .frame(height: 260)
                 .clipShape(RoundedRectangle(cornerRadius: AppElevation.Surface.radius, style: .continuous))
 
         case let .failed(message):
-            ErrorStateView(title: "Could not load collection", message: message) {
+            ErrorStateView(title: L10n.string("home.error_title"), message: message) {
                 Task { await viewModel.loadRecentProjects() }
             }
             .frame(height: 260)
@@ -119,10 +119,10 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text("Recent Editions")
+                    Text(L10n.string("home.recent_title"))
                         .font(AppTypography.section)
                         .foregroundStyle(AppColor.textPrimary)
-                    Text("Return to the books already on your desk.")
+                    Text(L10n.string("home.recent_subtitle"))
                         .font(AppTypography.footnote)
                         .foregroundStyle(AppColor.textSecondary)
                 }
@@ -130,10 +130,10 @@ struct HomeView: View {
                 if projects.isEmpty {
                     CardContainer {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            Text("Your shelf is empty")
+                            Text(L10n.string("home.empty_title"))
                                 .font(AppTypography.section)
                                 .foregroundStyle(AppColor.textPrimary)
-                            Text("Create your first personalized comic and it will appear here as a finished edition.")
+                            Text(L10n.string("home.empty_body"))
                                 .font(AppTypography.body)
                                 .foregroundStyle(AppColor.textSecondary)
                         }

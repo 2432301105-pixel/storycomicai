@@ -13,10 +13,10 @@ struct HeroPreviewJob: Equatable {
 
         var displayTitle: String {
             switch self {
-            case .queued: return "Queued"
-            case .running: return "Running"
-            case .succeeded: return "Succeeded"
-            case .failed: return "Failed"
+            case .queued: return L10n.string("hero_status.queued")
+            case .running: return L10n.string("hero_status.running")
+            case .succeeded: return L10n.string("hero_status.succeeded")
+            case .failed: return L10n.string("hero_status.failed")
             }
         }
     }

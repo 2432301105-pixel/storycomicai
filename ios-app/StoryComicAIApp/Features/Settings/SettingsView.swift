@@ -11,31 +11,31 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("Settings")
+                        Text(L10n.string("settings.title"))
                             .font(AppTypography.title)
                             .foregroundStyle(AppColor.textPrimary)
-                        Text("Account and product preferences for your comic studio.")
+                        Text(L10n.string("settings.subtitle"))
                             .font(AppTypography.body)
                             .foregroundStyle(AppColor.textSecondary)
                     }
 
                     CardContainer(emphasize: true) {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            Text("Session")
+                            Text(L10n.string("settings.session"))
                                 .font(AppTypography.meta)
                                 .foregroundStyle(AppColor.textTertiary)
                                 .textCase(.uppercase)
-                            Text(sessionStore.isAuthenticated ? "Signed In" : "Signed Out")
+                            Text(sessionStore.isAuthenticated ? L10n.string("settings.signed_in") : L10n.string("settings.signed_out"))
                                 .font(AppTypography.section)
                                 .foregroundStyle(AppColor.textPrimary)
-                            Text("Your comic studio remains ready on this device.")
+                            Text(L10n.string("settings.ready"))
                                 .font(AppTypography.footnote)
                                 .foregroundStyle(AppColor.textSecondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    PrimaryButton(title: "Sign Out", isLoading: viewModel.isSigningOut) {
+                    PrimaryButton(title: L10n.string("action.sign_out"), isLoading: viewModel.isSigningOut) {
                         viewModel.signOut(using: sessionStore)
                     }
                 }
@@ -46,7 +46,7 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
-        .navigationTitle("Settings")
+        .navigationTitle(L10n.string("settings.nav"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
