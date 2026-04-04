@@ -2,6 +2,7 @@ import SwiftUI
 
 enum AppTypography {
     static let coverTitle = Font.system(size: 44, weight: .bold, design: .serif)
+    static let coverCompactTitle = Font.system(size: 24, weight: .bold, design: .serif)
     static let display = Font.system(size: 52, weight: .bold, design: .serif)
     static let title = Font.system(size: 36, weight: .bold, design: .serif)
     static let heading = Font.system(size: 26, weight: .semibold, design: .serif)

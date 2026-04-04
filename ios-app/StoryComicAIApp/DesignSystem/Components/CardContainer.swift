@@ -28,8 +28,8 @@ struct CardContainer<Content: View>: View {
             .fill(
                 LinearGradient(
                     colors: emphasize
-                        ? [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.82)]
-                        : [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.7)],
+                        ? [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.55)]
+                        : [AppColor.surfaceElevated, AppColor.surface, AppColor.surfaceMuted.opacity(0.46)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -44,7 +44,7 @@ struct CardContainer<Content: View>: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 RadialGradient(
-                    colors: [AppColor.accentSecondary.opacity(emphasize ? 0.16 : 0.08), .clear],
+                    colors: [AppColor.accentSecondary.opacity(emphasize ? 0.08 : 0.04), .clear],
                     center: .center,
                     startRadius: 4,
                     endRadius: 110
@@ -99,7 +99,7 @@ struct EditorialBackground: View {
 
             HalftoneWash()
                 .blendMode(.multiply)
-                .opacity(0.18)
+                .opacity(0.08)
 
             if showsDeskBand {
                 LinearGradient(
@@ -156,6 +156,11 @@ private struct HalftoneWash: View {
     }
 }
 
+enum ComicCoverPresentation {
+    case standard
+    case compact
+}
+
 struct ComicCoverCard: View {
     let title: String
     let subtitle: String?
@@ -164,6 +169,7 @@ struct ComicCoverCard: View {
     let eyebrow: String
     let badge: String?
     let emphasize: Bool
+    let presentation: ComicCoverPresentation
 
     init(
         title: String,
@@ -172,7 +178,8 @@ struct ComicCoverCard: View {
         style: StoryStyle? = nil,
         eyebrow: String,
         badge: String? = nil,
-        emphasize: Bool = false
+        emphasize: Bool = false,
+        presentation: ComicCoverPresentation = .standard
     ) {
         self.title = title
         self.subtitle = subtitle
@@ -181,106 +188,128 @@ struct ComicCoverCard: View {
         self.eyebrow = eyebrow
         self.badge = badge
         self.emphasize = emphasize
+        self.presentation = presentation
     }
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: AppElevation.Cover.radius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [accent.opacity(0.94), AppColor.textPrimary, AppColor.textPrimary.opacity(0.92)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: AppElevation.Cover.radius - 5, style: .continuous)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                        .padding(6)
-                }
-                .overlay(alignment: .leading) {
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.18), Color.white.opacity(0.04), .clear],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: AppElevation.Cover.spineWidth)
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: AppElevation.Cover.radius,
-                            bottomLeadingRadius: AppElevation.Cover.radius,
-                            bottomTrailingRadius: 0,
-                            topTrailingRadius: 0
+        GeometryReader { proxy in
+            let isCompact = presentation == .compact || proxy.size.width < 132
+
+            ZStack(alignment: .bottomLeading) {
+                RoundedRectangle(cornerRadius: AppElevation.Cover.radius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [accent.opacity(isCompact ? 0.82 : 0.9), AppColor.textPrimary, AppColor.textPrimary.opacity(0.96)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                }
-                .overlay(alignment: .bottomTrailing) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.black.opacity(0.14))
-                        .frame(width: 88, height: 40)
-                        .overlay {
-                            Text(styleStamp)
-                                .font(AppTypography.badge)
-                                .foregroundStyle(AppColor.textOnDark.opacity(0.88))
-                                .tracking(1.0)
+                    .overlay(alignment: .topLeading) {
+                        RoundedRectangle(cornerRadius: AppElevation.Cover.radius - 5, style: .continuous)
+                            .stroke(Color.white.opacity(isCompact ? 0.08 : 0.12), lineWidth: 1)
+                            .padding(6)
+                    }
+                    .overlay(alignment: .leading) {
+                        LinearGradient(
+                            colors: [Color.white.opacity(isCompact ? 0.12 : 0.18), Color.white.opacity(0.04), .clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(width: AppElevation.Cover.spineWidth)
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: AppElevation.Cover.radius,
+                                bottomLeadingRadius: AppElevation.Cover.radius,
+                                bottomTrailingRadius: 0,
+                                topTrailingRadius: 0
+                            )
+                        )
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        if !isCompact {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.black.opacity(0.14))
+                                .frame(width: 88, height: 40)
+                                .overlay {
+                                    Text(styleStamp)
+                                        .font(AppTypography.badge)
+                                        .foregroundStyle(AppColor.textOnDark.opacity(0.88))
+                                        .tracking(1.0)
+                                }
+                                .padding(AppSpacing.md)
                         }
-                        .padding(AppSpacing.md)
-                }
-                .overlay(alignment: .topTrailing) {
-                    if let badge {
-                        Text(badge)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if !isCompact, let badge {
+                            Text(badge)
+                                .font(AppTypography.badge)
+                                .foregroundStyle(AppColor.textOnDark.opacity(0.95))
+                                .tracking(0.8)
+                                .padding(.horizontal, AppSpacing.sm)
+                                .padding(.vertical, AppSpacing.xs)
+                                .background(Color.white.opacity(0.12))
+                                .clipShape(Capsule())
+                                .padding(AppSpacing.md)
+                        }
+                    }
+                    .overlay {
+                        coverPattern
+                            .blendMode(.screen)
+                            .opacity(isCompact ? 0.18 : 0.28)
+                    }
+                    .shadow(
+                        color: AppColor.bookDepthShadow.opacity(emphasize ? 1 : 0.76),
+                        radius: emphasize ? AppElevation.Cover.shadowRadius + 6 : AppElevation.Cover.shadowRadius,
+                        x: 0,
+                        y: emphasize ? AppElevation.Cover.shadowYOffset + 4 : AppElevation.Cover.shadowYOffset
+                    )
+
+                VStack(alignment: .leading, spacing: isCompact ? AppSpacing.xs : AppSpacing.sm) {
+                    Text(eyebrow)
+                        .font(isCompact ? AppTypography.badge : AppTypography.coverMeta)
+                        .foregroundStyle(AppColor.textOnDark.opacity(0.8))
+                        .tracking(isCompact ? 1.0 : 1.6)
+                        .textCase(.uppercase)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+
+                    Spacer(minLength: 0)
+
+                    Text(displayTitle(isCompact: isCompact))
+                        .font(isCompact ? AppTypography.coverCompactTitle : AppTypography.coverTitle)
+                        .foregroundStyle(AppColor.textOnDark)
+                        .lineLimit(isCompact ? 2 : 3)
+                        .minimumScaleFactor(isCompact ? 0.72 : 0.56)
+                        .allowsTightening(true)
+
+                    if let subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(isCompact ? AppTypography.meta : AppTypography.footnote)
+                            .foregroundStyle(AppColor.textOnDark.opacity(isCompact ? 0.76 : 0.82))
+                            .lineLimit(isCompact ? 2 : 2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .minimumScaleFactor(isCompact ? 0.8 : 0.78)
+                    }
+
+                    if isCompact {
+                        Text(styleStamp)
                             .font(AppTypography.badge)
-                            .foregroundStyle(AppColor.textOnDark.opacity(0.95))
-                            .tracking(0.8)
-                            .padding(.horizontal, AppSpacing.sm)
-                            .padding(.vertical, AppSpacing.xs)
-                            .background(Color.white.opacity(0.12))
-                            .clipShape(Capsule())
-                            .padding(AppSpacing.md)
+                            .foregroundStyle(AppColor.textOnDark.opacity(0.66))
+                            .tracking(0.9)
+                            .padding(.top, AppSpacing.xxs)
                     }
                 }
-                .overlay {
-                    coverPattern
-                        .blendMode(.screen)
-                        .opacity(0.35)
-                }
-                .shadow(
-                    color: AppColor.bookDepthShadow.opacity(emphasize ? 1 : 0.8),
-                    radius: emphasize ? AppElevation.Cover.shadowRadius + 6 : AppElevation.Cover.shadowRadius,
-                    x: 0,
-                    y: emphasize ? AppElevation.Cover.shadowYOffset + 4 : AppElevation.Cover.shadowYOffset
-                )
-
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(eyebrow)
-                    .font(AppTypography.coverMeta)
-                    .foregroundStyle(AppColor.textOnDark.opacity(0.82))
-                    .tracking(1.6)
-                    .textCase(.uppercase)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-
-                Spacer(minLength: 0)
-
-                Text(title)
-                    .font(AppTypography.coverTitle)
-                    .foregroundStyle(AppColor.textOnDark)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.56)
-                    .allowsTightening(true)
-
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColor.textOnDark.opacity(0.82))
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .minimumScaleFactor(0.78)
-                }
+                .padding(isCompact ? AppSpacing.sm : AppSpacing.lg)
             }
-            .padding(AppSpacing.lg)
         }
         .aspectRatio(2 / 3, contentMode: .fit)
+    }
+
+    private func displayTitle(isCompact: Bool) -> String {
+        if isCompact {
+            return title.replacingOccurrences(of: "\n", with: " ")
+        }
+        return title
     }
 
     private var coverPattern: some View {
@@ -455,77 +484,6 @@ struct FloatingPanelScreen<Header: View, Content: View, Footer: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColor.backgroundPrimary.ignoresSafeArea())
         .ignoresSafeArea(.container, edges: .all)
-    }
-}
-
-struct PremiumTabBar: View {
-    let selectedTab: MainTab
-    let onSelect: (MainTab) -> Void
-
-    var body: some View {
-        HStack(spacing: AppSpacing.xs) {
-            ForEach(MainTab.allCases, id: \.self) { tab in
-                Button {
-                    onSelect(tab)
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: tab.systemImage)
-                            .font(.system(size: 15, weight: .semibold))
-
-                        if selectedTab == tab {
-                            Text(tab.title)
-                                .font(AppTypography.footnote)
-                                .transition(.opacity.combined(with: .move(edge: .trailing)))
-                        }
-                    }
-                    .foregroundStyle(selectedTab == tab ? AppColor.textPrimary : AppColor.textTertiary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, selectedTab == tab ? AppSpacing.sm : AppSpacing.xs)
-                    .padding(.vertical, 14)
-                    .background(
-                        Group {
-                            if selectedTab == tab {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [AppColor.surfaceElevated, AppColor.surfaceMuted.opacity(0.92)],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .stroke(AppColor.borderStrong.opacity(0.45), lineWidth: 1)
-                                    )
-                            }
-                        }
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [AppColor.surfaceElevated.opacity(0.98), AppColor.surface.opacity(0.95)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .stroke(AppColor.border.opacity(0.9), lineWidth: 1)
-                )
-                .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .stroke(Color.white.opacity(0.5), lineWidth: 0.6)
-                        .blur(radius: 0.4)
-                }
-                .shadow(color: AppColor.bookShadow.opacity(0.9), radius: 20, x: 0, y: 8)
-        )
-        .animation(.easeInOut(duration: 0.18), value: selectedTab)
     }
 }
 

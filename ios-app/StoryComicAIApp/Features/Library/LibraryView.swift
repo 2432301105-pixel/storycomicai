@@ -103,9 +103,10 @@ private struct LibraryProjectCard: View {
                 subtitle: nil,
                 accent: AppColor.accent(for: project.style),
                 style: project.style,
-                eyebrow: project.style.moodLabel,
+                eyebrow: project.style.coverEyebrow,
                 badge: nil,
-                emphasize: false
+                emphasize: false,
+                presentation: .compact
             )
 
             Text(project.title)

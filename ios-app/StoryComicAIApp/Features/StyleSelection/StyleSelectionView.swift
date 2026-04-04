@@ -96,7 +96,7 @@ private struct StyleOptionCard: View {
                 } else {
                     HStack(alignment: .top, spacing: AppSpacing.md) {
                         cover
-                            .frame(width: 94)
+                            .frame(width: 108)
                         styleMeta
                     }
                 }
@@ -112,8 +112,9 @@ private struct StyleOptionCard: View {
             accent: AppColor.accent(for: style),
             style: style,
             eyebrow: style.coverEyebrow,
-            badge: isSelected ? "Selected" : nil,
-            emphasize: isSelected
+            badge: nil,
+            emphasize: isSelected,
+            presentation: .compact
         )
     }
 
@@ -135,7 +136,7 @@ private struct StyleOptionCard: View {
             HStack(spacing: AppSpacing.xs) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(isSelected ? AppColor.accent(for: style) : AppColor.borderStrong)
-                Text(isSelected ? "Selected for render" : "Tap to choose")
+                Text(isSelected ? "Selected" : "Tap to choose")
                     .font(AppTypography.footnote)
                     .foregroundStyle(AppColor.textSecondary)
                     .lineLimit(1)

@@ -46,7 +46,7 @@ struct HomeView: View {
                 .font(AppTypography.title)
                 .foregroundStyle(AppColor.textPrimary)
 
-            Text("Create a premium comic edition, return to your recent books and keep the collection calm and readable.")
+            Text("Turn your photos and story into a calm, premium comic edition you can open like a finished book.")
                 .font(AppTypography.body)
                 .foregroundStyle(AppColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -58,17 +58,19 @@ struct HomeView: View {
             navigateToCreateProject = true
         } label: {
             CardContainer(emphasize: true) {
-                HStack(alignment: .center, spacing: AppSpacing.lg) {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
                     VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        Text("Start A New Edition")
+                        Text("Start a new edition")
                             .font(AppTypography.heading)
                             .foregroundStyle(AppColor.textPrimary)
 
-                        Text("Upload photos, write the story, choose the visual edition and reveal the finished comic like a bound book.")
+                        Text("Upload photos, write the story, choose a visual edition and reveal the finished comic like a bound book.")
                             .font(AppTypography.body)
                             .foregroundStyle(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
+                    }
 
+                    HStack(alignment: .bottom, spacing: AppSpacing.md) {
                         HStack(spacing: AppSpacing.xs) {
                             Text("Create your comic")
                                 .font(AppTypography.button)
@@ -76,20 +78,21 @@ struct HomeView: View {
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(AppColor.accent)
+
+                        Spacer(minLength: 0)
+
+                        ComicCoverCard(
+                            title: "Personal Edition",
+                            subtitle: "Bound for one",
+                            accent: AppColor.accent(for: .cinematic),
+                            style: .cinematic,
+                            eyebrow: "Edition",
+                            badge: nil,
+                            emphasize: false,
+                            presentation: .compact
+                        )
+                        .frame(width: 112)
                     }
-
-                    Spacer(minLength: 0)
-
-                    ComicCoverCard(
-                        title: "Personal\nEdition",
-                        subtitle: "Bound for one",
-                        accent: AppColor.accent(for: .cinematic),
-                        style: .cinematic,
-                        eyebrow: "Create",
-                        badge: "New",
-                        emphasize: false
-                    )
-                    .frame(width: 124)
                 }
             }
         }
@@ -173,9 +176,10 @@ private struct HomeProjectCard: View {
                 subtitle: nil,
                 accent: AppColor.accent(for: project.style),
                 style: project.style,
-                eyebrow: project.style.moodLabel,
+                eyebrow: project.style.coverEyebrow,
                 badge: project.statusDisplayName,
-                emphasize: false
+                emphasize: false,
+                presentation: .compact
             )
             .frame(width: 94)
 
