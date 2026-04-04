@@ -21,12 +21,27 @@ struct ProjectDetailView: View {
                     )
 
                     CardContainer(emphasize: true) {
-                        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            detailRow(title: "Style", value: viewModel.project.style.displayName)
-                            detailRow(title: "Status", value: viewModel.project.statusDisplayName)
-                            detailRow(title: "Pages", value: "\(viewModel.project.targetPages)")
+                        HStack(alignment: .top, spacing: AppSpacing.md) {
+                            ComicCoverCard(
+                                title: viewModel.project.title,
+                                subtitle: viewModel.project.collectionSubtitle,
+                                accent: AppColor.accent(for: viewModel.project.style),
+                                style: viewModel.project.style,
+                                eyebrow: viewModel.project.style.coverEyebrow,
+                                badge: viewModel.project.statusDisplayName,
+                                emphasize: false,
+                                presentation: .compact,
+                                compactVariant: CompactCoverVariant.productDefault(for: viewModel.project.style)
+                            )
+                            .frame(width: 104)
+
+                            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                                detailRow(title: "Style", value: viewModel.project.style.displayName)
+                                detailRow(title: "Status", value: viewModel.project.statusDisplayName)
+                                detailRow(title: "Pages", value: "\(viewModel.project.targetPages)")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     NavigationLink {

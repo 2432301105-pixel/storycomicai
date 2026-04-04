@@ -184,10 +184,28 @@ enum CompactCoverVariant: String, CaseIterable, Identifiable {
         }
     }
 
+    static let productDefaults: [CompactCoverVariant] = [
+        .pulseFrame,
+        .popRibbon,
+        .bamBurst
+    ]
+
+    static func productDefault(for style: StoryStyle) -> CompactCoverVariant {
+        switch style {
+        case .cinematic, .manga, .western:
+            return .pulseFrame
+        case .childrensBook:
+            return .popRibbon
+        case .cartoon:
+            return .bamBurst
+        }
+    }
+
     static func automatic(style: StoryStyle, title: String) -> CompactCoverVariant {
-        let variants = CompactCoverVariant.allCases
+        let preferred = CompactCoverVariant.productDefaults
+        let styleDefault = productDefault(for: style)
         let seed = abs("\(style.rawValue)-\(title)".hashValue)
-        return variants[seed % variants.count]
+        return seed.isMultiple(of: 2) ? styleDefault : preferred[seed % preferred.count]
     }
 }
 
@@ -399,6 +417,7 @@ struct ComicCoverCard: View {
                         .font(AppTypography.coverCompactLabel)
                         .foregroundStyle(palette.paper)
                         .tracking(0.8)
+                        .lineLimit(1)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
                         .background(AppColor.comicInk.opacity(0.76))
@@ -411,7 +430,7 @@ struct ComicCoverCard: View {
                     .font(AppTypography.coverCompactDisplay)
                     .foregroundStyle(palette.ink)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.76)
+                    .minimumScaleFactor(0.82)
                     .allowsTightening(true)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -424,8 +443,8 @@ struct ComicCoverCard: View {
                 Text(compactFooterText)
                     .font(AppTypography.coverCompactMeta)
                     .foregroundStyle(palette.paper)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.88)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
@@ -797,8 +816,8 @@ struct ComicCoverCard: View {
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if normalized.count > 26 {
-            let index = normalized.index(normalized.startIndex, offsetBy: 23)
+        if normalized.count > 18 {
+            let index = normalized.index(normalized.startIndex, offsetBy: 15)
             return String(normalized[..<index]) + "..."
         }
 
@@ -806,18 +825,25 @@ struct ComicCoverCard: View {
     }
 
     private var compactEyebrowText: String {
-        let value = eyebrow.isEmpty ? resolvedStyle.coverEyebrow : eyebrow
-        return value
+        let value = eyebrow.isEmpty ? resolvedStyle.shortSignature : eyebrow
+        let normalized = value
             .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
+
+        if normalized.count > 11 {
+            return resolvedStyle.shortSignature.uppercased()
+        }
+
+        return normalized
     }
 
     private var compactTokenText: String {
         if let badge, !badge.isEmpty {
-            return String(badge.uppercased().prefix(10))
+            return String(badge.uppercased().prefix(6))
         }
 
-        return String(resolvedStyle.shortSignature.uppercased().prefix(10))
+        return String(resolvedStyle.shortSignature.uppercased().prefix(6))
     }
 
     private var resolvedStyle: StoryStyle {

@@ -68,20 +68,37 @@ struct ExportView: View {
         let style = StoryStyle(displayLabel: package.styleLabel) ?? .cinematic
 
         VStack(alignment: .leading, spacing: AppSpacing.xl) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text("Export Studio")
-                    .font(AppTypography.eyebrow)
-                    .foregroundStyle(AppColor.textTertiary)
-                    .tracking(1.3)
-                    .textCase(.uppercase)
+            HStack(alignment: .top, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Export Studio")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.3)
+                        .textCase(.uppercase)
 
-                Text("Package your comic as a finished edition")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColor.textPrimary)
+                    Text("Package your comic as a finished edition")
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
 
-                Text("Prepare a shareable PDF or image bundle without losing the premium book presentation.")
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColor.textSecondary)
+                    Text("Prepare a shareable PDF or image bundle without losing the premium book presentation.")
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                Spacer(minLength: 0)
+
+                ComicCoverCard(
+                    title: package.cover.titleText ?? package.title,
+                    subtitle: viewModel.selectedType.displayTitle,
+                    accent: AppColor.accent(for: style),
+                    style: style,
+                    eyebrow: package.styleLabel,
+                    badge: "EXPORT",
+                    emphasize: false,
+                    presentation: .compact,
+                    compactVariant: CompactCoverVariant.productDefault(for: style)
+                )
+                .frame(width: 106)
             }
 
             ComicCoverCard(

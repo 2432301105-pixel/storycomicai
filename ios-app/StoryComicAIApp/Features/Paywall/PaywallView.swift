@@ -45,21 +45,40 @@ struct PaywallView: View {
 
     @ViewBuilder
     private func loadedContent(content: PaywallViewModel.Content) -> some View {
+        let compactStyle = flowStore.selectedStyle
+
         VStack(alignment: .leading, spacing: AppSpacing.xl) {
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text("Collector Unlock")
-                    .font(AppTypography.eyebrow)
-                    .foregroundStyle(AppColor.textTertiary)
-                    .tracking(1.3)
-                    .textCase(.uppercase)
+            HStack(alignment: .top, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text("Collector Unlock")
+                        .font(AppTypography.eyebrow)
+                        .foregroundStyle(AppColor.textTertiary)
+                        .tracking(1.3)
+                        .textCase(.uppercase)
 
-                Text(content.headline)
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppColor.textPrimary)
+                    Text(content.headline)
+                        .font(AppTypography.title)
+                        .foregroundStyle(AppColor.textPrimary)
 
-                Text(content.subheadline)
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColor.textSecondary)
+                    Text(content.subheadline)
+                        .font(AppTypography.body)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                Spacer(minLength: 0)
+
+                ComicCoverCard(
+                    title: flowStore.projectName.isEmpty ? "Collector" : flowStore.projectName,
+                    subtitle: "Unlock",
+                    accent: AppColor.accent(for: compactStyle),
+                    style: compactStyle,
+                    eyebrow: compactStyle.coverEyebrow,
+                    badge: "LOCKED",
+                    emphasize: false,
+                    presentation: .compact,
+                    compactVariant: CompactCoverVariant.productDefault(for: compactStyle)
+                )
+                .frame(width: 106)
             }
 
             lockedPreview
