@@ -68,7 +68,10 @@ Key values:
 - `SC_CELERY_BROKER_URL`, `SC_CELERY_RESULT_BACKEND`: Celery transport
 - `SC_AUTH_JWT_SECRET`: JWT signing secret
 - `SC_APPLE_CLIENT_ID`: Apple Sign-In audience
-- `SC_STORAGE_PROVIDER`: `mock` or future providers
+- `SC_STORAGE_PROVIDER`: `mock` or `s3`
+- `SC_STORAGE_BUCKET`: target bucket/container for rendered comic assets
+- `SC_AI_RENDER_PROVIDER_BASE_URL`: remote panel render service
+- `SC_AI_RENDER_PROVIDER_API_KEY`: remote panel render credential
 
 ## Common Commands
 
@@ -139,6 +142,13 @@ StoryComicAI can run remote on Render with two profiles:
 ### 3) Configure required secrets in Render
 - `SC_APPLE_CLIENT_ID`
 - `SC_AUTH_JWT_SECRET` (auto-generated for API in Blueprint)
+- `SC_AI_RENDER_PROVIDER_BASE_URL`
+- `SC_AI_RENDER_PROVIDER_API_KEY`
+- `SC_STORAGE_REGION`
+- `SC_STORAGE_ENDPOINT_URL` (if using S3-compatible storage instead of AWS S3)
+- `SC_STORAGE_ACCESS_KEY_ID`
+- `SC_STORAGE_SECRET_ACCESS_KEY`
+- `SC_STORAGE_PUBLIC_BASE_URL` (optional if you want stable public asset URLs)
 
 ### 4) Configure GitHub deploy hooks
 - Add these GitHub repository secrets:
@@ -153,3 +163,31 @@ StoryComicAI can run remote on Render with two profiles:
   - starts `uvicorn api.app.main:app`
 - Worker start script: `infra/render/start_worker.sh`
   - starts Celery worker for `hero_preview,default` queues
+
+### Production Render + Asset Checklist
+For a real story-to-comic pipeline in paid Render:
+
+1. Use [`render.paid.yaml`](render.paid.yaml)
+2. Set:
+   - `SC_JOB_QUEUE_MODE=celery`
+   - `SC_STORAGE_PROVIDER=s3`
+   - `SC_AI_RENDER_PROVIDER_BASE_URL=<vendor endpoint>`
+   - `SC_AI_RENDER_PROVIDER_API_KEY=<vendor key>`
+3. Fill S3/object-storage credentials
+4. Deploy API + worker together
+
+Render activation rule:
+- If `SC_AI_RENDER_PROVIDER_BASE_URL` is present, backend automatically promotes render mode from `mock` to `remote_http`.
+
+### First Live Smoke
+After deploy, verify:
+
+```bash
+curl -sS https://<your-render-url>/v1/health/live
+```
+
+Then run a comic generation job with a real story and verify:
+- `comic-generation` status reaches `succeeded`
+- job result contains `rendered_assets`
+- `comic-package` page URLs resolve
+- rendered asset route returns a PNG or redirects to object storage

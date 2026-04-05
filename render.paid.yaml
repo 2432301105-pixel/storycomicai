@@ -18,6 +18,8 @@ services:
         value: /v1
       - key: SC_RUN_MIGRATIONS_ON_START
         value: true
+      - key: SC_JOB_QUEUE_MODE
+        value: celery
       - key: SC_DATABASE_URL
         fromDatabase:
           name: storycomicai-postgres
@@ -44,9 +46,43 @@ services:
       - key: SC_ALLOW_UNVERIFIED_APPLE_TOKEN_IN_LOCAL
         value: false
       - key: SC_STORAGE_PROVIDER
-        value: mock
+        value: s3
       - key: SC_STORAGE_BUCKET
         value: storycomicai-production
+      - key: SC_STORAGE_REGION
+        sync: false
+      - key: SC_STORAGE_ENDPOINT_URL
+        sync: false
+      - key: SC_STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: SC_STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: SC_STORAGE_SESSION_TOKEN
+        sync: false
+      - key: SC_STORAGE_PUBLIC_BASE_URL
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER
+        value: mock
+      - key: SC_AI_RENDER_PROVIDER_BASE_URL
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_API_KEY
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_MODEL_ID
+        value: storycomicai-panel-v1
+      - key: SC_AI_RENDER_PROVIDER_ADAPTER_ID
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_SUBMIT_PATH
+        value: /render/panels
+      - key: SC_AI_RENDER_PROVIDER_STATUS_PATH_TEMPLATE
+        value: /render/jobs/{job_id}
+      - key: SC_AI_RENDER_PROVIDER_POLL_INTERVAL_MS
+        value: 1000
+      - key: SC_AI_RENDER_PROVIDER_MAX_POLL_SECONDS
+        value: 90
+      - key: SC_AI_RENDER_PROVIDER_AUTH_HEADER
+        value: Authorization
+      - key: SC_AI_RENDER_PROVIDER_AUTH_SCHEME
+        value: Bearer
 
   - type: worker
     name: storycomicai-worker
@@ -89,10 +125,46 @@ services:
         sync: false
       - key: SC_ALLOW_UNVERIFIED_APPLE_TOKEN_IN_LOCAL
         value: false
+      - key: SC_JOB_QUEUE_MODE
+        value: celery
       - key: SC_STORAGE_PROVIDER
-        value: mock
+        value: s3
       - key: SC_STORAGE_BUCKET
         value: storycomicai-production
+      - key: SC_STORAGE_REGION
+        sync: false
+      - key: SC_STORAGE_ENDPOINT_URL
+        sync: false
+      - key: SC_STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: SC_STORAGE_SECRET_ACCESS_KEY
+        sync: false
+      - key: SC_STORAGE_SESSION_TOKEN
+        sync: false
+      - key: SC_STORAGE_PUBLIC_BASE_URL
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER
+        value: mock
+      - key: SC_AI_RENDER_PROVIDER_BASE_URL
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_API_KEY
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_MODEL_ID
+        value: storycomicai-panel-v1
+      - key: SC_AI_RENDER_PROVIDER_ADAPTER_ID
+        sync: false
+      - key: SC_AI_RENDER_PROVIDER_SUBMIT_PATH
+        value: /render/panels
+      - key: SC_AI_RENDER_PROVIDER_STATUS_PATH_TEMPLATE
+        value: /render/jobs/{job_id}
+      - key: SC_AI_RENDER_PROVIDER_POLL_INTERVAL_MS
+        value: 1000
+      - key: SC_AI_RENDER_PROVIDER_MAX_POLL_SECONDS
+        value: 90
+      - key: SC_AI_RENDER_PROVIDER_AUTH_HEADER
+        value: Authorization
+      - key: SC_AI_RENDER_PROVIDER_AUTH_SCHEME
+        value: Bearer
 
   - type: redis
     name: storycomicai-redis
