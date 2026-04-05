@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy.orm import Session
+
 from api.app.models.generation_job import GenerationJob
 from api.app.models.project import Project
 from api.app.schemas.ai.generation import ComicGenerationBlueprintData, QualitySignalData
@@ -29,6 +31,7 @@ class ComicGenerationOrchestrator:
     def build_blueprint(
         self,
         *,
+        db: Session,
         project: Project,
         base_url: str,
         latest_preview: GenerationJob | None,
@@ -48,7 +51,12 @@ class ComicGenerationOrchestrator:
         panel_specs = []
         page_number = 1
         for beat in story_plan.beats:
-            references = self.reference_index_service.retrieve(style_guide=style_guide, beat=beat)
+            references = self.reference_index_service.retrieve(
+                db=db,
+                style_guide=style_guide,
+                beat=beat,
+                base_url=base_url,
+            )
             shot_sequence = self._shot_sequence(beat.scene_type, beat.panel_count_hint)
             for panel_index, shot_type in enumerate(shot_sequence, start=1):
                 panel_specs.append(
@@ -76,7 +84,12 @@ class ComicGenerationOrchestrator:
         reference_assets = []
         seen_asset_ids: set[str] = set()
         for beat in story_plan.beats:
-            for asset in self.reference_index_service.retrieve(style_guide=style_guide, beat=beat):
+            for asset in self.reference_index_service.retrieve(
+                db=db,
+                style_guide=style_guide,
+                beat=beat,
+                base_url=base_url,
+            ):
                 if asset.asset_id not in seen_asset_ids:
                     seen_asset_ids.add(asset.asset_id)
                     reference_assets.append(asset)

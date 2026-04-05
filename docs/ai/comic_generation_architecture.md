@@ -24,6 +24,8 @@ StoryComicAI does not need a generic image classifier. It needs a story-to-comic
   - Converts style preset into rendering, framing, bubble, and page-layout rules.
 - `reference_index_service.py`
   - Retrieves comic reference assets by taxonomy tags.
+  - Backed by the `reference_assets` metadata table instead of a hardcoded list.
+  - Seeds a first-party CC0 reference library when the table is empty.
 - `panel_prompt_service.py`
   - Produces continuity-aware prompts for each panel.
 - `panel_generation_service.py`
@@ -55,6 +57,23 @@ The reference library is not classified like CIFAR-10. It is indexed by comic-sp
 - Pinterest may be used only as a manual inspiration / moodboard source.
 - Pinterest content must not be scraped, downloaded into datasets, used as retrieval assets, or used for model training.
 - Production reference assets must come from licensed, public-domain, first-party, or explicitly permitted sources.
+- The default seeded library is first-party generated and tagged `CC0-1.0` so the product can boot without third-party scraping.
+
+## Approved Open-Access Source Allowlist
+StoryComicAI's first real third-party ingest pass is restricted to these institutional sources:
+- Smithsonian Open Access
+- The Met Open Access
+- Art Institute of Chicago Open Access
+- Cleveland Museum of Art Open Access
+- National Gallery of Art Open Access
+
+Ingest policy:
+- Accept automatically: `CC0`, `public_domain`
+- Accept conditionally: attribution-bearing licenses only if attribution metadata is complete
+- Reject: `NC`, `ND`, unknown, or provenance-incomplete assets
+
+The backend exposes this allowlist through:
+- `GET /v1/reference-assets/sources`
 
 ## Why This Is The Right Shape
 - We should not train a foundation image model from scratch for the MVP.

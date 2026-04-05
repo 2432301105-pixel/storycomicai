@@ -11,7 +11,13 @@ from api.app.schemas.ai.generation import (
     StoryPlanData,
     StyleGuideData,
 )
-from api.app.schemas.ai.taxonomy import ReferenceAssetData, ReferenceAssetTagsData
+from api.app.schemas.ai.taxonomy import (
+    ReferenceAssetData,
+    ReferenceAssetLicenseData,
+    ReferenceAssetProvenanceData,
+    ReferenceAssetTagsData,
+    ReferenceSourcePolicyData,
+)
 
 __all__ = [
     "CharacterBibleData",
@@ -21,7 +27,10 @@ __all__ = [
     "PanelSpecData",
     "QualitySignalData",
     "ReferenceAssetData",
+    "ReferenceAssetLicenseData",
+    "ReferenceAssetProvenanceData",
     "ReferenceAssetTagsData",
+    "ReferenceSourcePolicyData",
     "StoryBeatData",
     "StoryPlanData",
     "StyleGuideData",

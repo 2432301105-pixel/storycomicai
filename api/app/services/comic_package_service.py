@@ -200,6 +200,7 @@ class ComicPackageService:
             if job_blueprint is not None:
                 return job_blueprint
         return self.orchestrator.build_blueprint(
+            db=db,
             project=project,
             base_url=base_url,
             latest_preview=latest_preview,

@@ -55,6 +55,7 @@ class ComicGenerationService:
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
         normalized_base_url = base_url.rstrip("/")
         generation_blueprint = self.orchestrator.build_blueprint(
+            db=db,
             project=project,
             base_url=normalized_base_url,
             latest_preview=latest_preview,
