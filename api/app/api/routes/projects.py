@@ -5,9 +5,10 @@ from __future__ import annotations
 import html
 import re
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from api.app.api.dependencies import get_current_user
@@ -34,6 +35,7 @@ from api.app.services.hero_preview_service import HeroPreviewService
 from api.app.services.project_service import ProjectService
 from api.app.services.reading_progress_service import ReadingProgressService
 from api.app.services.upload_service import UploadService
+from api.app.services.object_storage import resolve_mock_storage_path
 
 router = APIRouter(prefix="/projects")
 
@@ -297,6 +299,18 @@ def get_rendered_asset(
     ink = f"#{palette[1]}" if len(palette) > 1 else "#1A1F29"
     paper = f"#{palette[2]}" if len(palette) > 2 else "#F4F1EA"
 
+    persisted_storage_key = _persisted_rendered_asset_storage_key(
+        project_id=project_id,
+        asset_kind=asset_kind,
+        asset_id=asset_id,
+        variant=variant,
+        request=request,
+    )
+    if persisted_storage_key is not None:
+        persisted_path = resolve_mock_storage_path(storage_key=persisted_storage_key)
+        if persisted_path is not None and persisted_path.exists():
+            return FileResponse(path=persisted_path)
+
     if asset_kind == "cover":
         svg = (
             "<svg xmlns='http://www.w3.org/2000/svg' width='1536' height='2048' viewBox='0 0 1536 2048'>"
@@ -350,3 +364,32 @@ def get_rendered_asset(
         "</svg>"
     )
     return Response(content=svg, media_type="image/svg+xml")
+
+
+def _persisted_rendered_asset_storage_key(
+    *,
+    project_id: uuid.UUID,
+    asset_kind: str,
+    asset_id: str,
+    variant: str,
+    request: Request,
+) -> str | None:
+    normalized_variant = "thumbnail" if variant == "thumbnail" else "full"
+    if asset_kind == "cover":
+        return f"projects/{project_id}/covers/{asset_id}-{normalized_variant}"
+    if asset_kind == "page":
+        try:
+            page_number = int(asset_id)
+        except ValueError:
+            return None
+        return f"projects/{project_id}/pages/page-{page_number:02d}-{normalized_variant}"
+    if asset_kind == "panel":
+        page_value = request.query_params.get("page")
+        try:
+            page_number = int(page_value) if page_value is not None else None
+        except ValueError:
+            return None
+        if page_number is None:
+            return None
+        return f"projects/{project_id}/panels/page-{page_number:02d}/{asset_id}-{normalized_variant}"
+    return None

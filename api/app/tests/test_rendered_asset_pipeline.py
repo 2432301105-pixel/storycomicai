@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 import uuid
 
@@ -17,7 +18,8 @@ from api.app.schemas.ai.generation import (
     StyleGuideData,
 )
 from api.app.services.ai.rendered_asset_pipeline_service import RenderedAssetPipelineService
-from api.app.services.object_storage import MockObjectStorageClient
+from api.app.services.object_storage import MockObjectStorageClient, resolve_mock_storage_path
+from api.app.core.config import settings
 
 
 def _sample_generation_blueprint() -> ComicGenerationBlueprintData:
@@ -99,7 +101,9 @@ def _sample_generation_blueprint() -> ComicGenerationBlueprintData:
     )
 
 
-def test_rendered_asset_pipeline_builds_manifest_with_provider_panel_assets() -> None:
+def test_rendered_asset_pipeline_builds_manifest_with_provider_panel_assets(tmp_path: Path) -> None:
+    original_dir = settings.export_artifact_dir
+    settings.export_artifact_dir = str(tmp_path / "artifacts")
     project = SimpleNamespace(
         id=uuid.uuid4(),
         title="Shadow Run",
@@ -110,17 +114,29 @@ def test_rendered_asset_pipeline_builds_manifest_with_provider_panel_assets() ->
     )
     service = RenderedAssetPipelineService(storage=MockObjectStorageClient())
 
-    manifest = service.build_manifest(
-        project=project,
-        base_url="https://storycomicai.onrender.com",
-        generation_blueprint=_sample_generation_blueprint(),
-        provider_name="remote_http",
-        latest_preview=preview_job,
-    )
+    try:
+        manifest = service.build_manifest(
+            project=project,
+            base_url="https://storycomicai.onrender.com",
+            generation_blueprint=_sample_generation_blueprint(),
+            provider_name="remote_http",
+            latest_preview=preview_job,
+        )
 
-    assert manifest["providerName"] == "remote_http"
-    assert manifest["cover"]["fullUrl"] == "https://provider.example.com/cover-front.png"
-    assert manifest["pages"][0]["pageNumber"] == 1
-    assert manifest["pages"][0]["fullUrl"].startswith("https://storycomicai.onrender.com/v1/projects/")
-    assert manifest["panels"][0]["fullUrl"] == "https://provider.example.com/panel-1.png"
-    assert manifest["panels"][0]["thumbnailUrl"] == "https://provider.example.com/panel-1-thumb.png"
+        assert manifest["providerName"] == "remote_http"
+        assert manifest["cover"]["fullUrl"].startswith("https://storycomicai.onrender.com/v1/projects/")
+        assert manifest["cover"]["sourceFullUrl"] == "https://provider.example.com/cover-front.png"
+        assert manifest["pages"][0]["pageNumber"] == 1
+        assert manifest["pages"][0]["fullUrl"].startswith("https://storycomicai.onrender.com/v1/projects/")
+        assert manifest["panels"][0]["fullUrl"].startswith("https://storycomicai.onrender.com/v1/projects/")
+        assert manifest["panels"][0]["sourceFullUrl"] == "https://provider.example.com/panel-1.png"
+        assert manifest["panels"][0]["sourceThumbnailUrl"] == "https://provider.example.com/panel-1-thumb.png"
+
+        cover_path = resolve_mock_storage_path(storage_key=f"projects/{project.id}/covers/front-full")
+        page_path = resolve_mock_storage_path(storage_key=f"projects/{project.id}/pages/page-01-full")
+        panel_path = resolve_mock_storage_path(storage_key=f"projects/{project.id}/panels/page-01/panel-1-full")
+        assert cover_path is not None and cover_path.exists()
+        assert page_path is not None and page_path.exists()
+        assert panel_path is not None and panel_path.exists()
+    finally:
+        settings.export_artifact_dir = original_dir

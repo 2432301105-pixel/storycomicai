@@ -1,4 +1,4 @@
-"""Builds a stable rendered asset manifest for generated comic outputs."""
+"""Builds and persists final rendered comic assets for generated outputs."""
 
 from __future__ import annotations
 
@@ -9,15 +9,21 @@ import uuid
 
 from api.app.models.generation_job import GenerationJob
 from api.app.models.project import Project
-from api.app.schemas.ai.generation import ComicGenerationBlueprintData
-from api.app.services.object_storage import ObjectStorageClient, StoredAssetReference, get_object_storage_client
+from api.app.schemas.ai.generation import ComicGenerationBlueprintData, PanelRenderData
+from api.app.services.ai.page_composer_service import PageComposerService
+from api.app.services.object_storage import ObjectStorageClient, get_object_storage_client
 
 
 class RenderedAssetPipelineService:
-    """Persists or normalizes cover/page/panel asset references for a generation run."""
+    """Creates stable cover/page/panel assets and returns a manifest."""
 
-    def __init__(self, storage: ObjectStorageClient | None = None) -> None:
+    def __init__(
+        self,
+        storage: ObjectStorageClient | None = None,
+        page_composer: PageComposerService | None = None,
+    ) -> None:
         self.storage = storage or get_object_storage_client()
+        self.page_composer = page_composer or PageComposerService()
 
     def build_manifest(
         self,
@@ -29,176 +35,177 @@ class RenderedAssetPipelineService:
         latest_preview: GenerationJob | None = None,
     ) -> dict[str, Any]:
         normalized_base_url = base_url.rstrip("/")
-        cover_source_url = self._cover_source_url(
-            base_url=normalized_base_url,
-            project=project,
-            latest_preview=latest_preview,
-        )
-        cover_ref = self._persist_reference(
+        style_guide = generation_blueprint.style_guide
+        character_bible = generation_blueprint.character_bible
+        panel_renders_by_id = {
+            render.panel_id: render
+            for render in generation_blueprint.panel_renders
+        }
+
+        cover_full_ref = self.storage.persist_bytes(
             storage_key=f"projects/{project.id}/covers/front-full",
-            source_url=cover_source_url,
+            data=self.page_composer.render_cover_png(
+                project=project,
+                style_guide=style_guide,
+                character_bible=character_bible,
+            ),
+            content_type="image/png",
+            expires_in_seconds=86_400,
+        )
+        cover_thumb_ref = self.storage.persist_bytes(
+            storage_key=f"projects/{project.id}/covers/front-thumbnail",
+            data=self.page_composer.resize_png(
+                source_png=self.page_composer.render_cover_png(
+                    project=project,
+                    style_guide=style_guide,
+                    character_bible=character_bible,
+                )
+            ),
+            content_type="image/png",
+            expires_in_seconds=86_400,
         )
 
         panel_assets: list[dict[str, Any]] = []
         panel_assets_by_id: dict[str, dict[str, Any]] = {}
+        panel_specs_by_id = {
+            spec.panel_id: spec
+            for page in generation_blueprint.pages
+            for spec in page.panel_specs
+        }
         for render in generation_blueprint.panel_renders:
-            full_ref = self._persist_reference(
-                storage_key=(
-                    f"projects/{project.id}/panels/"
-                    f"page-{render.page_number:02d}/{render.panel_id}-full"
-                ),
-                source_url=render.image_url,
+            spec = panel_specs_by_id.get(render.panel_id)
+            if spec is None:
+                continue
+            full_png = self.page_composer.render_panel_png(
+                spec=spec,
+                render=render,
+                character_bible=character_bible,
+                style_guide=style_guide,
             )
-            thumb_ref = self._persist_reference(
-                storage_key=(
-                    f"projects/{project.id}/panels/"
-                    f"page-{render.page_number:02d}/{render.panel_id}-thumb"
-                ),
-                source_url=render.thumbnail_url or render.image_url,
+            full_ref = self.storage.persist_bytes(
+                storage_key=f"projects/{project.id}/panels/page-{render.page_number:02d}/{render.panel_id}-full",
+                data=full_png,
+                content_type="image/png",
+                expires_in_seconds=86_400,
+            )
+            thumb_ref = self.storage.persist_bytes(
+                storage_key=f"projects/{project.id}/panels/page-{render.page_number:02d}/{render.panel_id}-thumbnail",
+                data=self.page_composer.resize_png(source_png=full_png, size=(384, 512)),
+                content_type="image/png",
+                expires_in_seconds=86_400,
             )
             entry = {
                 "panelId": render.panel_id,
                 "pageNumber": render.page_number,
-                "fullUrl": full_ref.resolved_url if full_ref else None,
-                "thumbnailUrl": thumb_ref.resolved_url if thumb_ref else None,
-                "sourceFullUrl": full_ref.source_url if full_ref else None,
-                "sourceThumbnailUrl": thumb_ref.source_url if thumb_ref else None,
-                "storageKey": full_ref.storage_key if full_ref else None,
+                "fullUrl": self._asset_url(
+                    base_url=normalized_base_url,
+                    project_id=project.id,
+                    asset_kind="panel",
+                    asset_id=render.panel_id,
+                    variant="full",
+                    query_params={"page": str(render.page_number)},
+                ),
+                "thumbnailUrl": self._asset_url(
+                    base_url=normalized_base_url,
+                    project_id=project.id,
+                    asset_kind="panel",
+                    asset_id=render.panel_id,
+                    variant="thumbnail",
+                    query_params={"page": str(render.page_number)},
+                ),
+                "sourceFullUrl": render.image_url,
+                "sourceThumbnailUrl": render.thumbnail_url or render.image_url,
+                "storageKey": full_ref.storage_key,
                 "caption": render.caption,
                 "dialogue": render.dialogue,
+                "persisted": full_ref.persisted and thumb_ref.persisted,
             }
             panel_assets.append(entry)
             panel_assets_by_id[render.panel_id] = entry
 
         page_assets: list[dict[str, Any]] = []
         for page in generation_blueprint.pages:
-            caption = self._page_caption(page=page)
-            full_ref = self._persist_reference(
-                storage_key=f"projects/{project.id}/pages/page-{page.page_number:02d}-full",
-                source_url=self._page_asset_url(
-                    base_url=normalized_base_url,
-                    project_id=project.id,
-                    style_key=project.style,
-                    page=page,
-                    caption=caption,
-                    variant="full",
-                ),
+            full_png = self.page_composer.render_page_png(
+                page=page,
+                style_guide=style_guide,
+                character_bible=character_bible,
+                panel_renders_by_id=panel_renders_by_id,
             )
-            thumb_ref = self._persist_reference(
-                storage_key=f"projects/{project.id}/pages/page-{page.page_number:02d}-thumb",
-                source_url=self._page_asset_url(
-                    base_url=normalized_base_url,
-                    project_id=project.id,
-                    style_key=project.style,
-                    page=page,
-                    caption=caption,
-                    variant="thumbnail",
-                ),
+            full_ref = self.storage.persist_bytes(
+                storage_key=f"projects/{project.id}/pages/page-{page.page_number:02d}-full",
+                data=full_png,
+                content_type="image/png",
+                expires_in_seconds=86_400,
+            )
+            thumb_ref = self.storage.persist_bytes(
+                storage_key=f"projects/{project.id}/pages/page-{page.page_number:02d}-thumbnail",
+                data=self.page_composer.resize_png(source_png=full_png),
+                content_type="image/png",
+                expires_in_seconds=86_400,
             )
             page_assets.append(
                 {
                     "pageNumber": page.page_number,
                     "title": page.title,
-                    "fullUrl": full_ref.resolved_url if full_ref else None,
-                    "thumbnailUrl": thumb_ref.resolved_url if thumb_ref else None,
-                    "sourceFullUrl": full_ref.source_url if full_ref else None,
-                    "sourceThumbnailUrl": thumb_ref.source_url if thumb_ref else None,
-                    "storageKey": full_ref.storage_key if full_ref else None,
+                    "fullUrl": self._asset_url(
+                        base_url=normalized_base_url,
+                        project_id=project.id,
+                        asset_kind="page",
+                        asset_id=str(page.page_number),
+                        variant="full",
+                    ),
+                    "thumbnailUrl": self._asset_url(
+                        base_url=normalized_base_url,
+                        project_id=project.id,
+                        asset_kind="page",
+                        asset_id=str(page.page_number),
+                        variant="thumbnail",
+                    ),
+                    "sourceFullUrl": None,
+                    "sourceThumbnailUrl": None,
+                    "storageKey": full_ref.storage_key,
                     "panelIds": [spec.panel_id for spec in page.panel_specs],
                     "panelAssets": [
                         panel_assets_by_id[spec.panel_id]
                         for spec in page.panel_specs
                         if spec.panel_id in panel_assets_by_id
                     ],
+                    "persisted": full_ref.persisted and thumb_ref.persisted,
                 }
             )
 
+        preview_front = self._preview_front_url(latest_preview=latest_preview)
         return {
             "generatedAtUtc": datetime.now(UTC).isoformat(),
             "providerName": provider_name,
             "cover": {
-                "fullUrl": cover_ref.resolved_url if cover_ref else None,
-                "sourceFullUrl": cover_ref.source_url if cover_ref else None,
-                "storageKey": cover_ref.storage_key if cover_ref else None,
+                "fullUrl": self._asset_url(
+                    base_url=normalized_base_url,
+                    project_id=project.id,
+                    asset_kind="cover",
+                    asset_id="front",
+                    variant="full",
+                ),
+                "thumbnailUrl": self._asset_url(
+                    base_url=normalized_base_url,
+                    project_id=project.id,
+                    asset_kind="cover",
+                    asset_id="front",
+                    variant="thumbnail",
+                ),
+                "sourceFullUrl": preview_front,
+                "storageKey": cover_full_ref.storage_key,
+                "persisted": cover_full_ref.persisted and cover_thumb_ref.persisted,
             },
             "pages": page_assets,
             "panels": panel_assets,
         }
 
-    def _persist_reference(
-        self,
-        *,
-        storage_key: str,
-        source_url: str | None,
-    ) -> StoredAssetReference | None:
-        if not isinstance(source_url, str) or not source_url.strip():
-            return None
-        return self.storage.persist_external_asset_reference(
-            storage_key=storage_key,
-            source_url=source_url.strip(),
-            expires_in_seconds=86_400,
-        )
-
     @staticmethod
-    def _cover_source_url(
-        *,
-        base_url: str,
-        project: Project,
-        latest_preview: GenerationJob | None,
-    ) -> str:
+    def _preview_front_url(*, latest_preview: GenerationJob | None) -> str | None:
         preview_assets = (latest_preview.result or {}).get("preview_assets", {}) if latest_preview else {}
         front_url = preview_assets.get("front")
-        if isinstance(front_url, str) and front_url.startswith(("http://", "https://")):
-            return front_url
-        return RenderedAssetPipelineService._asset_url(
-            base_url=base_url,
-            project_id=project.id,
-            asset_kind="cover",
-            asset_id="front",
-            variant="full",
-            query_params={
-                "style": project.style,
-                "title": project.title,
-                "subtitle": "Your story begins",
-            },
-        )
-
-    @staticmethod
-    def _page_caption(*, page) -> str:
-        for panel_spec in page.panel_specs:
-            if panel_spec.narration:
-                return panel_spec.narration
-        return page.narrative_purpose
-
-    @staticmethod
-    def _page_asset_url(
-        *,
-        base_url: str,
-        project_id: uuid.UUID,
-        style_key: str,
-        page,
-        caption: str,
-        variant: str,
-    ) -> str:
-        dialogues = [spec.dialogue for spec in page.panel_specs if spec.dialogue]
-        shots = [spec.shot_type for spec in page.panel_specs if spec.shot_type]
-        moods = [spec.mood for spec in page.panel_specs if spec.mood]
-        return RenderedAssetPipelineService._asset_url(
-            base_url=base_url,
-            project_id=project_id,
-            asset_kind="page",
-            asset_id=str(page.page_number),
-            variant=variant,
-            query_params={
-                "style": style_key,
-                "title": page.title,
-                "caption": caption,
-                "dialogue": " | ".join(dialogues[:2]) if dialogues else None,
-                "shot": shots[0] if shots else None,
-                "mood": moods[0] if moods else None,
-                "panels": str(len(page.panel_specs)),
-            },
-        )
+        return front_url if isinstance(front_url, str) and front_url.strip() else None
 
     @staticmethod
     def _asset_url(
