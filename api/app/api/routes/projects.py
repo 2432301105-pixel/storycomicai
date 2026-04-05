@@ -5,10 +5,9 @@ from __future__ import annotations
 import html
 import re
 import uuid
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from api.app.api.dependencies import get_current_user
@@ -35,7 +34,8 @@ from api.app.services.hero_preview_service import HeroPreviewService
 from api.app.services.project_service import ProjectService
 from api.app.services.reading_progress_service import ReadingProgressService
 from api.app.services.upload_service import UploadService
-from api.app.services.object_storage import resolve_mock_storage_path
+from api.app.core.config import settings
+from api.app.services.object_storage import get_object_storage_client, resolve_mock_storage_path
 
 router = APIRouter(prefix="/projects")
 
@@ -310,6 +310,12 @@ def get_rendered_asset(
         persisted_path = resolve_mock_storage_path(storage_key=persisted_storage_key)
         if persisted_path is not None and persisted_path.exists():
             return FileResponse(path=persisted_path)
+        if settings.storage_provider != "mock":
+            download_url = get_object_storage_client().create_presigned_download_url(
+                storage_key=persisted_storage_key,
+                expires_in_seconds=settings.storage_presign_ttl_seconds,
+            )
+            return RedirectResponse(url=download_url, status_code=307)
 
     if asset_kind == "cover":
         svg = (

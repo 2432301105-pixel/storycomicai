@@ -366,10 +366,14 @@ class RemoteComicRenderProvider:
 
 
 def get_comic_render_provider() -> ComicRenderProvider:
-    if settings.ai_render_provider == "mock":
+    effective_provider = settings.ai_render_provider
+    if effective_provider == "mock" and settings.ai_render_provider_base_url:
+        effective_provider = "remote_http"
+
+    if effective_provider == "mock":
         return MockComicRenderProvider()
 
-    if settings.ai_render_provider not in {"remote", "remote_http"}:
+    if effective_provider not in {"remote", "remote_http"}:
         raise DomainError(
             code="REMOTE_RENDER_PROVIDER_NOT_SUPPORTED",
             message="Configured render provider is not supported.",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,6 +41,48 @@ class Settings(BaseSettings):
 
     storage_provider: Literal["mock", "s3"] = "mock"
     storage_bucket: str = "storycomicai-local"
+    storage_region: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SC_STORAGE_REGION",
+            "SC_AWS_REGION",
+            "AWS_REGION",
+            "AWS_DEFAULT_REGION",
+        ),
+    )
+    storage_endpoint_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SC_STORAGE_ENDPOINT_URL",
+            "SC_S3_ENDPOINT_URL",
+            "AWS_ENDPOINT_URL_S3",
+        ),
+    )
+    storage_access_key_id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SC_STORAGE_ACCESS_KEY_ID",
+            "SC_AWS_ACCESS_KEY_ID",
+            "AWS_ACCESS_KEY_ID",
+        ),
+    )
+    storage_secret_access_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SC_STORAGE_SECRET_ACCESS_KEY",
+            "SC_AWS_SECRET_ACCESS_KEY",
+            "AWS_SECRET_ACCESS_KEY",
+        ),
+    )
+    storage_session_token: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SC_STORAGE_SESSION_TOKEN",
+            "SC_AWS_SESSION_TOKEN",
+            "AWS_SESSION_TOKEN",
+        ),
+    )
+    storage_public_base_url: str | None = Field(default=None, validation_alias=AliasChoices("SC_STORAGE_PUBLIC_BASE_URL"))
     storage_presign_ttl_seconds: int = 900
     export_artifact_dir: str = "/tmp/storycomicai-artifacts"
     export_download_token_ttl_seconds: int = 3600

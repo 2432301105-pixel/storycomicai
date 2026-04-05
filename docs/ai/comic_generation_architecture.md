@@ -86,6 +86,10 @@ Optional environment variables:
 - `SC_AI_RENDER_PROVIDER_AUTH_HEADER`
 - `SC_AI_RENDER_PROVIDER_AUTH_SCHEME`
 
+Activation rule:
+- If `SC_AI_RENDER_PROVIDER_BASE_URL` is present, StoryComicAI will promote the provider to `remote_http` even when `SC_AI_RENDER_PROVIDER` is left as `mock`.
+- This keeps local development simple while allowing production/staging to activate the real vendor with environment-only changes.
+
 Expected provider behaviors:
 1. Direct mode
    - `POST {submit_path}` returns `{ panels: [...] }`
@@ -118,3 +122,22 @@ iOS should treat generation as a structured pipeline, not a spinner:
 - style adapters / LoRA routing
 - actual image generation with continuity guidance
 - page-level quality reranking and repair passes
+
+## Storage for Final Assets
+Final panel/page/cover assets must be persisted after composition.
+
+Required storage environment:
+- `SC_STORAGE_PROVIDER=mock|s3`
+- `SC_STORAGE_BUCKET`
+
+Optional S3-compatible environment:
+- `SC_STORAGE_REGION`
+- `SC_STORAGE_ENDPOINT_URL`
+- `SC_STORAGE_ACCESS_KEY_ID`
+- `SC_STORAGE_SECRET_ACCESS_KEY`
+- `SC_STORAGE_SESSION_TOKEN`
+- `SC_STORAGE_PUBLIC_BASE_URL`
+
+Behavior:
+- `mock` writes composed assets to local disk for development.
+- `s3` uploads composed assets to object storage and the rendered-asset routes redirect to presigned download URLs.

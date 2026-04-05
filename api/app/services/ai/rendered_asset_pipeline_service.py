@@ -41,26 +41,21 @@ class RenderedAssetPipelineService:
             render.panel_id: render
             for render in generation_blueprint.panel_renders
         }
+        cover_png = self.page_composer.render_cover_png(
+            project=project,
+            style_guide=style_guide,
+            character_bible=character_bible,
+        )
 
         cover_full_ref = self.storage.persist_bytes(
             storage_key=f"projects/{project.id}/covers/front-full",
-            data=self.page_composer.render_cover_png(
-                project=project,
-                style_guide=style_guide,
-                character_bible=character_bible,
-            ),
+            data=cover_png,
             content_type="image/png",
             expires_in_seconds=86_400,
         )
         cover_thumb_ref = self.storage.persist_bytes(
             storage_key=f"projects/{project.id}/covers/front-thumbnail",
-            data=self.page_composer.resize_png(
-                source_png=self.page_composer.render_cover_png(
-                    project=project,
-                    style_guide=style_guide,
-                    character_bible=character_bible,
-                )
-            ),
+            data=self.page_composer.resize_png(source_png=cover_png),
             content_type="image/png",
             expires_in_seconds=86_400,
         )

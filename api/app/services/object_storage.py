@@ -6,11 +6,14 @@ import mimetypes
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
+from urllib.parse import quote
 
 import httpx
 
 from api.app.core.config import settings
+from api.app.services.exceptions import DomainError
 
 
 @dataclass(frozen=True)
@@ -50,6 +53,13 @@ class ObjectStorageClient(Protocol):
         content_type: str,
         expires_in_seconds: int,
     ) -> StoredAssetReference: ...
+
+    def create_presigned_download_url(
+        self,
+        *,
+        storage_key: str,
+        expires_in_seconds: int,
+    ) -> str: ...
 
 
 @dataclass
@@ -116,6 +126,15 @@ class MockObjectStorageClient:
             persisted=True,
         )
 
+    def create_presigned_download_url(
+        self,
+        *,
+        storage_key: str,
+        expires_in_seconds: int,
+    ) -> str:
+        del expires_in_seconds
+        return f"{self.base_url}/assets/{storage_key}"
+
     @staticmethod
     def _download_bytes(*, source_url: str) -> tuple[bytes, str] | None:
         if not source_url.startswith(("http://", "https://")):
@@ -153,11 +172,148 @@ def resolve_mock_storage_path(*, storage_key: str) -> Path | None:
     return matches[0] if matches else None
 
 
+@dataclass
+class S3ObjectStorageClient:
+    """S3-compatible storage provider for persistent rendered assets."""
+
+    bucket: str
+    endpoint_url: str | None
+    region_name: str | None
+    access_key_id: str | None
+    secret_access_key: str | None
+    session_token: str | None
+    public_base_url: str | None = None
+    client_factory: Callable[[], Any] | None = None
+
+    def create_presigned_upload_url(
+        self,
+        *,
+        storage_key: str,
+        mime_type: str,
+        expires_in_seconds: int,
+    ) -> str:
+        client = self._client()
+        return client.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": self.bucket,
+                "Key": storage_key,
+                "ContentType": mime_type,
+            },
+            ExpiresIn=expires_in_seconds,
+        )
+
+    def create_presigned_download_url(
+        self,
+        *,
+        storage_key: str,
+        expires_in_seconds: int,
+    ) -> str:
+        if self.public_base_url:
+            return f"{self.public_base_url.rstrip('/')}/{quote(storage_key, safe='/')}"
+
+        client = self._client()
+        return client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": self.bucket,
+                "Key": storage_key,
+            },
+            ExpiresIn=expires_in_seconds,
+        )
+
+    def persist_external_asset_reference(
+        self,
+        *,
+        storage_key: str,
+        source_url: str,
+        expires_in_seconds: int,
+    ) -> StoredAssetReference:
+        downloaded = MockObjectStorageClient._download_bytes(source_url=source_url.strip())
+        if downloaded is None:
+            return StoredAssetReference(
+                storage_key=storage_key,
+                source_url=source_url,
+                resolved_url=source_url,
+                persisted=False,
+            )
+
+        data, content_type = downloaded
+        return self.persist_bytes(
+            storage_key=storage_key,
+            data=data,
+            content_type=content_type,
+            expires_in_seconds=expires_in_seconds,
+        )
+
+    def persist_bytes(
+        self,
+        *,
+        storage_key: str,
+        data: bytes,
+        content_type: str,
+        expires_in_seconds: int,
+    ) -> StoredAssetReference:
+        client = self._client()
+        client.put_object(
+            Bucket=self.bucket,
+            Key=storage_key,
+            Body=data,
+            ContentType=content_type,
+            CacheControl=f"public, max-age={max(expires_in_seconds, 300)}",
+        )
+        return StoredAssetReference(
+            storage_key=storage_key,
+            source_url="",
+            resolved_url=self.create_presigned_download_url(
+                storage_key=storage_key,
+                expires_in_seconds=expires_in_seconds,
+            ),
+            persisted=True,
+        )
+
+    def _client(self):
+        if self.client_factory is not None:
+            return self.client_factory()
+
+        try:
+            import boto3  # type: ignore
+        except ImportError as exc:
+            raise DomainError(
+                code="OBJECT_STORAGE_CLIENT_NOT_INSTALLED",
+                message="boto3 must be installed when SC_STORAGE_PROVIDER is s3.",
+                status_code=503,
+            ) from exc
+
+        return boto3.client(
+            "s3",
+            endpoint_url=self.endpoint_url,
+            region_name=self.region_name,
+            aws_access_key_id=self.access_key_id,
+            aws_secret_access_key=self.secret_access_key,
+            aws_session_token=self.session_token,
+        )
+
+
 def get_object_storage_client() -> ObjectStorageClient:
     """Factory for configured storage implementation."""
 
     if settings.storage_provider == "mock":
         return MockObjectStorageClient()
 
-    # TODO: Add S3 provider implementation when moving beyond local environment.
-    return MockObjectStorageClient()
+    if settings.storage_provider == "s3":
+        return S3ObjectStorageClient(
+            bucket=settings.storage_bucket,
+            endpoint_url=settings.storage_endpoint_url,
+            region_name=settings.storage_region,
+            access_key_id=settings.storage_access_key_id,
+            secret_access_key=settings.storage_secret_access_key,
+            session_token=settings.storage_session_token,
+            public_base_url=settings.storage_public_base_url,
+        )
+
+    raise DomainError(
+        code="OBJECT_STORAGE_PROVIDER_NOT_SUPPORTED",
+        message="Configured storage provider is not supported.",
+        status_code=503,
+    )

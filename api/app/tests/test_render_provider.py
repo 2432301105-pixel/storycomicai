@@ -7,9 +7,12 @@ import uuid
 import httpx
 
 from api.app.services.ai.render_provider import (
+    MockComicRenderProvider,
     RemoteComicRenderProvider,
     RenderProviderPanelRequest,
+    get_comic_render_provider,
 )
+from api.app.core.config import settings
 
 
 def _sample_request() -> RenderProviderPanelRequest:
@@ -142,3 +145,34 @@ def test_remote_render_provider_polls_job_until_panels_ready() -> None:
     assert len(results) == 1
     assert results[0].provider_name == "vendor_async"
     assert results[0].thumbnail_url.endswith("thumb.png")
+
+
+def test_render_provider_factory_promotes_remote_when_base_url_is_present() -> None:
+    original_provider = settings.ai_render_provider
+    original_base_url = settings.ai_render_provider_base_url
+    original_api_key = settings.ai_render_provider_api_key
+    try:
+        settings.ai_render_provider = "mock"
+        settings.ai_render_provider_base_url = "https://render.example.com"
+        settings.ai_render_provider_api_key = "secret"
+        provider = get_comic_render_provider()
+    finally:
+        settings.ai_render_provider = original_provider
+        settings.ai_render_provider_base_url = original_base_url
+        settings.ai_render_provider_api_key = original_api_key
+
+    assert isinstance(provider, RemoteComicRenderProvider)
+
+
+def test_render_provider_factory_uses_mock_without_remote_base_url() -> None:
+    original_provider = settings.ai_render_provider
+    original_base_url = settings.ai_render_provider_base_url
+    try:
+        settings.ai_render_provider = "mock"
+        settings.ai_render_provider_base_url = None
+        provider = get_comic_render_provider()
+    finally:
+        settings.ai_render_provider = original_provider
+        settings.ai_render_provider_base_url = original_base_url
+
+    assert isinstance(provider, MockComicRenderProvider)
