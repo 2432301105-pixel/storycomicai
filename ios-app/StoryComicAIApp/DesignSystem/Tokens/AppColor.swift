@@ -1,82 +1,102 @@
 import SwiftUI
 
 enum AppColor {
-    static let backgroundPrimary = Color(hex: "F8F2E9")
-    static let backgroundSecondary = Color(hex: "F1E7D8")
-    static let backgroundCanvas = Color(hex: "F6EFE5")
-    static let backgroundInkWash = Color(hex: "EADBC6")
-    static let surface = Color(hex: "FFFDF9")
-    static let surfaceElevated = Color(hex: "FFFFFF")
-    static let surfaceMuted = Color(hex: "F7EFE4")
-    static let surfaceInset = Color(hex: "EFE4D4")
-    static let pagePaper = Color(hex: "FEFBF5")
-    static let border = Color(hex: "E3D7C7")
-    static let borderStrong = Color(hex: "CDB798")
-    static let borderFoil = Color(hex: "CFA25C")
+    // ─── Canvas ───────────────────────────────────────────────────────────────
+    /// Deep ink black — primary background
+    static let inkBlack      = Color(hex: "0C0B09")
+    /// Warm near-black — elevated surfaces
+    static let inkDeep       = Color(hex: "141210")
+    /// Panel surface — card backgrounds
+    static let inkPanel      = Color(hex: "1C1A16")
+    /// Subtle panel border
+    static let inkMuted      = Color(hex: "2A2722")
 
-    static let deskTopStart = Color(hex: "6B5343")
-    static let deskTopMid = Color(hex: "8B6D58")
-    static let deskTopEnd = Color(hex: "B89A80")
-    static let bookShadow = Color.black.opacity(0.12)
-    static let bookDepthShadow = Color.black.opacity(0.20)
-    static let overlayScrim = Color.black.opacity(0.18)
-    static let lockedOverlay = Color(hex: "1B1712").opacity(0.62)
-    static let halftoneInk = Color(hex: "786B5B").opacity(0.08)
-    static let spotlight = Color.white.opacity(0.68)
+    // ─── Paper ────────────────────────────────────────────────────────────────
+    /// Aged comic paper — primary light surface
+    static let paper         = Color(hex: "F4EDD8")
+    /// Bright panel white
+    static let panelWhite    = Color(hex: "FAFAF6")
+    /// Paper shadow / inset
+    static let paperDim      = Color(hex: "E8DFC8")
 
-    static let textPrimary = Color(hex: "211B16")
-    static let textSecondary = Color(hex: "61574D")
-    static let textTertiary = Color(hex: "8A7E72")
-    static let textOnDark = Color(hex: "F7F1E7")
+    // ─── Ink text ─────────────────────────────────────────────────────────────
+    static let textPrimary   = Color(hex: "F4EDD8")   // cream on dark
+    static let textSecondary = Color(hex: "9B9284")
+    static let textTertiary  = Color(hex: "5E5A52")
+    static let textOnLight   = Color(hex: "0C0B09")   // ink on paper
 
-    static let accent = Color(hex: "C28D38")
-    static let accentSecondary = Color(hex: "E5C281")
-    static let success = Color(hex: "2F7D57")
-    static let warning = Color(hex: "A56C22")
-    static let error = Color(hex: "A64646")
+    // ─── Accent ───────────────────────────────────────────────────────────────
+    /// Comic action red
+    static let comicRed      = Color(hex: "E8351D")
+    /// Comic yellow highlight
+    static let comicYellow   = Color(hex: "F7C948")
+    /// Comic blue
+    static let comicBlue     = Color(hex: "2D5BFF")
+    /// Default accent (yellow)
+    static let accent        = Color(hex: "F7C948")
+    static let accentSecondary = Color(hex: "E8351D")
 
-    static let comicInk = Color(hex: "17120F")
-    static let comicCream = Color(hex: "FFF4DF")
-    static let comicRed = Color(hex: "F0442E")
-    static let comicYellow = Color(hex: "FFD84A")
-    static let comicBlue = Color(hex: "3B68FF")
-    static let comicTeal = Color(hex: "2FAE9D")
-    static let comicBerry = Color(hex: "E24A76")
-    static let comicViolet = Color(hex: "6B56C9")
-    static let comicOrange = Color(hex: "F3963E")
+    // ─── Semantic ─────────────────────────────────────────────────────────────
+    static let success       = Color(hex: "2FA86E")
+    static let warning       = Color(hex: "F7C948")
+    static let error         = Color(hex: "E8351D")
 
-    static let tabBarBackground = Color(hex: "FCF8F1")
-    static let tabBarShadow = Color.black.opacity(0.06)
-    static let tabBarBorder = Color(hex: "E2D5C5")
+    // ─── Halftone / texture ───────────────────────────────────────────────────
+    static let halftoneDot   = Color(hex: "F4EDD8").opacity(0.04)
+    static let panelBorder   = Color(hex: "F4EDD8").opacity(0.10)
+    static let panelBorderStrong = Color(hex: "F4EDD8").opacity(0.20)
 
+    // ─── Legacy aliases (for untouched views) ─────────────────────────────────
+    static let backgroundPrimary    = inkBlack
+    static let backgroundSecondary  = inkDeep
+    static let backgroundCanvas     = inkBlack
+    static let backgroundInkWash    = inkPanel
+    static let surface              = inkPanel
+    static let surfaceElevated      = inkDeep
+    static let surfaceMuted         = inkPanel
+    static let surfaceInset         = inkMuted
+    static let pagePaper            = paper
+    static let border               = panelBorder
+    static let borderStrong         = panelBorderStrong
+    static let borderFoil           = comicYellow.opacity(0.6)
+    static let deskTopStart         = Color(hex: "141210")
+    static let deskTopMid           = Color(hex: "1C1A16")
+    static let deskTopEnd           = Color(hex: "2A2722")
+    static let bookShadow           = Color.black.opacity(0.4)
+    static let bookDepthShadow      = Color.black.opacity(0.6)
+    static let overlayScrim         = Color.black.opacity(0.5)
+    static let lockedOverlay        = Color.black.opacity(0.72)
+    static let halftoneInk          = halftoneDot
+    static let spotlight            = Color.white.opacity(0.06)
+    static let tabBarBackground     = inkDeep
+    static let tabBarShadow         = Color.black.opacity(0.3)
+    static let tabBarBorder         = panelBorder
+    static let comicInk             = inkBlack
+    static let comicCream           = paper
+    static let comicTeal            = Color(hex: "2FA8A0")
+    static let comicBerry           = Color(hex: "E24A76")
+    static let comicViolet          = Color(hex: "7B5CF0")
+    static let comicOrange          = Color(hex: "F07840")
+
+    // ─── Style accents ────────────────────────────────────────────────────────
     static func accent(for style: StoryStyle) -> Color {
         switch style {
-        case .manga:
-            return Color(hex: "B44645")
-        case .western:
-            return Color(hex: "8F4A2B")
-        case .cartoon:
-            return Color(hex: "C98F2A")
-        case .cinematic:
-            return Color(hex: "B4873A")
-        case .childrensBook:
-            return Color(hex: "5F9E9D")
+        case .manga:         return Color(hex: "E8351D")
+        case .western:       return Color(hex: "C97A3A")
+        case .cartoon:       return Color(hex: "F7C948")
+        case .cinematic:     return Color(hex: "2D5BFF")
+        case .childrensBook: return Color(hex: "2FA8A0")
         }
     }
 
     static func accent(for styleLabel: String?) -> Color {
         guard let styleLabel else { return accent }
         switch styleLabel.lowercased() {
-        case let value where value.contains("manga"):
-            return accent(for: .manga)
-        case let value where value.contains("western"):
-            return accent(for: .western)
-        case let value where value.contains("cartoon"):
-            return accent(for: .cartoon)
-        case let value where value.contains("child"):
-            return accent(for: .childrensBook)
-        default:
-            return accent(for: .cinematic)
+        case let v where v.contains("manga"):   return accent(for: .manga)
+        case let v where v.contains("western"): return accent(for: .western)
+        case let v where v.contains("cartoon"): return accent(for: .cartoon)
+        case let v where v.contains("child"):   return accent(for: .childrensBook)
+        default:                                return accent(for: .cinematic)
         }
     }
 }
