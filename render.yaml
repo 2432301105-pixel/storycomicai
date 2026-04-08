@@ -61,8 +61,12 @@ services:
         sync: false
       - key: SC_STORAGE_PUBLIC_BASE_URL
         sync: false
+      - key: SC_ANTHROPIC_API_KEY
+        sync: false
+      - key: SC_OPENAI_API_KEY
+        sync: false
       - key: SC_AI_RENDER_PROVIDER
-        value: mock
+        value: dalle
       - key: SC_AI_RENDER_PROVIDER_BASE_URL
         sync: false
       - key: SC_AI_RENDER_PROVIDER_API_KEY

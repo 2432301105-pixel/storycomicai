@@ -86,7 +86,10 @@ class Settings(BaseSettings):
     storage_presign_ttl_seconds: int = 900
     export_artifact_dir: str = "/tmp/storycomicai-artifacts"
     export_download_token_ttl_seconds: int = 3600
-    ai_render_provider: Literal["mock", "remote", "remote_http"] = "mock"
+    anthropic_api_key: str | None = None
+    openai_api_key: str | None = None
+
+    ai_render_provider: Literal["mock", "remote", "remote_http", "dalle"] = "mock"
     ai_render_provider_base_url: str | None = None
     ai_render_provider_api_key: str | None = None
     ai_render_provider_timeout_seconds: int = 45
@@ -122,6 +125,8 @@ class Settings(BaseSettings):
         normalized = value.strip().lower()
         if normalized == "remote":
             return "remote_http"
+        if normalized in {"dall-e", "dall_e", "dall-e-3", "dallee"}:
+            return "dalle"
         return normalized
 
 

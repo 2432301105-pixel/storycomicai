@@ -10,17 +10,17 @@ from api.app.models.generation_job import GenerationJob
 from api.app.models.project import Project
 from api.app.schemas.ai.generation import ComicGenerationBlueprintData, QualitySignalData
 from api.app.services.ai.character_bible_service import CharacterBibleService
+from api.app.services.ai.claude_story_planner import get_story_planner
 from api.app.services.ai.page_composer_service import PageComposerService
 from api.app.services.ai.panel_generation_service import PanelGenerationService
 from api.app.services.ai.panel_prompt_service import PanelPromptService
 from api.app.services.ai.reference_index_service import ReferenceIndexService
-from api.app.services.ai.story_planner import StoryPlanner
 from api.app.services.ai.style_guide_service import StyleGuideService
 
 
 class ComicGenerationOrchestrator:
     def __init__(self) -> None:
-        self.story_planner = StoryPlanner()
+        self.story_planner = get_story_planner()
         self.character_bible_service = CharacterBibleService()
         self.style_guide_service = StyleGuideService()
         self.reference_index_service = ReferenceIndexService()

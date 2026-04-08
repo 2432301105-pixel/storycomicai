@@ -373,6 +373,10 @@ def get_comic_render_provider() -> ComicRenderProvider:
     if effective_provider == "mock":
         return MockComicRenderProvider()
 
+    if effective_provider == "dalle":
+        from api.app.services.ai.dalle_render_provider import DalleComicRenderProvider
+        return DalleComicRenderProvider()
+
     if effective_provider not in {"remote", "remote_http"}:
         raise DomainError(
             code="REMOTE_RENDER_PROVIDER_NOT_SUPPORTED",
