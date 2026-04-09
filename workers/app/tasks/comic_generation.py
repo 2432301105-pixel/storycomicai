@@ -151,6 +151,7 @@ def _resolve_generation_blueprint(
     base_url = str(payload.get("base_url") or "http://localhost:8000").rstrip("/")
     orchestrator = ComicGenerationOrchestrator()
     return orchestrator.build_blueprint(
+        db=db,
         project=project,
         base_url=base_url,
         latest_preview=latest_preview,

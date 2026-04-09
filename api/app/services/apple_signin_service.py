@@ -39,19 +39,19 @@ class AppleSignInService:
         claims = _decode_unverified_claims(identity_token)
         _validate_claims(claims)
 
-        if settings.env != "local" or not settings.allow_unverified_apple_token_in_local:
+        if not settings.allow_unverified_apple_token_in_local:
             raise DomainError(
                 code="APPLE_SIGNATURE_VERIFICATION_REQUIRED",
                 message=(
-                    "Apple token signature verification with JWKS must be enabled "
-                    "outside local mode."
+                    "Apple token signature verification with JWKS must be enabled. "
+                    "Set SC_ALLOW_UNVERIFIED_APPLE_TOKEN_IN_LOCAL=true to bypass in dev/staging."
                 ),
                 status_code=503,
             )
 
         logger.warning(
-            "Using unverified Apple token flow in local mode only. "
-            "Do not enable this in non-local environments."
+            "Using unverified Apple token flow (SC_ALLOW_UNVERIFIED_APPLE_TOKEN_IN_LOCAL=true). "
+            "Do not use this in production."
         )
         return AppleIdentity(sub=claims.sub, email=claims.email)
 
