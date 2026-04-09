@@ -95,7 +95,8 @@ class GenerationJobService:
             job_type=JobType.COMIC_GENERATION,
             not_found_message="Comic generation job not found.",
         )
-        return self.serialize_comic_generation_job(job)
+        start_data = self.serialize_comic_generation_job(job)
+        return ComicGenerationStatusData(**start_data.model_dump())
 
     def get_job_or_404(
         self,

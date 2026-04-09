@@ -80,6 +80,7 @@ class ComicPackageService:
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
         latest_generation = self._latest_generation_job(db=db, project_id=project.id)
         generation_blueprint = self._build_generation_blueprint(
+            db=db,
             project=project,
             base_url=normalized_base_url,
             latest_preview=latest_preview,
@@ -177,6 +178,7 @@ class ComicPackageService:
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
         latest_generation = self._latest_generation_job(db=db, project_id=project.id)
         return self._build_generation_blueprint(
+            db=db,
             project=project,
             base_url=base_url.rstrip("/"),
             latest_preview=latest_preview,
@@ -190,6 +192,7 @@ class ComicPackageService:
     def _build_generation_blueprint(
         self,
         *,
+        db: Session,
         project: Project,
         base_url: str,
         latest_preview: GenerationJob | None,
