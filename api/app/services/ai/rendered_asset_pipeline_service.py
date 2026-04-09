@@ -198,7 +198,14 @@ class RenderedAssetPipelineService:
 
     @staticmethod
     def _preview_front_url(*, latest_preview: GenerationJob | None) -> str | None:
-        preview_assets = (latest_preview.result or {}).get("preview_assets", {}) if latest_preview else {}
+        if not latest_preview:
+            return None
+        result = latest_preview.result
+        if not isinstance(result, dict):
+            return None
+        preview_assets = result.get("preview_assets", {})
+        if not isinstance(preview_assets, dict):
+            return None
         front_url = preview_assets.get("front")
         return front_url if isinstance(front_url, str) and front_url.strip() else None
 

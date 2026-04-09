@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import uuid
 from datetime import UTC, datetime
 from typing import Protocol
@@ -123,69 +124,69 @@ class InlineJobQueueClient:
         user_id: uuid.UUID,
         payload: dict[str, object],
     ) -> None:
-        del user_id  # Not used in the MVP inline path.
+        del user_id  # Not used in the inline path.
 
-        db = SessionLocal()
-        job: GenerationJob | None = None
-        try:
-            job = db.get(GenerationJob, job_id)
-            if job is None:
-                raise DomainError(
-                    code="JOB_NOT_FOUND",
-                    message="Hero preview job not found for inline execution.",
-                    status_code=404,
-                )
+        def _run() -> None:
+            db = SessionLocal()
+            job: GenerationJob | None = None
+            try:
+                job = db.get(GenerationJob, job_id)
+                if job is None:
+                    logger.error("Hero preview job not found", extra={"job_id": str(job_id)})
+                    return
 
-            now = datetime.now(UTC)
-            job.status = JobStatus.RUNNING
-            job.current_stage = "rendering_preview"
-            job.progress_pct = 30
-            job.started_at = now
-            db.add(job)
-            db.commit()
-
-            preview_result = {
-                "hero_sheet_version": 1,
-                "style": payload.get("style", "manga"),
-                "preview_assets": {
-                    "front": f"https://mock-storage.storycomicai.local/preview/{job_id}/front.png",
-                    "three_quarter": f"https://mock-storage.storycomicai.local/preview/{job_id}/three_quarter.png",
-                    "side": f"https://mock-storage.storycomicai.local/preview/{job_id}/side.png",
-                },
-                "consistency_seed": str(uuid.uuid4()),
-            }
-
-            job.status = JobStatus.SUCCEEDED
-            job.current_stage = "completed"
-            job.progress_pct = 100
-            job.result = preview_result
-            job.completed_at = datetime.now(UTC)
-            db.add(job)
-
-            project = db.get(Project, project_id)
-            if project is not None:
-                project.status = ProjectStatus.HERO_PREVIEW_READY
-                db.add(project)
-            db.commit()
-        except DomainError:
-            raise
-        except Exception as exc:
-            db.rollback()
-            if job is not None:
-                job.status = JobStatus.FAILED
-                job.current_stage = "failed"
-                job.error_message = str(exc)
-                job.completed_at = datetime.now(UTC)
+                job.status = JobStatus.RUNNING
+                job.current_stage = "rendering_preview"
+                job.progress_pct = 30
+                job.started_at = datetime.now(UTC)
                 db.add(job)
                 db.commit()
-            logger.exception("Inline hero preview execution failed", extra={"job_id": str(job_id)})
-            raise DomainError(
-                code="QUEUE_ENQUEUE_FAILED",
-                message="Failed to run inline hero preview job.",
-                status_code=503,
-            ) from exc
-        finally:
-            db.close()
+
+                # Try real DALL-E generation; fall back to placeholder on failure
+                front_url = _generate_hero_preview_image(
+                    style=str(payload.get("style", "cinematic")),
+                    job_id=str(job_id),
+                )
+
+                preview_result = {
+                    "hero_sheet_version": 1,
+                    "style": payload.get("style", "cinematic"),
+                    "preview_assets": {
+                        "front": front_url,
+                        "three_quarter": front_url,
+                        "side": front_url,
+                    },
+                    "consistency_seed": str(uuid.uuid4()),
+                }
+
+                job.status = JobStatus.SUCCEEDED
+                job.current_stage = "completed"
+                job.progress_pct = 100
+                job.result = preview_result
+                job.completed_at = datetime.now(UTC)
+                db.add(job)
+
+                project = db.get(Project, project_id)
+                if project is not None:
+                    project.status = ProjectStatus.HERO_PREVIEW_READY
+                    db.add(project)
+                db.commit()
+            except Exception as exc:
+                db.rollback()
+                if job is not None:
+                    job.status = JobStatus.FAILED
+                    job.current_stage = "failed"
+                    job.error_message = str(exc)
+                    job.completed_at = datetime.now(UTC)
+                    db.add(job)
+                    db.commit()
+                logger.exception("Inline hero preview failed", extra={"job_id": str(job_id)})
+            finally:
+                db.close()
+
+        thread = threading.Thread(target=_run, daemon=True, name=f"hero-preview-{job_id}")
+        thread.start()
+        logger.info("Hero preview dispatched to background thread", extra={"job_id": str(job_id)})
 
     def enqueue_comic_generation(
         self,
@@ -203,21 +204,59 @@ class InlineJobQueueClient:
                 status_code=503,
             ) from exc
 
-        try:
-            run_comic_generation_job(
-                job_id=str(job_id),
-                project_id=str(project_id),
-                payload=payload,
-            )
-        except DomainError:
-            raise
-        except Exception as exc:
-            logger.exception("Inline comic generation execution failed", extra={"job_id": str(job_id)})
-            raise DomainError(
-                code="QUEUE_ENQUEUE_FAILED",
-                message="Failed to run inline comic generation job.",
-                status_code=503,
-            ) from exc
+        def _run() -> None:
+            try:
+                run_comic_generation_job(
+                    job_id=str(job_id),
+                    project_id=str(project_id),
+                    payload=payload,
+                )
+            except Exception:
+                logger.exception(
+                    "Background inline comic generation failed",
+                    extra={"job_id": str(job_id)},
+                )
+
+        thread = threading.Thread(target=_run, daemon=True, name=f"comic-gen-{job_id}")
+        thread.start()
+        logger.info("Inline comic generation dispatched to background thread", extra={"job_id": str(job_id)})
+
+
+def _generate_hero_preview_image(*, style: str, job_id: str) -> str:
+    """Generate a hero character preview with DALL-E 3, or return a placeholder URL."""
+    if not settings.openai_api_key:
+        return f"https://mock-storage.storycomicai.local/preview/{job_id}/front.png"
+
+    try:
+        from openai import OpenAI  # type: ignore
+        prompt = (
+            f"Comic book character hero sheet. {style.title()} comic art style. "
+            "Bold black ink outlines, vibrant flat colors, halftone shading. "
+            "Full-body front-facing hero pose on a clean background. "
+            "Professional Marvel/DC aesthetic. No text or labels."
+        )
+        client = OpenAI(api_key=settings.openai_api_key)
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt[:4000],
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+        dalle_url: str = response.data[0].url  # type: ignore[union-attr]
+
+        # Persist via storage abstraction
+        from api.app.services.object_storage import get_object_storage_client
+        storage = get_object_storage_client()
+        stored = storage.persist_external_asset_reference(
+            storage_key=f"hero-previews/{job_id}/front.png",
+            source_url=dalle_url,
+            expires_in_seconds=settings.storage_presign_ttl_seconds,
+        )
+        return stored.resolved_url
+    except Exception:
+        logger.warning("DALL-E hero preview failed, using placeholder", exc_info=True)
+        return f"https://mock-storage.storycomicai.local/preview/{job_id}/front.png"
 
 
 def get_job_queue_client() -> JobQueueClient:

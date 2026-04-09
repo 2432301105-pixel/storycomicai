@@ -54,20 +54,16 @@ class ComicGenerationService:
 
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
         normalized_base_url = base_url.rstrip("/")
-        generation_blueprint = self.orchestrator.build_blueprint(
-            db=db,
-            project=project,
-            base_url=normalized_base_url,
-            latest_preview=latest_preview,
-        )
 
         project.status = ProjectStatus.FREE_PREVIEW_GENERATING
         db.add(project)
         db.commit()
         db.refresh(project)
 
+        # Build a lightweight payload now; the worker will call the orchestrator
+        # (including the Claude story planner) inside the background thread so the
+        # HTTP request returns immediately without waiting for AI API calls.
         request_payload: dict[str, object] = {
-            "generation_blueprint": generation_blueprint.model_dump(by_alias=True),
             "provider_name": settings.ai_render_provider,
             "provider_mode": settings.ai_render_provider,
             "base_url": normalized_base_url,
