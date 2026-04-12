@@ -24,6 +24,7 @@ enum AppColor {
     static let textSecondary = Color(hex: "9B9284")
     static let textTertiary  = Color(hex: "5E5A52")
     static let textOnLight   = Color(hex: "0C0B09")   // ink on paper
+    static let textOnDark    = Color(hex: "F4EDD8")   // alias for textPrimary
 
     // ─── Accent ───────────────────────────────────────────────────────────────
     /// Comic action red
