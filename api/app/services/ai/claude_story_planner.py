@@ -61,8 +61,6 @@ class ClaudeStoryPlanner:
     def build_plan(self, *, title: str, story_text: str, target_pages: int) -> StoryPlanData:
         try:
             return self._call_claude(title=title, story_text=story_text, target_pages=target_pages)
-        except DomainError:
-            raise
         except Exception:
             logger.warning("Claude story planner failed, falling back to rule-based planner", exc_info=True)
             return self._fallback.build_plan(title=title, story_text=story_text, target_pages=target_pages)

@@ -116,15 +116,15 @@ struct HomeView: View {
                         HStack(spacing: 6) {
                             Text("START CREATING")
                                 .font(AppTypography.badge)
-                                .foregroundStyle(AppColor.textOnLight)
+                                .foregroundStyle(AppColor.comicYellow)
                                 .tracking(1.4)
                             Image(systemName: "arrow.right")
                                 .font(.system(size: 11, weight: .black))
-                                .foregroundStyle(AppColor.textOnLight)
+                                .foregroundStyle(AppColor.comicYellow)
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(AppColor.textOnLight)
+                        .background(AppColor.inkBlack)
                         .clipShape(Capsule())
                     }
                     .padding(24)
