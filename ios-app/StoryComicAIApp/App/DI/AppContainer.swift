@@ -17,7 +17,7 @@ struct AppContainer {
     let analyticsService: any AnalyticsService
 
     static func live(configuration: AppConfiguration = .resolve()) -> AppContainer {
-        let tokenStore = InMemoryAccessTokenStore()
+        let tokenStore = KeychainAccessTokenStore()
         let environment = APIEnvironment(baseURL: configuration.apiBaseURL, timeout: 30)
 
         let apiClient: any APIClient

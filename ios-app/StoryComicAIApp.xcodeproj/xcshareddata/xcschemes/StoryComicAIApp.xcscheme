@@ -87,7 +87,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "STORYCOMICAI_SKIP_ENTRY_FLOW"
-            value = "true"
+            value = "false"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
@@ -126,7 +126,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "STORYCOMICAI_SKIP_ENTRY_FLOW"
-            value = "true"
+            value = "false"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

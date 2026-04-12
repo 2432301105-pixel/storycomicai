@@ -46,6 +46,25 @@ final class AppSessionStore: ObservableObject {
         defaults.set(true, forKey: onboardingFlagKey)
     }
 
+    // MARK: - Session restore from Keychain
+
+    /// Called on launch. Reads a persisted JWT from the Keychain, validates
+    /// its expiry (without signature verification) and, if valid, restores the
+    /// session so the user does not have to sign in again.
+    func restoreSessionIfNeeded() async {
+        guard userSession == nil else { return }
+        guard let token = await tokenStore.readToken() else { return }
+
+        guard let restored = UserSession(restoringFrom: token) else {
+            // Token expired or malformed — clear it so the sign-in screen appears.
+            await tokenStore.writeToken(nil)
+            return
+        }
+        userSession = restored
+    }
+
+    // MARK: - Sign-in
+
     func signInWithApple(identityToken: String) async {
         isSigningIn = true
         authErrorMessage = nil
@@ -65,6 +84,8 @@ final class AppSessionStore: ObservableObject {
         authErrorMessage = nil
         await tokenStore.writeToken(nil)
     }
+
+    // MARK: - Dev bootstrap (DEBUG direct-launch only)
 
     func bootstrapLaunchSessionIfNeeded() async {
         guard configuration.launchesDirectlyIntoApp else { return }
@@ -87,5 +108,47 @@ final class AppSessionStore: ObservableObject {
         } catch {
             authErrorMessage = nil
         }
+    }
+}
+
+// MARK: - JWT payload decode (no signature verification)
+
+private extension UserSession {
+    /// Reconstructs a UserSession from a stored JWT without verifying the
+    /// signature — we only need to check expiry and extract the user ID.
+    init?(restoringFrom token: String) {
+        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 3 else { return nil }
+
+        // Pad the base64url payload segment before decoding.
+        var base64 = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let remainder = base64.count % 4
+        if remainder != 0 { base64 += String(repeating: "=", count: 4 - remainder) }
+
+        guard let data = Data(base64Encoded: base64),
+              let payload = try? JSONDecoder().decode(JWTMinimalPayload.self, from: data) else {
+            return nil
+        }
+
+        let expDate = Date(timeIntervalSince1970: TimeInterval(payload.exp))
+        // Require at least 5 minutes remaining before we consider the token valid.
+        guard expDate > Date().addingTimeInterval(300) else { return nil }
+
+        guard let userID = UUID(uuidString: payload.sub) else { return nil }
+
+        self.init(
+            userID: userID,
+            accessToken: token,
+            tokenType: "bearer",
+            expiresInSeconds: max(0, Int(expDate.timeIntervalSinceNow)),
+            issuedAtUTC: Date()
+        )
+    }
+
+    private struct JWTMinimalPayload: Codable {
+        let sub: String
+        let exp: Int
     }
 }

@@ -44,6 +44,11 @@ struct AppCoordinatorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
+            // Always try to restore a persisted token first so the user
+            // does not have to sign in again after an app restart.
+            await sessionStore.restoreSessionIfNeeded()
+            // Dev-only: bootstrap a fake session for direct-launch builds
+            // if no persisted session was found.
             await sessionStore.bootstrapLaunchSessionIfNeeded()
         }
         .animation(.easeInOut(duration: 0.25), value: sessionStore.hasCompletedOnboarding)

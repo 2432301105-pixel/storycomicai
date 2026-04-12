@@ -103,8 +103,10 @@ struct HomeView: View {
 
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Create New Comic")
-                                .font(.system(size: 24, weight: .black, design: .serif))
+                                .font(.system(size: 22, weight: .black, design: .serif))
                                 .foregroundStyle(AppColor.textOnLight)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(2)
                             Text("Turn any story into a stunning graphic novel in minutes.")
                                 .font(AppTypography.footnote)
                                 .foregroundStyle(AppColor.textOnLight.opacity(0.65))
@@ -127,19 +129,18 @@ struct HomeView: View {
                     }
                     .padding(24)
 
-                    Spacer()
-
-                    // Decorative comic panel stack
-                    VStack(spacing: -8) {
+                    // Decorative comic panel stack (right-aligned, doesn't crowd text)
+                    VStack(spacing: -6) {
                         ForEach(0..<3) { i in
                             RoundedRectangle(cornerRadius: 3)
                                 .fill(AppColor.textOnLight.opacity(0.08 + Double(i) * 0.04))
-                                .frame(width: 52, height: 64)
+                                .frame(width: 44, height: 56)
                                 .rotationEffect(.degrees(Double(i - 1) * 5))
                         }
                     }
-                    .padding(.trailing, 20)
-                    .padding(.bottom, 20)
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 16)
+                    .layoutPriority(-1)
                 }
             }
             .frame(maxWidth: .infinity)
