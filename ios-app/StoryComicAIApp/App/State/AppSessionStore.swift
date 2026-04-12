@@ -37,6 +37,20 @@ final class AppSessionStore: ObservableObject {
         if configuration.launchesDirectlyIntoApp {
             defaults.set(true, forKey: onboardingFlagKey)
         }
+
+        // When any API call gets a 401 the stored token is stale (backend
+        // restarted, user deleted, secret rotated).  Auto-sign-out so the
+        // user lands on the sign-in screen instead of being stuck.
+        NotificationCenter.default.addObserver(
+            forName: .storyComicAISessionUnauthorized,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, self.userSession != nil else { return }
+            Task { @MainActor [weak self] in
+                await self?.signOut()
+            }
+        }
     }
 
     private let defaults: UserDefaults

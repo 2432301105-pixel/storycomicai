@@ -11,6 +11,10 @@ enum APIError: Error {
     case emptyResponseData
 }
 
+extension Notification.Name {
+    static let storyComicAISessionUnauthorized = Notification.Name("StoryComicAI.SessionUnauthorized")
+}
+
 extension APIError {
     var userMessage: String {
         switch self {

@@ -35,6 +35,7 @@ final class LiveAPIClient: APIClient {
         }
 
         if httpResponse.statusCode == 401 {
+            NotificationCenter.default.post(name: .storyComicAISessionUnauthorized, object: nil)
             throw APIError.unauthorized
         }
 
