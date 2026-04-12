@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     auth_jwt_secret: str = Field(default="change-me", min_length=8)
     auth_jwt_algorithm: str = "HS256"
-    auth_access_token_expire_minutes: int = 120
+    auth_access_token_expire_minutes: int = 43200  # 30 days — mobile app sessions
 
     apple_client_id: str = "com.storycomicai.app"
     apple_issuer: str = "https://appleid.apple.com"

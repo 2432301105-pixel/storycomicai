@@ -144,8 +144,12 @@ def run_comic_generation_job(
         if job is not None:
             try:
                 job.status = JobStatus.FAILED
-                job.current_stage = "failed"
-                job.progress_pct = 100
+                # Preserve the last active stage (set by _tick) so the iOS
+                # client shows which stage actually failed.  Only fall back
+                # to "failed" if no stage was ever ticked.
+                if not job.current_stage or job.current_stage in ("queued", ""):
+                    job.current_stage = "story_planner"
+                job.progress_pct = job.progress_pct  # keep as-is
                 job.error_message = str(exc)
                 job.completed_at = datetime.now(UTC)
                 db.add(job)

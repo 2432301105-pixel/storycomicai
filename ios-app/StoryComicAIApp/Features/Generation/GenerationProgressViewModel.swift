@@ -79,7 +79,8 @@ final class GenerationProgressViewModel: ObservableObject {
                 await hydrateRenderedPages()
             }
         } catch {
-            steps = Self.markFailed(steps: steps, currentStage: nil)
+            // Generation never started (auth error, network error, etc.)
+            // Don't mark any stage as failed — no stage ran.
             progress = 0
             errorMessage = (error as? APIError)?.userMessage ?? error.localizedDescription
             isComplete = false

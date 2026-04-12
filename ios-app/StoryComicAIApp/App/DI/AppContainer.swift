@@ -18,7 +18,7 @@ struct AppContainer {
 
     static func live(configuration: AppConfiguration = .resolve()) -> AppContainer {
         let tokenStore = KeychainAccessTokenStore()
-        let environment = APIEnvironment(baseURL: configuration.apiBaseURL, timeout: 30)
+        let environment = APIEnvironment(baseURL: configuration.apiBaseURL, timeout: 90)
 
         let apiClient: any APIClient
         if configuration.useMockServices {
