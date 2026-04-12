@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -49,8 +50,30 @@ class ComicGenerationService:
             job_type=JobType.COMIC_GENERATION,
         )
         if latest_job is not None and not payload.force_regenerate:
-            if latest_job.status in {JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.SUCCEEDED}:
+            if latest_job.status == JobStatus.SUCCEEDED:
                 return self.generation_job_service.serialize_comic_generation_job(latest_job)
+
+            if latest_job.status in {JobStatus.QUEUED, JobStatus.RUNNING}:
+                # If the job has been in-flight for more than 12 minutes it is
+                # stuck (prior DomainError re-raise bug or a crashed thread).
+                # Mark it failed so the user gets a clear error and the next
+                # request creates a fresh job.
+                job_age_cutoff = datetime.now(UTC) - timedelta(minutes=12)
+                ref_time = latest_job.started_at or latest_job.queued_at
+                # Normalise to UTC-aware for comparison regardless of whether
+                # the DB driver returns naive or aware datetimes.
+                if ref_time is not None:
+                    if ref_time.tzinfo is None:
+                        ref_time = ref_time.replace(tzinfo=UTC)
+                if ref_time is not None and ref_time < job_age_cutoff:
+                    latest_job.status = JobStatus.FAILED
+                    latest_job.current_stage = "failed"
+                    latest_job.error_message = "Generation timed out. Please try again."
+                    latest_job.completed_at = datetime.now(UTC)
+                    db.add(latest_job)
+                    db.commit()
+                else:
+                    return self.generation_job_service.serialize_comic_generation_job(latest_job)
 
         latest_preview = self._latest_succeeded_preview_job(db=db, project_id=project.id)
         normalized_base_url = base_url.rstrip("/")
