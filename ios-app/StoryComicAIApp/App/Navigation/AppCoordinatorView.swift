@@ -25,12 +25,10 @@ struct AppCoordinatorView: View {
                     SingleCompactCoverPreviewView(variant: singleCompactCoverVariant)
                 } else if showsCompactCoverGallery {
                     CompactCoverGalleryView()
-                } else if sessionStore.shouldBypassEntryFlow {
-                    if sessionStore.isBootstrappingLaunchSession && !sessionStore.isAuthenticated {
-                        LaunchBootView()
-                    } else {
-                        MainTabView(container: container)
-                    }
+                } else if sessionStore.isBootstrappingLaunchSession {
+                    // Bootstrap in progress — show loading screen regardless of
+                    // whether the bypass flag is set.
+                    LaunchBootView()
                 } else if !sessionStore.hasCompletedOnboarding {
                     OnboardingView(viewModel: OnboardingViewModel()) {
                         sessionStore.completeOnboarding()

@@ -46,7 +46,7 @@ final class AppSessionStore: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self, self.userSession != nil else { return }
+            guard let self else { return }
             Task { @MainActor [weak self] in
                 await self?.signOut()
             }
