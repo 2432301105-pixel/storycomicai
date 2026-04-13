@@ -54,9 +54,31 @@ struct GenerationProgressView: View {
                             ProgressStepListView(steps: viewModel.steps)
 
                             if let errorMessage = viewModel.errorMessage {
-                                Text(errorMessage)
-                                    .font(AppTypography.footnote)
-                                    .foregroundStyle(AppColor.error)
+                                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                                    Text(errorMessage)
+                                        .font(AppTypography.footnote)
+                                        .foregroundStyle(AppColor.error)
+
+                                    if viewModel.canRetry {
+                                        Button {
+                                            viewModel.retry(flowStore: flowStore)
+                                        } label: {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "arrow.clockwise")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                Text(L10n.string("action.retry"))
+                                                    .font(AppTypography.badge)
+                                                    .tracking(1.2)
+                                            }
+                                            .foregroundStyle(AppColor.textPrimary)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(AppColor.surfaceMuted)
+                                            .clipShape(Capsule())
+                                        }
+                                        .disabled(viewModel.isRetrying)
+                                    }
+                                }
                             }
                         }
                     }

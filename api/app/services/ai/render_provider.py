@@ -365,6 +365,10 @@ class RemoteComicRenderProvider:
         }
 
 
+import logging as _logging
+_provider_logger = _logging.getLogger(__name__)
+
+
 def get_comic_render_provider() -> ComicRenderProvider:
     effective_provider = settings.ai_render_provider
     if effective_provider == "mock" and settings.ai_render_provider_base_url:
@@ -374,33 +378,37 @@ def get_comic_render_provider() -> ComicRenderProvider:
         return MockComicRenderProvider()
 
     if effective_provider == "dalle":
-        from api.app.services.ai.dalle_render_provider import DalleComicRenderProvider
-        return DalleComicRenderProvider()
+        try:
+            from api.app.services.ai.dalle_render_provider import DalleComicRenderProvider  # noqa: PLC0415
+            return DalleComicRenderProvider()
+        except Exception:
+            _provider_logger.warning(
+                "DALL-E render provider unavailable (SC_OPENAI_API_KEY not set?), "
+                "falling back to mock placeholder provider."
+            )
+            return MockComicRenderProvider()
 
-    if effective_provider not in {"remote", "remote_http"}:
-        raise DomainError(
-            code="REMOTE_RENDER_PROVIDER_NOT_SUPPORTED",
-            message="Configured render provider is not supported.",
-            status_code=503,
+    if effective_provider in {"remote", "remote_http"}:
+        if not settings.ai_render_provider_base_url:
+            _provider_logger.warning(
+                "Remote render provider URL not configured, falling back to mock."
+            )
+            return MockComicRenderProvider()
+        return RemoteComicRenderProvider(
+            endpoint_base_url=settings.ai_render_provider_base_url,
+            api_key=settings.ai_render_provider_api_key,
+            timeout_seconds=settings.ai_render_provider_timeout_seconds,
+            model_id=settings.ai_render_provider_model_id,
+            adapter_id=settings.ai_render_provider_adapter_id,
+            submit_path=settings.ai_render_provider_submit_path,
+            status_path_template=settings.ai_render_provider_status_path_template,
+            poll_interval_ms=settings.ai_render_provider_poll_interval_ms,
+            max_poll_seconds=settings.ai_render_provider_max_poll_seconds,
+            auth_header=settings.ai_render_provider_auth_header,
+            auth_scheme=settings.ai_render_provider_auth_scheme,
         )
 
-    if not settings.ai_render_provider_base_url:
-        raise DomainError(
-            code="REMOTE_RENDER_PROVIDER_NOT_CONFIGURED",
-            message="SC_AI_RENDER_PROVIDER_BASE_URL must be configured when SC_AI_RENDER_PROVIDER is remote.",
-            status_code=503,
-        )
-
-    return RemoteComicRenderProvider(
-        endpoint_base_url=settings.ai_render_provider_base_url,
-        api_key=settings.ai_render_provider_api_key,
-        timeout_seconds=settings.ai_render_provider_timeout_seconds,
-        model_id=settings.ai_render_provider_model_id,
-        adapter_id=settings.ai_render_provider_adapter_id,
-        submit_path=settings.ai_render_provider_submit_path,
-        status_path_template=settings.ai_render_provider_status_path_template,
-        poll_interval_ms=settings.ai_render_provider_poll_interval_ms,
-        max_poll_seconds=settings.ai_render_provider_max_poll_seconds,
-        auth_header=settings.ai_render_provider_auth_header,
-        auth_scheme=settings.ai_render_provider_auth_scheme,
+    _provider_logger.warning(
+        "Unknown render provider '%s', falling back to mock.", effective_provider
     )
+    return MockComicRenderProvider()

@@ -26,7 +26,16 @@ class ComicGenerationOrchestrator:
         self.reference_index_service = ReferenceIndexService()
         self.panel_prompt_service = PanelPromptService()
         self.page_composer_service = PageComposerService()
-        self.panel_generation_service = PanelGenerationService()
+        # Lazy — resolved at build_blueprint() time so a misconfigured provider
+        # (e.g. SC_OPENAI_API_KEY absent) never prevents the orchestrator from
+        # being constructed or the blueprint storyboard stages from running.
+        self._panel_generation_service: PanelGenerationService | None = None
+
+    @property
+    def panel_generation_service(self) -> PanelGenerationService:
+        if self._panel_generation_service is None:
+            self._panel_generation_service = PanelGenerationService()
+        return self._panel_generation_service
 
     def build_blueprint(
         self,

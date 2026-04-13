@@ -9,6 +9,7 @@ final class GenerationProgressViewModel: ObservableObject {
     @Published private(set) var currentStageTitle: String = L10n.string("generation.stage.queued")
     @Published private(set) var sceneBreakdown: [String] = []
     @Published private(set) var renderedPageSummary: [String] = []
+    @Published private(set) var isRetrying: Bool = false
 
     private let comicGenerationService: any ComicGenerationService
     private let comicPackageService: any ComicPackageService
@@ -29,28 +30,49 @@ final class GenerationProgressViewModel: ObservableObject {
         self.steps = Self.baseSteps()
     }
 
+    var canRetry: Bool {
+        errorMessage != nil && !isComplete
+    }
+
     func startIfNeeded(flowStore: CreateProjectFlowStore) {
         guard task == nil else { return }
+        start(flowStore: flowStore, forceRegenerate: false)
+    }
 
+    func retry(flowStore: CreateProjectFlowStore) {
+        task?.cancel()
+        task = nil
+        steps = Self.baseSteps()
+        progress = 0
+        errorMessage = nil
+        isComplete = false
+        isRetrying = true
+        flowStore.comicGenerationJob = nil
+        start(flowStore: flowStore, forceRegenerate: true)
+    }
+
+    private func start(flowStore: CreateProjectFlowStore, forceRegenerate: Bool) {
         task = Task { [weak self] in
             guard let self else { return }
-            await self.run(flowStore: flowStore)
+            await self.run(flowStore: flowStore, forceRegenerate: forceRegenerate)
         }
     }
 
-    private func run(flowStore: CreateProjectFlowStore) async {
+    private func run(flowStore: CreateProjectFlowStore, forceRegenerate: Bool) async {
+        defer { isRetrying = false }
         errorMessage = nil
         isComplete = false
 
         do {
             let activeJob: ComicGenerationJob
-            if let existingJob = flowStore.comicGenerationJob, existingJob.projectID == projectID {
+            if !forceRegenerate, let existingJob = flowStore.comicGenerationJob,
+               existingJob.projectID == projectID, !existingJob.status.isTerminal {
                 activeJob = existingJob
                 apply(job: existingJob)
             } else {
                 let startedJob = try await comicGenerationService.startComicGeneration(
                     projectID: projectID,
-                    forceRegenerate: false
+                    forceRegenerate: forceRegenerate
                 )
                 flowStore.comicGenerationJob = startedJob
                 activeJob = startedJob
@@ -79,8 +101,7 @@ final class GenerationProgressViewModel: ObservableObject {
                 await hydrateRenderedPages()
             }
         } catch {
-            // Generation never started (auth error, network error, etc.)
-            // Don't mark any stage as failed — no stage ran.
+            // Network / auth error — don't mark any stage, just show message
             progress = 0
             errorMessage = (error as? APIError)?.userMessage ?? error.localizedDescription
             isComplete = false
@@ -94,7 +115,13 @@ final class GenerationProgressViewModel: ObservableObject {
         currentStageTitle = Self.displayTitle(for: job.currentStage)
         sceneBreakdown = Self.makeSceneBreakdown(from: blueprint)
         renderedPageSummary = Self.makeRenderedPageSummary(job: job, blueprint: blueprint)
-        errorMessage = job.status == .failed ? (job.errorMessage ?? L10n.string("generation.error_failed")) : nil
+        if job.status == .failed {
+            errorMessage = job.errorMessage?.isEmpty == false
+                ? job.errorMessage
+                : L10n.string("generation.error_failed")
+        } else {
+            errorMessage = nil
+        }
         isComplete = job.status == .succeeded
     }
 
@@ -131,7 +158,7 @@ final class GenerationProgressViewModel: ObservableObject {
         let referenceCount = blueprint?.referenceAssets.count ?? 0
         let panelCount = blueprint?.panelRenders.count ?? blueprint?.pages.flatMap(\.panelSpecs).count ?? 0
         let pageCount = blueprint?.pages.count ?? 0
-        let steps = [
+        var steps = [
             GenerationPipelineStep(
                 title: blueprint.map {
                     L10n.string("generation.step.story_planner_beats", $0.storyPlan.beats.count)
@@ -170,66 +197,50 @@ final class GenerationProgressViewModel: ObservableObject {
             ),
         ]
 
-        var updated = steps
         let stageIndex = stageOrder.firstIndex(of: normalizedStage(currentStage))
 
         if status == .succeeded {
-            for index in updated.indices {
-                updated[index].status = .completed
-            }
-            return updated
+            for index in steps.indices { steps[index].status = .completed }
+            return steps
         }
 
         if status == .failed {
-            return markFailed(steps: updated, currentStage: currentStage)
+            return markFailed(steps: steps, currentStage: currentStage)
         }
 
         guard let stageIndex else {
-            if !updated.isEmpty {
-                updated[0].status = status == .queued ? .pending : .active
+            if !steps.isEmpty {
+                steps[0].status = status == .queued ? .pending : .active
             }
-            return updated
+            return steps
         }
 
-        for index in updated.indices {
-            if index < stageIndex {
-                updated[index].status = .completed
-            } else if index == stageIndex {
-                updated[index].status = status == .queued ? .pending : .active
-            } else {
-                updated[index].status = .pending
-            }
+        for index in steps.indices {
+            if index < stageIndex { steps[index].status = .completed }
+            else if index == stageIndex { steps[index].status = status == .queued ? .pending : .active }
+            else { steps[index].status = .pending }
         }
-        return updated
+        return steps
     }
 
     private static func markFailed(steps: [GenerationPipelineStep], currentStage: String?) -> [GenerationPipelineStep] {
         var updated = steps
-        guard let currentStage else {
-            if let firstIndex = updated.indices.first {
-                updated[firstIndex].status = .failed
-            }
+        guard let currentStage, !currentStage.isEmpty else {
+            if let firstIndex = updated.indices.first { updated[firstIndex].status = .failed }
             return updated
         }
-
         let stageIndex = stageOrder.firstIndex(of: normalizedStage(currentStage)) ?? 0
         for index in updated.indices {
-            if index < stageIndex {
-                updated[index].status = .completed
-            } else if index == stageIndex {
-                updated[index].status = .failed
-            } else {
-                updated[index].status = .pending
-            }
+            if index < stageIndex { updated[index].status = .completed }
+            else if index == stageIndex { updated[index].status = .failed }
+            else { updated[index].status = .pending }
         }
         return updated
     }
 
     private static func makeSceneBreakdown(from blueprint: ComicGenerationBlueprint?) -> [String] {
         guard let blueprint else { return [] }
-        return blueprint.storyPlan.beats.prefix(4).map {
-            "\($0.title) • \($0.summary)"
-        }
+        return blueprint.storyPlan.beats.prefix(4).map { "\($0.title) • \($0.summary)" }
     }
 
     private static func makeRenderedPageSummary(
@@ -237,14 +248,12 @@ final class GenerationProgressViewModel: ObservableObject {
         blueprint: ComicGenerationBlueprint?
     ) -> [String] {
         guard let blueprint else { return [] }
-
         let renderedCount = max(job.renderedPagesCount, job.status == .succeeded ? blueprint.pages.count : 0)
         if renderedCount > 0 {
             return blueprint.pages.prefix(renderedCount).map {
                 L10n.string("generation.page_summary", $0.pageNumber, $0.title)
             }
         }
-
         return blueprint.pages.prefix(2).map {
             L10n.string("generation.preparing_page_summary", $0.pageNumber, $0.title)
         }
@@ -252,15 +261,15 @@ final class GenerationProgressViewModel: ObservableObject {
 
     private static func displayTitle(for stage: String) -> String {
         switch normalizedStage(stage) {
-        case "story_planner": return L10n.string("generation.stage.story_planner")
-        case "character_bible": return L10n.string("generation.stage.character_bible")
-        case "style_guide": return L10n.string("generation.stage.style_guide")
+        case "story_planner":      return L10n.string("generation.stage.story_planner")
+        case "character_bible":    return L10n.string("generation.stage.character_bible")
+        case "style_guide":        return L10n.string("generation.stage.style_guide")
         case "reference_taxonomy": return L10n.string("generation.stage.reference_taxonomy")
-        case "panel_prompts": return L10n.string("generation.stage.panel_prompts")
-        case "page_composer": return L10n.string("generation.stage.page_composer")
-        case "completed": return L10n.string("generation.stage.completed")
-        case "failed": return L10n.string("generation.stage.failed")
-        default: return L10n.string("generation.stage.queued")
+        case "panel_prompts":      return L10n.string("generation.stage.panel_prompts")
+        case "page_composer":      return L10n.string("generation.stage.page_composer")
+        case "completed":          return L10n.string("generation.stage.completed")
+        case "failed":             return L10n.string("generation.stage.failed")
+        default:                   return L10n.string("generation.stage.queued")
         }
     }
 
@@ -272,15 +281,9 @@ final class GenerationProgressViewModel: ObservableObject {
     }
 
     private static let stageOrder = [
-        "story_planner",
-        "character_bible",
-        "style_guide",
-        "reference_taxonomy",
-        "panel_prompts",
-        "page_composer",
+        "story_planner", "character_bible", "style_guide",
+        "reference_taxonomy", "panel_prompts", "page_composer",
     ]
 
-    deinit {
-        task?.cancel()
-    }
+    deinit { task?.cancel() }
 }
